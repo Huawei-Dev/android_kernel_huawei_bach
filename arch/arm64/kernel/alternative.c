@@ -29,33 +29,54 @@
 
 extern struct alt_instr __alt_instructions[], __alt_instructions_end[];
 
-static int __apply_alternatives(void *dummy)
+struct alt_region {
+	struct alt_instr *begin;
+	struct alt_instr *end;
+};
+
+static int __apply_alternatives(void *alt_region)
 {
 	struct alt_instr *alt;
-	u32 *origptr, *replptr, *endptr;
+	struct alt_region *region = alt_region;
+	u8 *origptr, *replptr;
 
-	for (alt = __alt_instructions; alt < __alt_instructions_end; alt++) {
+	for (alt = region->begin; alt < region->end; alt++) {
 		if (!cpus_have_cap(alt->cpufeature))
 			continue;
 
-		BUG_ON(alt->alt_len != alt->orig_len);
+		BUG_ON(alt->alt_len > alt->orig_len);
 
 		pr_info_once("patching kernel code\n");
 
-		origptr = (void *)&alt->orig_offset + alt->orig_offset;
-		endptr = (void *)origptr + alt->orig_len;
-		replptr = (void *)&alt->alt_offset + alt->alt_offset;
-		for (; origptr < endptr; origptr++, replptr++)
-			BUG_ON(aarch64_insn_patch_text_nosync(origptr, *replptr));
+		origptr = (u8 *)&alt->orig_offset + alt->orig_offset;
+		replptr = (u8 *)&alt->alt_offset + alt->alt_offset;
+		memcpy(origptr, replptr, alt->alt_len);
+		flush_icache_range((uintptr_t)origptr,
+				   (uintptr_t)(origptr + alt->alt_len));
 	}
 
 	return 0;
 }
 
-void apply_alternatives(void)
+void apply_alternatives_all(void)
 {
+	struct alt_region region = {
+		.begin	= __alt_instructions,
+		.end	= __alt_instructions_end,
+	};
+
 	/* better not try code patching on a live SMP system */
-	stop_machine(__apply_alternatives, NULL, NULL);
+	stop_machine(__apply_alternatives, &region, NULL);
+}
+
+void apply_alternatives(void *start, size_t length)
+{
+	struct alt_region region = {
+		.begin	= start,
+		.end	= start + length,
+	};
+
+	__apply_alternatives(&region);
 }
 
 void free_alternatives_memory(void)
