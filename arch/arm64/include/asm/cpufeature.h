@@ -48,6 +48,8 @@ struct arm64_cpu_capabilities {
 	};
 };
 
+#ifndef __ASSEMBLY__
+
 extern DECLARE_BITMAP(cpu_hwcaps, ARM64_NCAPS);
 
 static inline bool cpu_have_feature(unsigned int num)
