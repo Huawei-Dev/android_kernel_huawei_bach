@@ -1508,7 +1508,22 @@ static int ip_reply_glue_bits(void *dptr, char *to, int offset,
  *	Generic function to send a packet as reply to another packet.
  *	Used to send some TCP resets/acks so far.
  */
-void ip_send_unicast_reply(struct sock *sk, struct sk_buff *skb,
+
+static DEFINE_PER_CPU(struct inet_sock, unicast_sock) = {
+	.sk = {
+		.__sk_common = {
+			.skc_refcnt = ATOMIC_INIT(1),
+		},
+		.sk_wmem_alloc	= ATOMIC_INIT(1),
+		.sk_allocation	= GFP_ATOMIC,
+		.sk_flags	= (1UL << SOCK_USE_WRITE_QUEUE),
+		.sk_pacing_rate = ~0U,
+	},
+	.pmtudisc	= IP_PMTUDISC_WANT,
+	.uc_ttl		= -1,
+};
+
+void ip_send_unicast_reply(struct net *net, struct sk_buff *skb,
 			   const struct ip_options *sopt,
 			   __be32 daddr, __be32 saddr,
 			   const struct ip_reply_arg *arg,
