@@ -642,7 +642,6 @@ static int __qpnpint_handle_irq(struct spmi_controller *spmi_ctrl,
 
 		pr_warn("%d triggered [0x%01x, 0x%02x,0x%01x] %s\n",
 				irq, spec->slave, spec->per, spec->irq, name);
-		log_wakeup_reason(irq);
 	} else {
 		generic_handle_irq(irq);
 	}
