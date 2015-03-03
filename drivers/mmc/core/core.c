@@ -35,6 +35,7 @@
 
 #include <linux/wakelock.h>
 
+#define CREATE_TRACE_POINTS
 #include <trace/events/mmc.h>
 
 #include <linux/mmc/card.h>
@@ -61,6 +62,11 @@
 extern u64 device_index;
 #include <linux/mmc/dsm_emmc.h>
 #endif
+
+EXPORT_TRACEPOINT_SYMBOL_GPL(mmc_blk_erase_start);
+EXPORT_TRACEPOINT_SYMBOL_GPL(mmc_blk_erase_end);
+EXPORT_TRACEPOINT_SYMBOL_GPL(mmc_blk_rw_start);
+EXPORT_TRACEPOINT_SYMBOL_GPL(mmc_blk_rw_end);
 
 /* If the device is not responding */
 #define MMC_CORE_TIMEOUT_MS	(10 * 60 * 1000) /* 10 minute timeout */
