@@ -137,10 +137,6 @@ static int srecorder_get_symbol_kallsyms_lookup_name(const char *line, int len);
 **/
 srec_ksym_addr_t srecorder_get_cpu_name(void)
 {
-#if !(defined(CONFIG_DEBUG_KERNEL) && defined(CONFIG_KALLSYMS_ALL))
-    s_cpu_name = get_cpu_name();
-#endif
-    
     return s_cpu_name;
 }
 

@@ -50,7 +50,6 @@
 #include <asm/cpu.h>
 #include <asm/cputype.h>
 #include <asm/elf.h>
-#include <asm/cputable.h>
 #include <asm/cpufeature.h>
 #include <asm/cpu_ops.h>
 #include <asm/kasan.h>
@@ -98,18 +97,9 @@ EXPORT_SYMBOL(boot_reason);
 unsigned int cold_boot;
 EXPORT_SYMBOL(cold_boot);
 
-static const char *cpu_name;
 static const char *machine_name;
 
 phys_addr_t __fdt_pointer __initdata;
-
-#ifdef CONFIG_DUMP_SYS_INFO
-unsigned long get_cpu_name(void)
-{
-    return (unsigned long)&cpu_name;
-}
-EXPORT_SYMBOL(get_cpu_name);
-#endif
 
 /*
  * Standard memory resources
@@ -230,22 +220,12 @@ static void __init smp_build_mpidr_hash(void)
 
 static void __init setup_processor(void)
 {
-	struct cpu_info *cpu_info;
 	u64 features, block;
 	u32 cwg;
 	int cls;
 
-	cpu_info = lookup_processor_type(read_cpuid_id());
-	if (!cpu_info) {
-		printk("CPU configuration botched (ID %08x), unable to continue.\n",
-		       read_cpuid_id());
-		while (1);
-	}
-
-	cpu_name = cpu_info->cpu_name;
-
-	printk("CPU: %s [%08x] revision %d\n",
-	       cpu_name, read_cpuid_id(), read_cpuid_id() & 15);
+	printk("CPU: AArch64 Processor [%08x] revision %d\n",
+	       read_cpuid_id(), read_cpuid_id() & 15);
 
 	sprintf(init_utsname()->machine, ELF_PLATFORM);
 	elf_hwcap = 0;
@@ -594,8 +574,8 @@ static int c_show(struct seq_file *m, void *v)
 {
 	int i, j;
 
-	seq_printf(m, "Processor\t: %s rev %d (%s)\n",
-		cpu_name, read_cpuid_id() & 15, ELF_PLATFORM);
+	seq_printf(m, "Processor\t: AArch64 Processor rev %d (%s)\n",
+		read_cpuid_id() & 15, ELF_PLATFORM);
 	for_each_present_cpu(i) {
 		struct cpuinfo_arm64 *cpuinfo = &per_cpu(cpu_data, i);
 		u32 midr = cpuinfo->reg_midr;
