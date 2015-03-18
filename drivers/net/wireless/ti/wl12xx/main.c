@@ -1827,12 +1827,12 @@ static int wl12xx_setup(struct wl1271 *wl)
 
 	if (!fref_param) {
 		priv->ref_clock = wl12xx_get_clock_idx(wl12xx_refclock_table,
-						pdev_data->ref_clock_freq,
-						pdev_data->ref_clock_xtal);
+						       pdata->ref_clock_freq,
+						       pdata->ref_clock_xtal);
 		if (priv->ref_clock < 0) {
 			wl1271_error("Invalid ref_clock frequency (%d Hz, %s)",
-				     pdev_data->ref_clock_freq,
-				     pdev_data->ref_clock_xtal ?
+				     pdata->ref_clock_freq,
+				     pdata->ref_clock_xtal ?
 				     "XTAL" : "not XTAL");
 
 			return priv->ref_clock;
@@ -1854,14 +1854,13 @@ static int wl12xx_setup(struct wl1271 *wl)
 			wl1271_error("Invalid fref parameter %s", fref_param);
 	}
 
-	if (!tcxo_param && pdev_data->tcxo_clock_freq) {
+	if (!tcxo_param && pdata->tcxo_clock_freq) {
 		priv->tcxo_clock = wl12xx_get_clock_idx(wl12xx_tcxoclock_table,
-						pdev_data->tcxo_clock_freq,
-						true);
+							pdata->tcxo_clock_freq,
+							true);
 		if (priv->tcxo_clock < 0) {
 			wl1271_error("Invalid tcxo_clock frequency (%d Hz)",
-				     pdev_data->tcxo_clock_freq);
-
+				     pdata->tcxo_clock_freq);
 			return priv->tcxo_clock;
 		}
 	} else if (tcxo_param) {

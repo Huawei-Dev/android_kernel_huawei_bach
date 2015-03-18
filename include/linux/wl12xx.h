@@ -36,8 +36,9 @@ struct wl1251_platform_data {
 struct wl12xx_platform_data {
 	int irq;
 	u32 irq_trigger;
-	int board_ref_clock;
-	int board_tcxo_clock;
+	bool ref_clock_xtal;	/* specify whether the clock is XTAL or not */
+	u32 ref_clock_freq;	/* in Hertz */
+	u32 tcxo_clock_freq;	/* in Hertz, tcxo is always XTAL */
 	bool pwr_in_suspend;
 };
 
