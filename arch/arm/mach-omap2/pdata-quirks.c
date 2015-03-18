@@ -34,6 +34,35 @@ struct pdata_init {
 struct of_dev_auxdata omap_auxdata_lookup[];
 static struct twl4030_gpio_platform_data twl_gpio_auxdata;
 
+#if IS_ENABLED(CONFIG_WL12XX)
+
+static struct wl12xx_platform_data wl12xx __initdata;
+
+static void __init __used legacy_init_wl12xx(unsigned ref_clock,
+					     unsigned tcxo_clock,
+					     int gpio)
+{
+	int res;
+
+	wl12xx.board_ref_clock = ref_clock;
+	wl12xx.board_tcxo_clock = tcxo_clock;
+	wl12xx.irq = gpio_to_irq(gpio);
+	wl12xx.irq_trigger = IRQ_TYPE_LEVEL_HIGH;
+
+	res = wl12xx_set_platform_data(&wl12xx);
+	if (res) {
+		pr_err("error setting wl12xx data: %d\n", res);
+		return;
+	}
+}
+#else
+static inline void legacy_init_wl12xx(unsigned ref_clock,
+				      unsigned tcxo_clock,
+				      int gpio)
+{
+}
+#endif
+
 #ifdef CONFIG_MACH_NOKIA_N8X0
 static void __init omap2420_n8x0_legacy_init(void)
 {
