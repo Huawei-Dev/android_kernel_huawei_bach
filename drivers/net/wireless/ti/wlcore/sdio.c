@@ -230,68 +230,37 @@ static const struct of_device_id wlcore_sdio_of_match_table[] = {
 	{ }
 };
 
-static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
+static int wlcore_probe_of(struct device *dev, int *irq,
+			   struct wlcore_platdev_data *pdev_data)
 {
 	struct device_node *np = dev->of_node;
-	struct wl12xx_platform_data *pdata;
 
 	if (!np || !of_match_node(wlcore_sdio_of_match_table, np))
-		return NULL;
+		return -ENODATA;
 
-	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
-	if (!pdata)
-		return NULL;
-
-	pdata->irq = irq_of_parse_and_map(np, 0);
-	if (!pdata->irq) {
+	*irq = irq_of_parse_and_map(np, 0);
+	if (!*irq) {
 		dev_err(dev, "No irq in platform data\n");
-		kfree(pdata);
-		return NULL;
+		kfree(pdev_data);
+		return -EINVAL;
 	}
-
-	pdata->irq_trigger =
-		irqd_get_trigger_type(irq_get_irq_data(pdata->irq));
 
 	/* optional clock frequency params */
 	of_property_read_u32(np, "ref-clock-frequency",
-			     &pdata->ref_clock_freq);
+			     &pdev_data->ref_clock_freq);
 	of_property_read_u32(np, "tcxo-clock-frequency",
-			     &pdata->tcxo_clock_freq);
+			     &pdev_data->tcxo_clock_freq);
 
-	return pdata;
+	return 0;
 }
 #else
-static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
+static int wlcore_probe_of(struct device *dev, int *irq,
+			   struct wlcore_platdev_data *pdev_data)
 {
-	return NULL;
+	return -ENODATA;
 }
 #endif
 
-static struct wl12xx_platform_data *
-wlcore_get_platform_data(struct device *dev)
-{
-	struct wl12xx_platform_data *pdata;
-
-	/* first, look for DT data */
-	pdata = wlcore_probe_of(dev);
-	if (pdata)
-		return pdata;
-
-	/* if not found - fallback to static platform data */
-	pdata = wl12xx_get_platform_data();
-	if (!IS_ERR(pdata))
-		return kmemdup(pdata, sizeof(*pdata), GFP_KERNEL);
-
-	dev_err(dev, "No platform data set\n");
-	return NULL;
-}
-
-static void wlcore_del_platform_data(struct wl12xx_platform_data *pdata)
-{
-	kfree(pdata);
-}
-
->>>>>>> 586d76c117fc... UPSTREAM: wlcore: add device-tree support
 static int wl1271_probe(struct sdio_func *func,
 				  const struct sdio_device_id *id)
 {
@@ -324,8 +293,7 @@ static int wl1271_probe(struct sdio_func *func,
 	/* Use block mode for transferring over one block size of data */
 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
 
-	pdev_data.pdata = wlcore_get_platform_data(&func->dev);
-	if (!pdev_data.pdata)
+	if (wlcore_probe_of(&func->dev, &irq, &pdev_data))
 		goto out_free_glue;
 
 	/* if sdio can keep power while host is suspended, enable wow */
@@ -355,15 +323,16 @@ static int wl1271_probe(struct sdio_func *func,
 	if (!glue->core) {
 		dev_err(glue->dev, "can't allocate platform_device");
 		ret = -ENOMEM;
-		goto out_free_pdata;
+		goto out_free_glue;
 	}
 
 	glue->core->dev.parent = &func->dev;
 
 	memset(res, 0x00, sizeof(res));
 
-	res[0].start = pdev_data.pdata->irq;
-	res[0].flags = IORESOURCE_IRQ | pdev_data.pdata->irq_trigger;
+	res[0].start = irq;
+	res[0].flags = IORESOURCE_IRQ |
+		       irqd_get_trigger_type(irq_get_irq_data(irq));
 	res[0].name = "irq";
 
 	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
@@ -389,9 +358,6 @@ static int wl1271_probe(struct sdio_func *func,
 out_dev_put:
 	platform_device_put(glue->core);
 
-out_free_pdata:
-	wlcore_del_platform_data(pdev_data.pdata);
-
 out_free_glue:
 	kfree(glue);
 
@@ -402,14 +368,11 @@ out:
 static void wl1271_remove(struct sdio_func *func)
 {
 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
-	struct wlcore_platdev_data *pdev_data = glue->core->dev.platform_data;
-	struct wl12xx_platform_data *pdata = pdev_data->pdata;
 
 	/* Undo decrement done above in wl1271_probe */
 	pm_runtime_get_noresume(&func->dev);
 
 	platform_device_unregister(glue->core);
-	wlcore_del_platform_data(pdata);
 	kfree(glue);
 }
 
