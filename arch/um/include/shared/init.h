@@ -40,6 +40,26 @@
 typedef int (*initcall_t)(void);
 typedef void (*exitcall_t)(void);
 
+#ifdef __UM_HOST__
+#ifndef __section
+# define __section(S) __attribute__ ((__section__(#S)))
+#endif
+
+#if __GNUC__ == 3
+
+#if __GNUC_MINOR__ >= 3
+# define __used			__attribute__((__used__))
+#else
+# define __used			__attribute__((__unused__))
+#endif
+
+#else
+#if __GNUC__ == 4
+# define __used			__attribute__((__used__))
+#endif
+#endif
+
+#else
 #include <linux/compiler.h>
 
 /* These are for everybody (although not all archs will actually
