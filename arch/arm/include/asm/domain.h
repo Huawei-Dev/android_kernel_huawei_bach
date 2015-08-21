@@ -57,6 +57,12 @@
 
 #define domain_val(dom,type)	((type) << (2*(dom)))
 
+#define DACR_INIT \
+	(domain_val(DOMAIN_USER, DOMAIN_MANAGER) | \
+	 domain_val(DOMAIN_KERNEL, DOMAIN_MANAGER) | \
+	 domain_val(DOMAIN_TABLE, DOMAIN_MANAGER) | \
+	 domain_val(DOMAIN_IO, DOMAIN_CLIENT))
+
 #ifndef __ASSEMBLY__
 
 #ifdef CONFIG_CPU_USE_DOMAINS
