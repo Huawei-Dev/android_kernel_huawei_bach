@@ -216,4 +216,3 @@ ENTRY(memset)
 	b.ne	.Ltail_maybe_long
 	ret
 ENDPIPROC(memset)
-ENDPROC(__memset)

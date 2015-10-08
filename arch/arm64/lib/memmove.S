@@ -197,4 +197,3 @@ ENTRY(memmove)
 	b.ne	.Ltail63
 	ret
 ENDPIPROC(memmove)
-ENDPROC(__memmove)
