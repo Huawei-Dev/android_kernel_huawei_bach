@@ -1143,28 +1143,6 @@ static inline bool sanity_check_area_boundary(struct super_block *sb,
 	return false;
 }
 
-static int raw_super_checksum_invalid(struct super_block *sb, struct f2fs_super_block *raw_super)
-{
-	struct f2fs_sb_info *sbi = F2FS_SB(sb);
-	__u32 crc = 0;
-
-	crc = le32_to_cpu(raw_super->crc);
-	if (crc != 0 ) {
-		if (!f2fs_crc_valid(sbi, crc, raw_super, offsetof(struct f2fs_super_block, crc))) {
-			f2fs_msg(sb, KERN_ERR, "Invalid checksum crc(0x%x)", crc);
-			return 1;
-		}
-	} else {
-		/* force to check crc if the partition is mounted with force_crc */
-		if (test_opt(F2FS_SB(sb), FORCE_CRC)) {
-			f2fs_msg(sb, KERN_WARNING, "current kernel force to check CRC");
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
 static int sanity_check_raw_super(struct super_block *sb,
 			struct f2fs_super_block *raw_super)
 {
@@ -1174,10 +1152,6 @@ static int sanity_check_raw_super(struct super_block *sb,
 		f2fs_msg(sb, KERN_INFO,
 			"Magic Mismatch, valid(0x%x) - read(0x%x)",
 			F2FS_SUPER_MAGIC, le32_to_cpu(raw_super->magic));
-		return 1;
-	}
-
-	if (raw_super_checksum_invalid(sb, raw_super)) {
 		return 1;
 	}
 
@@ -1397,11 +1371,6 @@ int f2fs_commit_super(struct f2fs_sb_info *sbi, bool recover)
 {
 	struct f2fs_super_block *raw_super = sbi->raw_super;
 	int err;
-
-	/* check the crc before writing superblock back */
-	if (raw_super_checksum_invalid(sbi->sb, raw_super)) {
-		return -EINVAL;
-	}
 
 	/* write back-up superblock first */
 	err = __f2fs_commit_super(sbi, sbi->valid_super_block ? 0 : 1);
