@@ -1,6 +1,8 @@
 #ifndef __ASM_MEMORY_MODEL_H
 #define __ASM_MEMORY_MODEL_H
 
+#include <linux/pfn.h>
+
 #ifndef __ASSEMBLY__
 
 #if defined(CONFIG_FLATMEM)
@@ -72,8 +74,8 @@
 /*
  * Convert a physical address to a Page Frame Number and back
  */
-#define	__phys_to_pfn(paddr)	((unsigned long)((paddr) >> PAGE_SHIFT))
-#define	__pfn_to_phys(pfn)	((pfn) << PAGE_SHIFT)
+#define	__phys_to_pfn(paddr)	PHYS_PFN(paddr)
+#define	__pfn_to_phys(pfn)	PFN_PHYS(pfn)
 
 #define page_to_pfn __page_to_pfn
 #define pfn_to_page __pfn_to_page
