@@ -950,7 +950,7 @@ exit:
 /* To determine if cross connection occured */
 static int wcd_check_cross_conn(struct wcd_mbhc *mbhc)
 {
-	u16 swap_res;
+	u16 swap_res = 0;
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_NONE;
 	s16 reg1 = 0;
 	bool hphl_sch_res = false, hphr_sch_res = false;
@@ -2153,7 +2153,7 @@ static void wcd_btn_lpress_fn(struct work_struct *work)
 {
 	struct delayed_work *dwork;
 	struct wcd_mbhc *mbhc;
-	s16 btn_result;
+	s16 btn_result = 0;
 
 	pr_debug("%s: Enter\n", __func__);
 
