@@ -4956,8 +4956,6 @@ int msm_comm_kill_session(struct msm_vidc_inst *inst)
 		if (msm_comm_session_abort(inst)) {
 			msm_comm_generate_sys_error(inst);
 			return 0;
-		} else if (rc) {
-			return rc;
 		}
 		change_inst_state(inst, MSM_VIDC_CLOSE_DONE);
 		msm_comm_generate_session_error(inst);
