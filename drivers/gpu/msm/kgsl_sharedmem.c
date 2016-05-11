@@ -698,7 +698,6 @@ kgsl_sharedmem_page_alloc_user(struct kgsl_memdesc *memdesc,
 	unsigned int j, page_size, len_alloc;
 	unsigned int pcount = 0;
 	size_t len;
-	struct page **pages = NULL;
 	unsigned int align;
 
 	static DEFINE_RATELIMIT_STATE(_rs,
@@ -753,9 +752,9 @@ kgsl_sharedmem_page_alloc_user(struct kgsl_memdesc *memdesc,
 		int page_count;
 
 		page_count = kgsl_pool_alloc_page(&page_size,
-					pages + pcount, len_alloc - pcount,
+					memdesc->pages + pcount,
+					len_alloc - pcount,
 					&align);
-
 		if (page_count <= 0) {
 			if (page_count == -EAGAIN)
 				continue;
