@@ -108,10 +108,11 @@ config HW_MMC_TEST_MODULE
 
 	  This driver is only of interest to those developing or
 	  testing a host driver. Most people should say N here.
+
 config HW_EMMC_PROTECT_MODULE
 	tristate "EMMC write protect driver by Huawei"
 	depends on HW_SYSTEM_WR_PROTECT && HUAWEI_KERNEL
-	default y
+	default n
 	help
 	  This is for EMMC to write protect
 
