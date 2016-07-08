@@ -759,8 +759,7 @@ static long ipa3_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			retval = -EINVAL;
 			break;
 		}
-		if (ipa3_del_hdr_by_user((struct ipa_ioc_del_hdr *)param,
-			true)) {
+		if (ipa3_del_hdr((struct ipa_ioc_del_hdr *)param)) {
 			retval = -EFAULT;
 			break;
 		}
@@ -1529,8 +1528,8 @@ static long ipa3_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			retval = -EINVAL;
 			break;
 		}
-		if (ipa3_del_hdr_proc_ctx_by_user(
-			(struct ipa_ioc_del_hdr_proc_ctx *)param, true)) {
+		if (ipa3_del_hdr_proc_ctx(
+			(struct ipa_ioc_del_hdr_proc_ctx *)param)) {
 			retval = -EFAULT;
 			break;
 		}
