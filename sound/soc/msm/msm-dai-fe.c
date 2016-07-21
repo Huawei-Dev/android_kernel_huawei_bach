@@ -2070,12 +2070,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 1 Audio Service Capture",
 			.aif_name = "LSM1_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM1",
@@ -2085,12 +2087,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 2 Audio Service Capture",
 			.aif_name = "LSM2_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM2",
@@ -2100,12 +2104,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 3 Audio Service Capture",
 			.aif_name = "LSM3_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM3",
@@ -2115,12 +2121,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 4 Audio Service Capture",
 			.aif_name = "LSM4_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM4",
@@ -2130,12 +2138,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 5 Audio Service Capture",
 			.aif_name = "LSM5_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM5",
@@ -2145,12 +2155,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 6 Audio Service Capture",
 			.aif_name = "LSM6_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM6",
@@ -2160,12 +2172,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 7 Audio Service Capture",
 			.aif_name = "LSM7_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM7",
@@ -2175,12 +2189,14 @@ static struct snd_soc_dai_driver msm_fe_dais[] = {
 		.capture = {
 			.stream_name = "Listen 8 Audio Service Capture",
 			.aif_name = "LSM8_UL_HL",
-			.rates = SNDRV_PCM_RATE_16000,
-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+			.rates = (SNDRV_PCM_RATE_16000 |
+				  SNDRV_PCM_RATE_48000),
+			.formats = (SNDRV_PCM_FMTBIT_S16_LE |
+				    SNDRV_PCM_FMTBIT_S24_LE),
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 4,
 			.rate_min = 16000,
-			.rate_max = 16000,
+			.rate_max = 48000,
 		},
 		.ops = &msm_fe_dai_ops,
 		.name = "LSM8",
