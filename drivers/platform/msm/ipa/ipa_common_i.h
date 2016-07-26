@@ -141,7 +141,6 @@ struct ipa_mem_buffer {
 	u32 size;
 };
 
-
 #define IPA_MHI_GSI_ER_START 10
 #define IPA_MHI_GSI_ER_END 16
 
@@ -162,7 +161,6 @@ enum ipa3_mhi_burst_mode {
 	IPA_MHI_BURST_MODE_DISABLE,
 	IPA_MHI_BURST_MODE_ENABLE,
 };
-
 
 /**
  * enum ipa_hw_mhi_channel_states - MHI channel state machine
@@ -348,6 +346,8 @@ int ipa_mhi_handle_ipa_config_req(struct ipa_config_req_msg_v01 *config_req);
 int ipa_mhi_query_ch_info(enum ipa_client_type client,
 		struct gsi_chan_info *ch_info);
 int ipa_mhi_destroy_channel(enum ipa_client_type client);
+int ipa_mhi_is_using_dma(bool *flag);
+const char *ipa_mhi_get_state_str(int state);
 
 int ipa_mhi_is_using_dma(bool *flag);
 const char *ipa_mhi_get_state_str(int state);
