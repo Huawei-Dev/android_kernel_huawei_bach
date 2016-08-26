@@ -42,7 +42,6 @@ struct dsm_client *sdcard_dclient = NULL;
 char g_dsm_log_sum[1024] = {0};
 #endif
 
-#define cls_dev_to_mmc_host(d)	container_of(d, struct mmc_host, class_dev)
 #define MMC_DEVFRQ_DEFAULT_UP_THRESHOLD 35
 #define MMC_DEVFRQ_DEFAULT_DOWN_THRESHOLD 5
 #define MMC_DEVFRQ_DEFAULT_POLLING_MSEC 100
@@ -809,6 +808,7 @@ int mmc_add_host(struct mmc_host *host)
 	mmc_add_host_debugfs(host);
 #endif
 	mmc_host_clk_sysfs_init(host);
+	mmc_latency_hist_sysfs_init(host);
 
 	err = sysfs_create_group(&host->class_dev.kobj, &clk_scaling_attr_grp);
 	if (err)
@@ -849,6 +849,8 @@ void mmc_remove_host(struct mmc_host *host)
 #endif
 	sysfs_remove_group(&host->parent->kobj, &dev_attr_grp);
 	sysfs_remove_group(&host->class_dev.kobj, &clk_scaling_attr_grp);
+
+	mmc_latency_hist_sysfs_exit(host);
 
 	device_del(&host->class_dev);
 
