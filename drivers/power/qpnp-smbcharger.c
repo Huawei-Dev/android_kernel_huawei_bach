@@ -72,6 +72,7 @@ struct parallel_usb_cfg {
 	ktime_t				last_disabled;
 	bool				enabled_once;
 	int				parallel_aicl_ma;
+	int				min_main_icl_ma;
 	bool				use_parallel_aicl;
 	bool				parallel_en_in_progress;
 };
@@ -2524,7 +2525,7 @@ static void smbchg_parallel_usb_enable(struct smbchg_chip *chip,
 	struct power_supply *parallel_psy = get_parallel_psy(chip);
 	union power_supply_propval pval = {0, };
 	int new_parallel_cl_ma, set_parallel_cl_ma, new_pmi_cl_ma, rc;
-	int current_table_index, target_icl_ma;
+	int current_table_index, target_icl_ma, pmi_icl_ma;
 	int fcc_ma, main_fastchg_current_ma;
 	int target_parallel_fcc_ma, supplied_parallel_fcc_ma;
 	int parallel_chg_fcc_percent;
@@ -2542,7 +2543,6 @@ static void smbchg_parallel_usb_enable(struct smbchg_chip *chip,
 	}
 	/* Set USB ICL */
 	target_icl_ma = get_effective_result_locked(chip->usb_icl_votable);
-
 	if (target_icl_ma < 0) {
 		pr_err("no voters for usb_icl, skip it\n");
 		return;
@@ -8359,6 +8359,8 @@ static int smb_parse_dt(struct smbchg_chip *chip)
 				"max-pulse-allowed", rc, 1);
 	chip->parallel.use_parallel_aicl = of_property_read_bool(node,
 					"qcom,use-parallel-aicl");
+	OF_PROP_READ(chip, chip->parallel.min_main_icl_ma,
+				"parallel-min-main-icl-ma", rc, 1);
 	/*
 	 * use the dt values if they exist, otherwise do not touch the params
 	 */
