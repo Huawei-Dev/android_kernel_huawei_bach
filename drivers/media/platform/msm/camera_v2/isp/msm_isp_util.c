@@ -20,6 +20,8 @@
 #include "msm_isp_stats_util.h"
 #include "msm_camera_io_util.h"
 #include "cam_smmu_api.h"
+#define CREATE_TRACE_POINTS
+#include "trace/events/msm_cam.h"
 
 #ifdef CONFIG_HUAWEI_DSM
 #include "msm_camera_dsm.h"
@@ -1791,6 +1793,8 @@ void msm_isp_process_overflow_irq(
 
 		ISP_DBG("%s: VFE%d Bus overflow detected: start recovery!\n",
 			__func__, vfe_dev->pdev->id);
+
+		trace_msm_cam_isp_overflow(vfe_dev, *irq_status0, *irq_status1);
 
 		/* maks off irq for current vfe */
 		atomic_cmpxchg(&vfe_dev->error_info.overflow_state,
