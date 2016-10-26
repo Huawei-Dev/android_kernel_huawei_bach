@@ -122,12 +122,9 @@ IPA SMMU sub nodes
 
 - qcom,iova-mapping: specifies the start address and size of iova space.
 
-<<<<<<< HEAD
-=======
 - qcom,additional-mapping: specifies any addtional mapping needed for this
 				context bank. The format is <iova pa size>
 
->>>>>>> origin/platform/qcom/LA.UM.5.6-01810-89xx.0
 IPA SMP2P sub nodes
 
 -compatible: "qcom,smp2pgpio-map-ipa-1-out" - represents the out gpio from
@@ -204,14 +201,11 @@ qcom,ipa@fd4c0000 {
 	ipa_smmu_ap: ipa_smmu_ap {
 		compatible = "qcom,ipa-smmu-ap-cb";
 		iommus = <&anoc2_smmu 0x30>;
-<<<<<<< HEAD
-		qcom,iova-mapping = <0x10000000 0x40000000>;
-=======
+
 		qcom,iova-mapping = <0x20000000 0x40000000>;
 		qcom,additional-mapping =
 		/* modem tables in IMEM */
 		<0x146BD000 0x146BD000 0x2000>;
->>>>>>> origin/platform/qcom/LA.UM.5.6-01810-89xx.0
 	};
 
 	ipa_smmu_wlan: ipa_smmu_wlan {
