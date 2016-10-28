@@ -10,7 +10,6 @@ Required properties:
 		"qcom,clock-a53-8916", "qcom,clock-a7-vpipa",
 		"qcom,clock-a7-9640", "qcom,clock-a7-9650",
 		"qcom,clock-a7-9640", "qcom,clock-a7-mdm9607"
->>>>>>> 57f6fd874bda... msm: Update the target name reference for MDM9650
 - reg: pairs of physical address and region size
 - reg-names: "rcg-base" is expected
 - clock-names: list of names of clock inputs
