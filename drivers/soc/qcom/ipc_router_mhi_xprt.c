@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -768,28 +768,37 @@ static void ipc_router_mhi_xprt_cb(struct mhi_cb_info *cb_info)
  * This function is called when a new XPRT is added.
  */
 static int ipc_router_mhi_driver_register(
-		struct ipc_router_mhi_xprt *mhi_xprtp)
+		struct ipc_router_mhi_xprt *mhi_xprtp, struct device *dev)
 {
-	int rc_status;
+	int rc;
+	const char *node_name = "qcom,mhi";
+	struct mhi_client_info_t *mhi_info;
 
-	rc_status = mhi_register_channel(&mhi_xprtp->ch_hndl.out_handle,
-				mhi_xprtp->ch_hndl.out_chan_id, 0,
-				&mhi_xprtp->ch_hndl.out_clnt_info,
-				(void *)mhi_xprtp);
-	if (rc_status) {
+	if (!mhi_is_device_ready(dev, node_name))
+		return -EPROBE_DEFER;
+
+	mhi_info = &mhi_xprtp->ch_hndl.out_clnt_info;
+	mhi_info->chan = mhi_xprtp->ch_hndl.out_chan_id;
+	mhi_info->dev = dev;
+	mhi_info->node_name = node_name;
+	mhi_info->user_data = mhi_xprtp;
+	rc = mhi_register_channel(&mhi_xprtp->ch_hndl.out_handle, mhi_info);
+	if (rc) {
 		IPC_RTR_ERR("%s: Error %d registering out_chan for %s\n",
-			    __func__, rc_status, mhi_xprtp->xprt_name);
+			    __func__, rc, mhi_xprtp->xprt_name);
 		return -EFAULT;
 	}
 
-	rc_status = mhi_register_channel(&mhi_xprtp->ch_hndl.in_handle,
-				mhi_xprtp->ch_hndl.in_chan_id, 0,
-				&mhi_xprtp->ch_hndl.in_clnt_info,
-				(void *)mhi_xprtp);
-	if (rc_status) {
+	mhi_info = &mhi_xprtp->ch_hndl.in_clnt_info;
+	mhi_info->chan = mhi_xprtp->ch_hndl.in_chan_id;
+	mhi_info->dev = dev;
+	mhi_info->node_name = node_name;
+	mhi_info->user_data = mhi_xprtp;
+	rc = mhi_register_channel(&mhi_xprtp->ch_hndl.in_handle, mhi_info);
+	if (rc) {
 		mhi_deregister_channel(mhi_xprtp->ch_hndl.out_handle);
 		IPC_RTR_ERR("%s: Error %d registering in_chan for %s\n",
-			    __func__, rc_status, mhi_xprtp->xprt_name);
+			    __func__, rc, mhi_xprtp->xprt_name);
 		return -EFAULT;
 	}
 	return 0;
@@ -806,7 +815,8 @@ static int ipc_router_mhi_driver_register(
  * the MHI XPRT configurations from device tree.
  */
 static int ipc_router_mhi_config_init(
-	struct ipc_router_mhi_xprt_config *mhi_xprt_config)
+			struct ipc_router_mhi_xprt_config *mhi_xprt_config,
+			struct device *dev)
 {
 	struct ipc_router_mhi_xprt *mhi_xprtp;
 	char wq_name[XPRT_NAME_LEN];
@@ -865,7 +875,7 @@ static int ipc_router_mhi_config_init(
 	INIT_LIST_HEAD(&mhi_xprtp->rx_addr_map_list);
 	spin_lock_init(&mhi_xprtp->rx_addr_map_list_lock);
 
-	rc = ipc_router_mhi_driver_register(mhi_xprtp);
+	rc = ipc_router_mhi_driver_register(mhi_xprtp, dev);
 	return rc;
 }
 
@@ -949,7 +959,7 @@ static int ipc_router_mhi_xprt_probe(struct platform_device *pdev)
 			return rc;
 		}
 
-		rc = ipc_router_mhi_config_init(&mhi_xprt_config);
+		rc = ipc_router_mhi_config_init(&mhi_xprt_config, &pdev->dev);
 		if (rc) {
 			IPC_RTR_ERR("%s: init failed\n", __func__);
 			return rc;
