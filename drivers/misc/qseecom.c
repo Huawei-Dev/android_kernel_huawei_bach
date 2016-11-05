@@ -2410,12 +2410,12 @@ static int qseecom_load_app(struct qseecom_dev_handle *data, void __user *argp)
 		pr_err("copy_to_user failed\n");
 		ret = -EFAULT;
 		if (first_time == true) {
-		spin_lock_irqsave(
-		&qseecom.registered_app_list_lock, flags);
-		list_del(&entry->list);
-		spin_unlock_irqrestore(
-		&qseecom.registered_app_list_lock, flags);
-		kzfree(entry);
+			spin_lock_irqsave(
+				&qseecom.registered_app_list_lock, flags);
+			list_del(&entry->list);
+			spin_unlock_irqrestore(
+				&qseecom.registered_app_list_lock, flags);
+			kzfree(entry);
 		}
 	}
 
