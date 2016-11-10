@@ -171,7 +171,6 @@
 
 #define PON_DIS_PWRKPD_RESET 1
 
-
 #ifdef CONFIG_HUAWEI_PMU_DSM
 #define REASON_MAX		16
 
@@ -216,6 +215,9 @@ extern int dsm_get_pa_temp(void);
 extern int dsm_get_cpu_temp(void);
 extern int dsm_get_tsens_temp(uint32_t tsensor_id, long *temp);
 #endif
+
+/* Wakeup event timeout */
+#define WAKEUP_TIMEOUT_MSEC			3000
 
 enum qpnp_pon_version {
 	QPNP_PON_GEN1_V1,
@@ -881,6 +883,9 @@ qpnp_pon_input_dispatch(struct qpnp_pon *pon, u32 pon_type)
 	/* Check if key reporting is supported */
 	if (!cfg->key_code)
 		return 0;
+
+	if (device_may_wakeup(&pon->spmi->dev))
+		pm_wakeup_event(&pon->spmi->dev, WAKEUP_TIMEOUT_MSEC);
 
 	/* check the RT status to get the current status of the line */
 	rc = spmi_ext_register_readl(pon->spmi->ctrl, pon->spmi->sid,
