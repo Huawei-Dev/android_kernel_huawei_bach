@@ -51,8 +51,10 @@ static int msm_auxpcm_rate = SAMPLING_RATE_8KHZ;
 static int msm_hdmi_rx_ch = 2;
 static int msm_proxy_rx_ch = 2;
 static int hdmi_rx_sample_rate = SAMPLING_RATE_48KHZ;
+static int msm_sec_mi2s_tx_ch = 2;
 static int msm_tert_mi2s_tx_ch = 2;
 static int msm_quat_mi2s_rx_ch = 2;
+static int msm_sec_mi2s_tx_bit_format = SNDRV_PCM_FORMAT_S16_LE;
 static int msm_tert_mi2s_tx_bit_format = SNDRV_PCM_FORMAT_S16_LE;
 static int msm_quat_mi2s_rx_bit_format = SNDRV_PCM_FORMAT_S16_LE;
 static int msm_sec_mi2s_rate = SAMPLING_RATE_48KHZ;
@@ -1697,6 +1699,7 @@ static int msm_mi2s_rx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 static int msm_mi2s_tx_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 				     struct snd_pcm_hw_params *params)
 {
+	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
 	struct snd_interval *rate = hw_param_interval(params,
 					SNDRV_PCM_HW_PARAM_RATE);
 	struct snd_interval *channels = hw_param_interval(params,
@@ -1863,6 +1866,18 @@ static int apq8096_mi2s_snd_startup(struct snd_pcm_substream *substream)
 	case 0:	/*MSM_PRIM_MI2S*/
 		break;
 	case 1:	/*MSM_SEC_MI2S*/
+		sec_mi2s_tx_clk.enable = 1;
+		ret = afe_set_lpass_clock_v2(AFE_PORT_ID_SECONDARY_MI2S_TX,
+					&sec_mi2s_tx_clk);
+		if (ret < 0) {
+			pr_err("%s: afe lpass clock failed, err:%d\n",
+				__func__, ret);
+			goto err;
+		}
+		ret = snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_CBM_CFM);
+		if (ret < 0)
+			pr_err("%s: set fmt cpu dai failed, err:%d\n",
+				__func__, ret);
 		break;
 	case 2:	/*MSM_TERT_MI2S*/
 		mi2s_tx_clk.enable = 1;
@@ -1914,6 +1929,12 @@ static void apq8096_mi2s_snd_shutdown(struct snd_pcm_substream *substream)
 	case 0:	/*MSM_PRIM_MI2S*/
 		break;
 	case 1:	/*MSM_SEC_MI2S*/
+		sec_mi2s_tx_clk.enable = 0;
+		ret = afe_set_lpass_clock_v2(AFE_PORT_ID_SECONDARY_MI2S_TX,
+					&sec_mi2s_tx_clk);
+		if (ret < 0)
+			pr_err("%s: afe lpass clock failed, err:%d\n",
+				__func__, ret);
 		break;
 	case 2:	/*MSM_TERT_MI2S*/
 		mi2s_tx_clk.enable = 0;
@@ -3603,6 +3624,20 @@ static struct snd_soc_dai_link apq8096_common_be_dai_links[] = {
 
 static struct snd_soc_dai_link apq8096_auto_be_dai_links[] = {
 	/* Backend DAI Links */
+	{
+		.name = LPASS_BE_SEC_MI2S_TX,
+		.stream_name = "Secondary MI2S Capture",
+		.cpu_dai_name = "msm-dai-q6-mi2s.1",
+		.platform_name = "msm-pcm-routing",
+		.codec_name = "msm-stub-codec.1",
+		.codec_dai_name = "msm-stub-tx",
+		.no_pcm = 1,
+		.dpcm_capture = 1,
+		.be_id = MSM_BACKEND_DAI_SECONDARY_MI2S_TX,
+		.be_hw_params_fixup = msm_mi2s_tx_be_hw_params_fixup,
+		.ops = &apq8096_mi2s_be_ops,
+		.ignore_suspend = 1,
+	},
 	{
 		.name = LPASS_BE_TERT_MI2S_TX,
 		.stream_name = "Tertiary MI2S Capture",
