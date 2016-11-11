@@ -1295,7 +1295,6 @@ static int __from_user_pgc_lut_data_v1_7(
 		pr_err("failed to copy from user the pgc32 payload\n");
 		return -EFAULT;
 	}
-
 	memset(&pgc_cfg_payload, 0, sizeof(pgc_cfg_payload));
 	pgc_cfg_payload.c0_data = compat_ptr(pgc_cfg_payload_32.c0_data);
 	pgc_cfg_payload.c1_data = compat_ptr(pgc_cfg_payload_32.c1_data);
