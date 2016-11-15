@@ -1309,8 +1309,10 @@ int msm_dts_eagle_ioctl(unsigned int cmd, unsigned long arg)
 			return -EINVAL;
 		}
 		if (_sec_blob[target[0]] != NULL) {
-			eagle_ioctl_dbg("%s: reallocate already allocated license index %u",
-				__func__, target[0]);
+			if (((u32 *)_sec_blob[target[0]])[1] != target[1]) {
+				eagle_ioctl_dbg("%s: request new size for already allocated license index %u",
+					 __func__, target[0]);
+			}
 			kfree(_sec_blob[target[0]]);
 			_sec_blob[target[0]] = NULL;
 		}
