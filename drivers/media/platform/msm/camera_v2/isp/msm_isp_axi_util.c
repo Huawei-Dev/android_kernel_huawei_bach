@@ -19,7 +19,6 @@
 #include "msm_camera_dsm.h"
 #endif
 
-#define HANDLE_TO_IDX(handle) (handle & 0xFF)
 #define ISP_SOF_DEBUG_COUNT 0
 
 #ifdef CONFIG_HUAWEI_DSM
