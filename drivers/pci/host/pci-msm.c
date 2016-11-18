@@ -223,6 +223,7 @@
 #define PCIE_COM_DEBUG_BUS_3_STATUS	0x468
 
 #define PCIE20_PARF_SYS_CTRL	     0x00
+#define PCIE20_PARF_PM_CTRL	0x20
 #define PCIE20_PARF_PM_STTS		0x24
 #define PCIE20_PARF_PCS_DEEMPH	   0x34
 #define PCIE20_PARF_PCS_SWING	    0x38
@@ -239,6 +240,7 @@
 #define PCIE20_PARF_SID_OFFSET		0x234
 #define PCIE20_PARF_BDF_TRANSLATE_CFG	0x24C
 #define PCIE20_PARF_BDF_TRANSLATE_N	0x250
+#define PCIE20_PARF_DEVICE_TYPE	0x1000
 
 #define PCIE20_ELBI_VERSION		0x00
 #define PCIE20_ELBI_SYS_CTRL	     0x04
@@ -1065,6 +1067,12 @@ static void pcie_phy_dump(struct msm_pcie_dev_t *dev)
 	int i, size;
 	u32 write_val;
 
+	if (dev->phy_ver >= 0x20) {
+		PCIE_DUMP(dev, "PCIe: RC%d PHY dump is not supported\n",
+			dev->rc_idx);
+		return;
+	}
+
 	PCIE_DUMP(dev, "PCIe: RC%d PHY testbus\n", dev->rc_idx);
 
 	pcie_phy_dump_test_cntrl(dev, 0x18, 0x19, 0x1A, 0x1B);
@@ -1547,7 +1555,7 @@ static void pcie_pcs_port_phy_init(struct msm_pcie_dev_t *dev)
 	struct msm_pcie_phy_info_t *phy_seq;
 	u8 common_phy;
 
-	if (dev->phy_ver == 0x90)
+	if (dev->phy_ver >= 0x20)
 		return;
 
 	PCIE_DBG(dev, "RC%d: Initializing PCIe PHY Port\n", dev->rc_idx);
@@ -1660,7 +1668,7 @@ static void pcie_pcs_port_phy_init(struct msm_pcie_dev_t *dev)
 
 static bool pcie_phy_is_ready(struct msm_pcie_dev_t *dev)
 {
-	if (dev->phy_ver == 0x90) {
+	if (dev->phy_ver >= 0x20) {
 		if (readl_relaxed(dev->phy +
 			PCIE_N_PCS_STATUS(dev->rc_idx, dev->common_phy)) &
 			BIT(6))
@@ -4376,6 +4384,13 @@ int msm_pcie_enable(struct msm_pcie_dev_t *dev, u32 options)
 		PCIE_DBG(dev, "RC%d: restoring sec config\n", dev->rc_idx);
 		msm_pcie_restore_sec_config(dev);
 	}
+
+	/* configure PCIe to RC mode */
+	msm_pcie_write_reg(dev->parf, PCIE20_PARF_DEVICE_TYPE, 0x4);
+
+	/* enable l1 mode, clear bit 5 (REQ_NOT_ENTR_L1) */
+	if (dev->l1_supported)
+		msm_pcie_write_mask(dev->parf + PCIE20_PARF_PM_CTRL, BIT(5), 0);
 
 	/* enable PCIe clocks and resets */
 	msm_pcie_write_mask(dev->parf + PCIE20_PARF_PHY_CTRL, BIT(0), 0);
