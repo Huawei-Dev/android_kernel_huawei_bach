@@ -11,3 +11,4 @@ mmc_core-y			:= core.o bus.o host.o \
 
 mmc_core-$(CONFIG_MMC_PASSWORDS) += lock.o sysfs.o
 mmc_core-$(CONFIG_DEBUG_FS)	+= debugfs.o
+obj-$(CONFIG_MMC_RING_BUFFER)	+= ring_buffer.o

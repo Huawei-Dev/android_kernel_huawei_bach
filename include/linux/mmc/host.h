@@ -22,8 +22,7 @@
 #include <linux/mmc/card.h>
 #include <linux/mmc/pm.h>
 #include <linux/slab.h>
-
-
+#include <linux/mmc/ring_buffer.h>
 
 #define MMC_AUTOSUSPEND_DELAY_MS	3000
 #ifdef CONFIG_HW_MMC_TEST
@@ -578,6 +577,7 @@ struct mmc_host {
 	int test_status;            /* save mmc_test status */
 #endif
 #endif
+	struct mmc_trace_buffer trace_buf;
 	enum dev_state dev_status;
 	bool			wakeup_on_idle;
 	struct mmc_cmdq_context_info	cmdq_ctx;
