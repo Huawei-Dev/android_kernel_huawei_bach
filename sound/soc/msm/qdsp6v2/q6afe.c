@@ -6447,8 +6447,9 @@ static int afe_map_cal_data(int32_t cal_type,
 		pr_err("%s: could not get cal index %d!\n",
 			__func__, cal_index);
 		ret = -EINVAL;
-		return ret;
+		goto done;
 	}
+
 
 	mutex_lock(&this_afe.afe_cmd_lock);
 	atomic_set(&this_afe.mem_map_cal_index, cal_index);
@@ -6463,14 +6464,16 @@ static int afe_map_cal_data(int32_t cal_type,
 			__func__,
 			&cal_block->cal_data.paddr,
 			cal_block->map_data.map_size);
+		mutex_unlock(&this_afe.afe_cmd_lock);
 		goto done;
 	}
 	cal_block->map_data.q6map_handle = atomic_read(&this_afe.
 		mem_map_cal_handles[cal_index]);
-done:
 	mutex_unlock(&this_afe.afe_cmd_lock);
+done:
 	return ret;
 }
+
 
 static int afe_unmap_cal_data(int32_t cal_type,
 				struct cal_block_data *cal_block)
