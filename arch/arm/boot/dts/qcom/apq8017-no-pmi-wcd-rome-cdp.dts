@@ -47,11 +47,11 @@
 };
 
 &i2c_2 {
-	/* DSI_TO_HDMI I2C configuration */
+ 	/* DSI_TO_HDMI I2C configuration */
 	adv7533@39 {
 		compatible = "adv7533";
 		reg = <0x39>;
-		instance_id = <0>;
+ 		instance_id = <0>;
 		adi,video-mode = <3>; /* 3 = 1080p */
 		adi,main-addr = <0x39>;
 		adi,cec-dsi-addr = <0x3C>;
