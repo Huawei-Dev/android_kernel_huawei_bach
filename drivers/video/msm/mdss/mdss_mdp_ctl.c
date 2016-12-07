@@ -954,7 +954,7 @@ static u32 mdss_mdp_calc_prefill_line_time(struct mdss_mdp_ctl *ctl,
 	prefill_us = __get_min_prefill_line_time_us(ctl);
 
 	/* if pipe is amortizable, add the amortized prefill contribution */
-	if (mdss_mdp_is_amortizable_pipe(pipe, mixer, mdata)) {
+	if (mdss_mdp_is_amortizable_pipe(pipe, mixer, ctl->mdata)) {
 		prefill_amortized = mult_frac(USEC_PER_SEC, pipe->src.y,
 			fps * v_total);
 		prefill_us += prefill_amortized;

@@ -3324,8 +3324,8 @@ static int cpr3_regulator_measure_aging(struct cpr3_controller *ctrl,
 {
 	u32 mask, reg, result, quot_min, quot_max, sel_min, sel_max;
 	u32 quot_min_scaled, quot_max_scaled;
-	u32 gcnt, gcnt_ref, gcnt0_restore, gcnt1_restore, irq_restore;
-	u32 cont_dly_restore, up_down_dly_restore = 0;
+	u32 gcnt, gcnt_ref, gcnt0_restore = 0, gcnt1_restore = 0, irq_restore = 0;
+	u32 cont_dly_restore = 0, up_down_dly_restore = 0;
 	int quot_delta, quot_delta_scaled, quot_delta_scaled_sum;
 	int *quot_delta_results;
 	int rc, rc2, i, aging_measurement_count, filtered_count;

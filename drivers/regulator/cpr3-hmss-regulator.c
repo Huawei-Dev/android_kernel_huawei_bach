@@ -1521,7 +1521,7 @@ static int cpr3_hmss_init_aging(struct cpr3_controller *ctrl)
 		}
 	}
 
-	if (!ctrl->aging_required || !fuse)
+	if (!vreg || !ctrl->aging_required || !fuse)
 		return 0;
 
 	if (!vreg) {

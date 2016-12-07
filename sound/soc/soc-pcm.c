@@ -805,7 +805,7 @@ static int soc_pcm_prepare(struct snd_pcm_substream *substream)
 		cancel_delayed_work(&rtd->delayed_work);
 	}
 
-	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
+	if (codec_dai && substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
 		if (codec_dai->capture_active == 1)
 			snd_soc_dapm_stream_event(rtd,
 			SNDRV_PCM_STREAM_CAPTURE,
