@@ -2263,7 +2263,7 @@ Example:
 	};
 
 * MDM9650 Automotive ASoC Machine driver
-
+* MDMCALIFORNIUM Automotive ASoC Machine driver
 - compatible : "qcom,mdm-audio-auto" for auto codec and
 		node is "sound-auto"
 - qcom,model : The user-visible name of this sound card.
