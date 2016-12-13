@@ -3170,6 +3170,16 @@ out:
 	msm_otg_dbg_log_event(&motg->phy, "CHECK VBUS EVENT DURING SUSPEND",
 			atomic_read(&motg->pm_suspended),
 			motg->sm_work_pending);
+
+	/* Move to host mode on vbus low if required */
+	if (motg->pdata->vbus_low_as_hostmode) {
+		if (!test_bit(B_SESS_VLD, &motg->inputs)) {
+			clear_bit(ID, &motg->inputs);
+			init = false;
+		} else {
+			set_bit(ID, &motg->inputs);
+		}
+	}
 	msm_otg_kick_sm_work(motg);
 }
 
@@ -4415,6 +4425,10 @@ struct msm_otg_platform_data *msm_otg_dt_to_pdata(struct platform_device *pdev)
 	if (pdata->enable_floated_charger == FLOATING_AS_DCP ||
 		pdata->enable_floated_charger == FLOATING_AS_INVALID)
 		debug_floated_charger_enabled = true;
+
+	pdata->vbus_low_as_hostmode = of_property_read_bool(node,
+					"qcom,vbus-low-as-hostmode");
+
 	return pdata;
 }
 
