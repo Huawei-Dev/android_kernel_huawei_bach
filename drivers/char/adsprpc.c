@@ -1202,6 +1202,7 @@ static int get_args(uint32_t kernel, struct smq_invoke_ctx *ctx)
 			rlen -= ALIGN(args, BALIGN) - args;
 			args = ALIGN(args, BALIGN);
 		}
+		mlen = ctx->overps[oix]->mend - ctx->overps[oix]->mstart;
 		VERIFY(err, rlen >= mlen);
 		if (err)
 			goto bail;
