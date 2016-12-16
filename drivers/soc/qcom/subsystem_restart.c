@@ -642,7 +642,8 @@ static int subsystem_ramdump(struct subsys_device *dev, void *data)
 	if (dev->desc->ramdump)
 #endif
 		if (dev->desc->ramdump(is_ramdump_enabled(dev), dev->desc) < 0)
-			pr_warn("%s[%p]: Ramdump failed.\n", name, current);
+			pr_warn("%s[%s:%d]: Ramdump failed.\n",
+				name, current->comm, current->pid);
 	dev->do_ramdump_on_put = false;
 	return 0;
 }
@@ -659,7 +660,7 @@ static int subsystem_powerup(struct subsys_device *dev, void *data)
 	const char *name = dev->desc->name;
 	int ret;
 
-	pr_info("[%p]: Powering up %s\n", current, name);
+	pr_info("[%s:%d]: Powering up %s\n", current->comm, current->pid, name);
 	init_completion(&dev->err_ready);
 
 	ret = dev->desc->powerup(dev->desc);
@@ -996,8 +997,8 @@ static void subsystem_restart_wq_func(struct work_struct *work)
 	 */
 	mutex_lock(&soc_order_reg_lock);
 
-	pr_debug("[%p]: Starting restart sequence for %s\n", current,
-			desc->name);
+	pr_debug("[%s:%d]: Starting restart sequence for %s\n",
+			current->comm, current->pid, desc->name);
 
 #ifdef CONFIG_HUAWEI_MODEM_CRASH_LOG
 	/* disable subsystem ramdump if subsystem restart is requested */
@@ -1038,8 +1039,8 @@ static void subsystem_restart_wq_func(struct work_struct *work)
 	}
 #endif
 
-	pr_info("[%p]: Restart sequence for %s completed.\n",
-			current, desc->name);
+	pr_info("[%s:%d]: Restart sequence for %s completed.\n",
+			current->comm, current->pid, desc->name);
 
 err:
 	/* Reset subsys count */
