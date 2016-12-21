@@ -769,6 +769,7 @@ static int diag_dci_remove_req_entry(unsigned char *buf, int len,
 	if (*buf != 0x80) {
 		list_del(&entry->track);
 		kfree(entry);
+		entry = NULL;
 		return 1;
 	}
 
@@ -786,6 +787,7 @@ static int diag_dci_remove_req_entry(unsigned char *buf, int len,
 	if (delayed_rsp_id == 0) {
 		list_del(&entry->track);
 		kfree(entry);
+		entry = NULL;
 		return 1;
 	}
 
@@ -799,6 +801,7 @@ static int diag_dci_remove_req_entry(unsigned char *buf, int len,
 	if (rsp_count > 0 && rsp_count < 0x1000) {
 		list_del(&entry->track);
 		kfree(entry);
+		entry = NULL;
 		return 1;
 	}
 
@@ -2934,6 +2937,7 @@ fail_alloc:
 					   &proc_buf->buf_primary->data_mutex);
 				}
 				kfree(proc_buf->buf_primary);
+				proc_buf->buf_primary = NULL;
 				if (proc_buf->buf_cmd) {
 					vfree(proc_buf->buf_cmd->data);
 					proc_buf->buf_cmd->data = NULL;
@@ -2941,6 +2945,7 @@ fail_alloc:
 					   &proc_buf->buf_cmd->data_mutex);
 				}
 				kfree(proc_buf->buf_cmd);
+				proc_buf->buf_cmd = NULL;
 			}
 		}
 		vfree(new_entry->dci_event_mask);
@@ -2948,7 +2953,9 @@ fail_alloc:
 		vfree(new_entry->dci_log_mask);
 		new_entry->dci_log_mask = NULL;
 		kfree(new_entry->buffers);
+		new_entry->buffers = NULL;
 		kfree(new_entry);
+		new_entry = NULL;
 	}
 	mutex_unlock(&driver->dci_mutex);
 	return DIAG_DCI_NO_REG;
@@ -3004,6 +3011,7 @@ int diag_dci_deinit_client(struct diag_dci_client_tbl *entry)
 			if (!list_empty(&req_entry->track))
 				list_del(&req_entry->track);
 			kfree(req_entry);
+			req_entry = NULL;
 		}
 	}
 
@@ -3019,6 +3027,7 @@ int diag_dci_deinit_client(struct diag_dci_client_tbl *entry)
 			buf_entry->data = NULL;
 			mutex_unlock(&buf_entry->data_mutex);
 			kfree(buf_entry);
+			buf_entry = NULL;
 		} else if (buf_entry->buf_type == DCI_BUF_CMD) {
 			peripheral = buf_entry->data_source;
 			if (peripheral == APPS_DATA)
@@ -3045,6 +3054,7 @@ int diag_dci_deinit_client(struct diag_dci_client_tbl *entry)
 			mutex_unlock(&buf_entry->data_mutex);
 			mutex_destroy(&buf_entry->data_mutex);
 			kfree(buf_entry);
+			buf_entry = NULL;
 		}
 
 		mutex_lock(&proc_buf->buf_primary->data_mutex);
@@ -3062,13 +3072,17 @@ int diag_dci_deinit_client(struct diag_dci_client_tbl *entry)
 		mutex_destroy(&proc_buf->buf_cmd->data_mutex);
 
 		kfree(proc_buf->buf_primary);
+		proc_buf->buf_primary = NULL;
 		kfree(proc_buf->buf_cmd);
+		proc_buf->buf_cmd = NULL;
 		mutex_unlock(&proc_buf->buf_mutex);
 	}
 	mutex_destroy(&entry->write_buf_mutex);
 
 	kfree(entry->buffers);
+	entry->buffers = NULL;
 	kfree(entry);
+	entry = NULL;
 
 	if (driver->num_dci_client == 0) {
 		diag_update_proc_vote(DIAG_PROC_DCI, VOTE_DOWN, token);
