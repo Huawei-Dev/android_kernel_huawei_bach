@@ -94,6 +94,7 @@ struct msm_sensor_ctrl_t {
 	uint32_t set_mclk_23880000;
 	uint8_t is_csid_tg_mode;
 	uint32_t is_secure;
+	uint8_t bypass_video_node_creation;
 
 	struct msm_sensor_afc_otp_info afc_otp_info;
 	struct msm_sensor_mmi_otp_flag hw_otp_check_flag;

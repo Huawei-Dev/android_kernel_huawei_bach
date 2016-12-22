@@ -229,11 +229,14 @@ static int32_t msm_sensor_driver_create_i2c_v4l_subdev
 	struct i2c_client *client = s_ctrl->sensor_i2c_client->client;
 
 	CDBG("%s %s I2c probe succeeded\n", __func__, client->name);
-	rc = camera_init_v4l2(&client->dev, &session_id);
-	if (rc < 0) {
-		pr_err("failed: camera_init_i2c_v4l2 rc %d", rc);
-		return rc;
+	if (0 == s_ctrl->bypass_video_node_creation) {
+		rc = camera_init_v4l2(&client->dev, &session_id);
+		if (rc < 0) {
+			pr_err("failed: camera_init_i2c_v4l2 rc %d", rc);
+			return rc;
+		}
 	}
+
 	CDBG("%s rc %d session_id %d\n", __func__, rc, session_id);
 	snprintf(s_ctrl->msm_sd.sd.name,
 		sizeof(s_ctrl->msm_sd.sd.name), "%s",
@@ -266,11 +269,14 @@ static int32_t msm_sensor_driver_create_v4l_subdev
 	int32_t rc = 0;
 	uint32_t session_id = 0;
 
-	rc = camera_init_v4l2(&s_ctrl->pdev->dev, &session_id);
-	if (rc < 0) {
-		pr_err("failed: camera_init_v4l2 rc %d", rc);
-		return rc;
+	if (0 == s_ctrl->bypass_video_node_creation) {
+		rc = camera_init_v4l2(&s_ctrl->pdev->dev, &session_id);
+		if (rc < 0) {
+			pr_err("failed: camera_init_v4l2 rc %d", rc);
+			return rc;
+		}
 	}
+
 	CDBG("rc %d session_id %d", rc, session_id);
 	s_ctrl->sensordata->sensor_info->session_id = session_id;
 
@@ -857,6 +863,8 @@ int32_t msm_sensor_driver_probe(void *setting,
 			slave_info32->sensor_init_params;
 		slave_info->output_format =
 			slave_info32->output_format;
+		slave_info->bypass_video_node_creation =
+			!!slave_info32->bypass_video_node_creation;
 		slave_info->cam_id_info = compat_ptr(slave_info32->cam_id_info);
 		kfree(slave_info32);
 	} else
@@ -885,7 +893,8 @@ int32_t msm_sensor_driver_probe(void *setting,
 		slave_info->sensor_init_params.position);
 	CDBG("mount %d",
 		slave_info->sensor_init_params.sensor_mount_angle);
-
+	CDBG("bypass video node creation %d",
+		slave_info->bypass_video_node_creation);
 	/* Validate camera id */
 	if (slave_info->camera_id >= MAX_CAMERAS) {
 		pr_err("failed: invalid camera id %d max %d",
@@ -1112,6 +1121,9 @@ CSID_TG:
 	 * probed on this slot
 	 */
 	s_ctrl->is_probe_succeed = 1;
+
+	s_ctrl->bypass_video_node_creation =
+		slave_info->bypass_video_node_creation;
 
 	/*
 	 * Update the subdevice id of flash-src based on availability in kernel.
@@ -1662,15 +1674,15 @@ static int pt_test_set_camera_power(struct msm_camera_power_ctrl_t *power_info, 
 /*bit0: 1->power up, 0->power off*/
 /********for milan**************/
 /*main camera power*/
-/*bit1: DVDD£ºL2*/
-/*bit2: AF_AVDD£ºL17*/
-/*bit3: AVDD£ºL22*/
-/*bit4: VREG_DOVDD_1P8£ºGPIO134*/
+/*bit1: DVDD\A3\BAL2*/
+/*bit2: AF_AVDD\A3\BAL17*/
+/*bit3: AVDD\A3\BAL22*/
+/*bit4: VREG_DOVDD_1P8\A3\BAGPIO134*/
 
 /*slave camera power*/
-/*bit5: DVDD£ºL23*/
-/*bit6: AVDD£ºGPIO128*/
-/*bit7: VREG_DOVDD_1P8£ºGPIO134*/
+/*bit5: DVDD\A3\BAL23*/
+/*bit6: AVDD\A3\BAGPIO128*/
+/*bit7: VREG_DOVDD_1P8\A3\BAGPIO134*/
 int ctrl_camera_power_status(int pt_action_value)
 {
     struct msm_sensor_ctrl_t  *s_ctrl_all[2] = {0};
