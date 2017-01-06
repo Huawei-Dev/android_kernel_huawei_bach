@@ -1289,7 +1289,7 @@ void cnss_schedule_recovery_work(void)
 }
 EXPORT_SYMBOL(cnss_schedule_recovery_work);
 
-static int cnss_register_subsys(struct cnss_plat_data *plat_priv)
+int cnss_register_subsys(struct cnss_plat_data *plat_priv)
 {
 	int ret = 0;
 	struct cnss_subsys_info *subsys_info;
@@ -1328,7 +1328,7 @@ out:
 	return ret;
 }
 
-static void cnss_unregister_subsys(struct cnss_plat_data *plat_priv)
+void cnss_unregister_subsys(struct cnss_plat_data *plat_priv)
 {
 	struct cnss_subsys_info *subsys_info;
 
@@ -1354,7 +1354,7 @@ static int cnss_init_dump_entry(struct cnss_plat_data *plat_priv)
 	return msm_dump_data_register(MSM_DUMP_TABLE_APPS, &dump_entry);
 }
 
-static int cnss_register_ramdump(struct cnss_plat_data *plat_priv)
+static int cnss_qca6174_register_ramdump(struct cnss_plat_data *plat_priv)
 {
 	int ret = 0;
 	struct device *dev;
@@ -1405,7 +1405,7 @@ out:
 	return ret;
 }
 
-static void cnss_unregister_ramdump(struct cnss_plat_data *plat_priv)
+static void cnss_qca6174_unregister_ramdump(struct cnss_plat_data *plat_priv)
 {
 	struct device *dev;
 	struct cnss_ramdump_info *ramdump_info;
@@ -1420,6 +1420,38 @@ static void cnss_unregister_ramdump(struct cnss_plat_data *plat_priv)
 		dma_free_coherent(dev, ramdump_info->ramdump_size,
 				  ramdump_info->ramdump_va,
 				  ramdump_info->ramdump_pa);
+}
+
+int cnss_register_ramdump(struct cnss_plat_data *plat_priv)
+{
+	int ret = 0;
+
+	switch (plat_priv->device_id) {
+	case QCA6174_DEVICE_ID:
+		ret = cnss_qca6174_register_ramdump(plat_priv);
+		break;
+	case QCA6290_DEVICE_ID:
+		break;
+	default:
+		cnss_pr_err("Unknown device ID: 0x%lx\n", plat_priv->device_id);
+		ret = -ENODEV;
+		break;
+	}
+	return ret;
+}
+
+void cnss_unregister_ramdump(struct cnss_plat_data *plat_priv)
+{
+	switch (plat_priv->device_id) {
+	case QCA6174_DEVICE_ID:
+		cnss_qca6174_unregister_ramdump(plat_priv);
+		break;
+	case QCA6290_DEVICE_ID:
+		break;
+	default:
+		cnss_pr_err("Unknown device ID: 0x%lx\n", plat_priv->device_id);
+		break;
+	}
 }
 
 static int cnss_register_bus_scale(struct cnss_plat_data *plat_priv)
@@ -1607,17 +1639,9 @@ static int cnss_probe(struct platform_device *plat_dev)
 	if (ret)
 		goto deinit_pci;
 
-	ret = cnss_register_subsys(plat_priv);
-	if (ret)
-		goto unreg_esoc;
-
-	ret = cnss_register_ramdump(plat_priv);
-	if (ret)
-		goto unreg_subsys;
-
 	ret = cnss_register_bus_scale(plat_priv);
 	if (ret)
-		goto unreg_ramdump;
+		goto unreg_esoc;
 
 	ret = cnss_create_sysfs(plat_priv);
 	if (ret)
@@ -1643,10 +1667,6 @@ remove_sysfs:
 	cnss_remove_sysfs(plat_priv);
 unreg_bus_scale:
 	cnss_unregister_bus_scale(plat_priv);
-unreg_ramdump:
-	cnss_unregister_ramdump(plat_priv);
-unreg_subsys:
-	cnss_unregister_subsys(plat_priv);
 unreg_esoc:
 	cnss_unregister_esoc(plat_priv);
 deinit_pci:
@@ -1671,8 +1691,6 @@ static int cnss_remove(struct platform_device *plat_dev)
 	cnss_event_work_deinit(plat_priv);
 	cnss_remove_sysfs(plat_priv);
 	cnss_unregister_bus_scale(plat_priv);
-	cnss_unregister_ramdump(plat_priv);
-	cnss_unregister_subsys(plat_priv);
 	cnss_unregister_esoc(plat_priv);
 	cnss_pci_deinit(plat_priv);
 	cnss_put_resources(plat_priv);
