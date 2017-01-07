@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2016-2017 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -936,6 +936,338 @@ static int smb138x_init_batt_psy(struct smb138x *chip)
 	rc = power_supply_register(chg->dev, chg->batt_psy);
 	if (rc < 0)
 		pr_err("Couldn't register battery power supply\n");
+
+	return rc;
+}
+
+#define AICL_DONE_CHECK_INTERVAL_MS	500
+#define AICL_DONE_CHECK_COUNT		4
+static int smb138x_get_icl_status(struct smb_charger *chg)
+{
+	int rc = 0, icl_ua, tries = AICL_DONE_CHECK_COUNT;
+	u8 reg;
+
+	while (tries--) {
+		rc = smb138x_read(chg, AICL_STATUS_REG, &reg);
+		if (rc) {
+			pr_err("Read AICL_STATUS failed, rc=%d\n", rc);
+			goto out;
+		}
+
+		if ((reg & AICL_DONE_BIT) == 0)
+			smb_dbg(chg, PR_REGISTER, "AICL not done\n");
+		else
+			break;
+
+		msleep(AICL_DONE_CHECK_INTERVAL_MS);
+	}
+
+	rc = smb138x_get_charge_param(chg, &chg->param.icl_status, &icl_ua);
+	if (rc) {
+		pr_err("Get icl_status failed, rc=%d\n", rc);
+		goto out;
+	}
+
+	chg->aicl_ma = icl_ua / 1000;
+
+	smb_dbg(chg, PR_REGISTER, "AICL result: %d mA\n", chg->aicl_ma);
+	return rc;
+out:
+	chg->aicl_ma = 0;
+	return rc;
+}
+
+static bool smb138x_is_input_current_limited(struct smb_charger *chg)
+{
+	int rc;
+	u8 val;
+	bool icl;
+
+	rc = smb138x_read(chg, MISC_INT_RT_STS_REG, &val);
+	if (rc) {
+		pr_err("Read MIST_INT_RT_STS failed, rc=%d\n", rc);
+		return false;
+	}
+
+	icl = !!(val & INPUT_CURRENT_LIMITING_RT_STS_BIT);
+	smb_dbg(chg, PR_REGISTER, "Input is %slimited\n", icl ? "" : "not ");
+
+	return icl;
+}
+
+static int smb138x_enable_aicl(struct smb_charger *chg, bool enable)
+{
+	int rc = 0;
+
+	rc = smb138x_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
+			USBIN_AICL_EN_BIT, enable ? USBIN_AICL_EN_BIT : 0);
+	if (rc)
+		pr_err("%sable AICL failed, rc=%d\n", enable ? "En" : "Dis",
+							rc);
+
+	return rc;
+}
+
+/*****************************
+ * PARALLEL PSY REGISTRATION *
+ *****************************/
+
+static int smb138x_parallel_set_chg_present(struct smb_charger *chg,
+						int present)
+{
+	int rc;
+
+	if (present == chg->parallel_charger_present) {
+		smb_dbg(chg, PR_PARALLEL, "parallel-present already %d\n",
+								present);
+		return 0;
+	}
+	smb_dbg(chg, PR_REGISTER, "set present: %d\n", present);
+
+	smb138x_set_usb_suspend(chg, true);
+	smb138x_set_charge_param(chg, &chg->param.usb_icl, 0);
+	chg->usb_psy_ma = 0;
+
+	if (present) {
+		/* enable the charging path */
+		rc = smb138x_enable_charging(chg, true);
+		if (rc < 0) {
+			pr_err("Couldn't enable charging rc=%d\n", rc);
+			return rc;
+		}
+
+		/* configure charge enable for software control; active high */
+		rc = smb138x_masked_write(chg, CHGR_CFG2_REG,
+				 CHG_EN_POLARITY_BIT | CHG_EN_SRC_BIT, 0);
+		if (rc < 0) {
+			pr_err("Couldn't configure charge enable source rc=%d\n",
+				rc);
+			return rc;
+		}
+	}
+
+	chg->parallel_charger_present = present;
+
+	return 0;
+}
+
+static enum power_supply_property smb138x_parallel_props[] = {
+	POWER_SUPPLY_PROP_INPUT_SUSPEND,
+	POWER_SUPPLY_PROP_CHARGING_ENABLED,
+	POWER_SUPPLY_PROP_STATUS,
+	POWER_SUPPLY_PROP_VOLTAGE_MAX,
+	POWER_SUPPLY_PROP_CURRENT_MAX,
+	POWER_SUPPLY_PROP_PRESENT,
+	POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX,
+	POWER_SUPPLY_PROP_ENABLE_AICL,
+	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
+	POWER_SUPPLY_PROP_INPUT_CURRENT_LIMITED,
+	POWER_SUPPLY_PROP_MODEL_NAME,
+};
+
+static int smb138x_parallel_get_prop(struct power_supply *psy,
+				     enum power_supply_property prop,
+				     union power_supply_propval *val)
+{
+	struct smb138x *chip = dev_get_drvdata(psy->dev->parent);
+	struct smb_charger *chg = &chip->chg;
+	int rc = 0;
+
+	val->intval = 0;
+
+	switch (prop) {
+	case POWER_SUPPLY_PROP_INPUT_SUSPEND:
+		if (chg->parallel_charger_present)
+			val->intval = smb138x_get_usb_suspend(chg);
+		else
+			val->intval = 1;	/* suspended */
+		break;
+	case POWER_SUPPLY_PROP_CHARGING_ENABLED:
+		if (chg->parallel_charger_present)
+			val->intval = !smb138x_get_usb_suspend(chg);
+		else
+			val->intval = 0;	/* disabled */
+		break;
+	case POWER_SUPPLY_PROP_STATUS:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_get_prop_batt_status(chg, val);
+			if (rc)
+				pr_err("get batt_status failed, rc=%d\n", rc);
+		} else {
+			val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
+		}
+		break;
+	case POWER_SUPPLY_PROP_PRESENT:
+		val->intval = chg->parallel_charger_present;
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_MAX:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_get_charge_param(chg, &chg->param.fv,
+							&val->intval);
+			if (rc)
+				pr_err("Get vfloat failed, rc=%d\n", rc);
+		}
+		break;
+	case POWER_SUPPLY_PROP_CURRENT_MAX:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_get_charge_param(chg, &chg->param.usb_icl,
+							&val->intval);
+			if (rc)
+				pr_err("Get usb_icl failed, rc=%d\n", rc);
+		}
+		break;
+	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_get_charge_param(chg, &chg->param.fcc,
+							&val->intval);
+			if (rc)
+				pr_err("Get fcc failed, rc=%d\n", rc);
+		}
+		break;
+	case POWER_SUPPLY_PROP_ENABLE_AICL:
+		break;
+	case POWER_SUPPLY_PROP_INPUT_CURRENT_MAX:
+		if (chg->parallel_charger_present)
+			val->intval = chg->aicl_ma * 1000;
+		break;
+	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMITED:
+		if (chg->parallel_charger_present)
+			val->intval = smb138x_is_input_current_limited(chg);
+		break;
+	case POWER_SUPPLY_PROP_MODEL_NAME:
+		val->strval = "smb138x";
+		break;
+	default:
+		pr_err("parallel power supply get prop %d not supported\n",
+			prop);
+		return -EINVAL;
+	}
+
+	return rc;
+}
+
+static int smb138x_parallel_set_prop(struct power_supply *psy,
+				     enum power_supply_property prop,
+				     const union power_supply_propval *val)
+{
+	struct smb138x *chip = dev_get_drvdata(psy->dev->parent);
+	struct smb_charger *chg = &chip->chg;
+	int rc = 0;
+
+	switch (prop) {
+	case POWER_SUPPLY_PROP_INPUT_SUSPEND:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_set_usb_suspend(chg, val->intval);
+			if (rc < 0)
+				pr_err("Couldn't suspend input, rc=%d\n", rc);
+			else
+				smb_dbg(chg, PR_PARALLEL, "USB_SUSPEND=%d\n",
+								val->intval);
+		}
+		break;
+	case POWER_SUPPLY_PROP_PRESENT:
+		rc = smb138x_parallel_set_chg_present(chg, val->intval);
+		if (rc)
+			pr_err("Couldn't %s parallel-charger rc=%d\n",
+				val->intval ? "enable" : "disable", rc);
+		break;
+	case POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_set_charge_param(chg, &chg->param.fcc,
+							val->intval);
+			if (rc < 0)
+				pr_err("Couldn't set FCC rc=%d\n", rc);
+			else
+				smb_dbg(chg, PR_PARALLEL, "parallel FCC=%d uA\n",
+								val->intval);
+		}
+		break;
+	case POWER_SUPPLY_PROP_VOLTAGE_MAX:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_set_charge_param(chg, &chg->param.fv,
+							val->intval * 1000);
+			if (rc < 0)
+				pr_err("Couldn't voltage max, rc=%d\n", rc);
+			else
+				smb_dbg(chg, PR_PARALLEL, "parallel FV=%d uV\n",
+								val->intval);
+		}
+		break;
+	case POWER_SUPPLY_PROP_CURRENT_MAX:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_set_charge_param(chg, &chg->param.usb_icl,
+							val->intval);
+			if (!rc) {
+				smb138x_get_charge_param(chg,
+					&chg->param.usb_icl, &chg->usb_psy_ma);
+				chg->usb_psy_ma /= 1000;
+				smb_dbg(chg, PR_PARALLEL, "parallel ICL=%d mA\n",
+							chg->usb_psy_ma);
+				/* enable charging */
+				rc = smb138x_set_usb_suspend(chg, false);
+				if (rc < 0)
+					pr_err("Couldn't clear USB suspend, rc=%d\n",
+									rc);
+				if (chg->aicl_enabled_in_parallel) {
+					rc = smb138x_get_icl_status(chg);
+					if (rc < 0)
+						pr_err("Get icl status failed, rc=%d\n",
+									rc);
+				}
+			}
+		}
+		break;
+	case POWER_SUPPLY_PROP_ENABLE_AICL:
+		if (chg->parallel_charger_present) {
+			rc = smb138x_enable_aicl(chg, !!val->intval);
+			if (rc)
+				pr_err("Unable to %sable AICL, rc=%d\n",
+					!!val->intval ? "en" : "dis", rc);
+			else
+				chg->aicl_enabled_in_parallel = !!val->intval;
+		}
+		break;
+	default:
+		pr_err("parallel power supply set prop %d not supported\n",
+			prop);
+		return -EINVAL;
+	}
+
+	return rc;
+}
+
+static int smb138x_parallel_prop_is_writeable(struct power_supply *psy,
+				      enum power_supply_property psp)
+{
+	switch (psp) {
+	case POWER_SUPPLY_PROP_PRESENT:
+	case POWER_SUPPLY_PROP_ENABLE_AICL:
+		return 1;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+static int smb138x_init_parallel_psy(struct smb138x *chip)
+{
+	int rc = 0;
+	struct smb_charger *chg = &chip->chg;
+
+	chg->parallel_psy.name		= "parallel";
+	chg->parallel_psy.type		= POWER_SUPPLY_TYPE_PARALLEL;
+	chg->parallel_psy.properties	= smb138x_parallel_props;
+	chg->parallel_psy.num_properties	=
+					ARRAY_SIZE(smb138x_parallel_props);
+	chg->parallel_psy.get_property	= smb138x_parallel_get_prop;
+	chg->parallel_psy.set_property	= smb138x_parallel_set_prop;
+	chg->parallel_psy.property_is_writeable =
+		smb138x_parallel_prop_is_writeable;
+
+	rc = power_supply_register(chg->dev, &chg->parallel_psy);
+	if (rc < 0)
+		pr_err("Couldn't register parallel power supply rc=%d\n", rc);
 
 	return rc;
 }
