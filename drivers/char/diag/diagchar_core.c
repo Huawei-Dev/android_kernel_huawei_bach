@@ -3686,9 +3686,6 @@ static int __init diagchar_init(void)
 	ret = diag_masks_init();
 	if (ret)
 		goto fail;
-	ret = diag_remote_init();
-	if (ret)
-		goto fail;
 	ret = diag_mux_init();
 	if (ret)
 		goto fail;
@@ -3740,7 +3737,6 @@ fail:
 	diag_dci_exit();
 	diag_masks_exit();
 	return -1;
-
 }
 
 static void diagchar_exit(void)
