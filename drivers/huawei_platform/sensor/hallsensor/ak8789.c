@@ -516,7 +516,7 @@ void hall_work_func(struct work_struct *work)
 		LOG_JANK_D(JLID_COVER_SENSOR_OPEN, "%s", "JL_COVER_SENSOR_OPEN");
 	}
 #endif
-	input_event(hw_hall_dev.hw_input_hall, EV_MSC, MSC_SCAN, value);
+	input_report_switch(hw_hall_dev.hw_input_hall, SW_LID, value & 0x1);
 	input_sync(hw_hall_dev.hw_input_hall);
 	atomic_dec(&irq_no_at);
 	AK8789_WARNMSG("input hall event:0x%x",value);
@@ -928,8 +928,11 @@ int hall_pf_probe(struct platform_device *pdev)
 	}
 	hw_hall_dev.hw_input_hall->name = "hall";
 	set_bit(EV_MSC, hw_hall_dev.hw_input_hall->evbit);
+	set_bit(EV_SW, hw_hall_dev.hw_input_hall->evbit);
 	set_bit(MSC_SCAN, hw_hall_dev.hw_input_hall->mscbit);
-	
+
+	input_set_capability(hw_hall_dev.hw_input_hall, EV_SW, SW_LID);
+
 	err = input_register_device(hw_hall_dev.hw_input_hall);
 	if (err){
 		AK8789_ERRMSG("hw_input_hall regiset error %d", err);
@@ -941,6 +944,7 @@ int hall_pf_probe(struct platform_device *pdev)
 		AK8789_ERRMSG("hw_input_camera_hall alloc error %ld", PTR_ERR(hw_hall_dev.hw_input_camera_hall));
 		goto input_err;
 	}
+
 	hw_hall_dev.hw_input_camera_hall->name = "camera_hall";
 	set_bit(EV_KEY, hw_hall_dev.hw_input_camera_hall->evbit);
 	set_bit(BTN_TRIGGER_HAPPY, hw_hall_dev.hw_input_camera_hall->keybit);
