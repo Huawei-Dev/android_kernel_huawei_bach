@@ -998,7 +998,11 @@ int hall_pf_probe(struct platform_device *pdev)
 	{
 		AK8789_ERRMSG("%s, line %d:set AK8789 app_info error", __func__, __LINE__);
 	}
+
+	queue_work(hw_hall_dev.hall_wq, &hw_hall_dev.hall_work);
+
 	AK8789_WARNMSG("probe successfully!");
+
 	return err;
 
 /*del Invalid global branch*/
