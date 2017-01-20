@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -311,9 +311,9 @@ static int modem_notifier_cb(struct notifier_block *this, unsigned long code,
 		break;
 
 	case SUBSYS_BEFORE_POWERUP:
-		if (_cmd)
+		if (_cmd) {
 			notifdata = (struct notif_data *) _cmd;
-		else {
+		} else {
 			ramdump_event = 0;
 			break;
 		}
