@@ -841,7 +841,8 @@ static int mdss_dsi_cmd_flush(struct file *file, fl_owner_t id)
 	struct dsi_ctrl_hdr *dchdr;
 
 	mutex_lock(&pcmds->dbg_mutex);
-	if (!pcmds->string_buf){
+
+	if (!pcmds->string_buf) {
 		mutex_unlock(&pcmds->dbg_mutex);
 		return 0;
 	}
