@@ -1871,7 +1871,7 @@ static int fastrpc_session_alloc(struct fastrpc_channel_ctx *chan, int *session)
 		chan->session[0].dev = me->dev;
 		break;
 	case SMD_APPS_MODEM:
-		VERIFY(err, me->dev != NULL);
+		VERIFY(err, me->modem_cma_dev != NULL);
 		if (err)
 			goto bail;
 		chan->session[0].dev = me->modem_cma_dev;
