@@ -3588,9 +3588,9 @@ void dentry_unhash(struct dentry *dentry)
 }
 EXPORT_SYMBOL(dentry_unhash);
 
-int vfs_rmdir(struct inode *dir, struct dentry *dentry)
+int vfs_rmdir2(struct vfsmount *mnt, struct inode *dir, struct dentry *dentry)
 {
-	int error = may_delete(dir, dentry, 1);
+	int error = may_delete(mnt, dir, dentry, 1);
 
 	if (error)
 		return error;
@@ -3624,6 +3624,12 @@ out:
 	if (!error)
 		d_delete(dentry);
 	return error;
+}
+EXPORT_SYMBOL(vfs_rmdir2);
+
+int vfs_rmdir(struct inode *dir, struct dentry *dentry)
+{
+	return vfs_rmdir2(NULL, dir, dentry);
 }
 EXPORT_SYMBOL(vfs_rmdir);
 
