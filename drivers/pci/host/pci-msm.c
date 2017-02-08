@@ -46,7 +46,7 @@
 #include <linux/ipc_logging.h>
 #include <linux/msm_pcie.h>
 
-#ifdef CONFIG_ARCH_MDMCALIFORNIUM
+#ifdef CONFIG_ARCH_MDM9650
 #define PCIE_VENDOR_ID_RCP		0x17cb
 #define PCIE_DEVICE_ID_RCP		0x0302
 
@@ -1261,7 +1261,7 @@ static void pcie_phy_dump(struct msm_pcie_dev_t *dev)
 	}
 }
 
-#ifdef CONFIG_ARCH_MDMCALIFORNIUM
+#ifdef CONFIG_ARCH_MDM9650
 static void pcie_phy_init(struct msm_pcie_dev_t *dev)
 {
 	u8 common_phy;

@@ -142,19 +142,19 @@ dtb-$(CONFIG_ARCH_MDM9640) += mdm9640-sim.dtb \
 	mdm9640-v2-mtp.dtb \
 	mdm9640-v2-pmk8001-mtp.dtb \
 
-
-dtb-$(CONFIG_ARCH_MDMCALIFORNIUM) += mdmcalifornium-sim.dtb \
-	mdmcalifornium-rumi.dtb \
-	mdmcalifornium-emmc-cdp.dtb \
-	mdmcalifornium-nand-cdp.dtb \
-	mdmcalifornium-emmc-mtp.dtb \
-	mdmcalifornium-nand-mtp.dtb \
-	mdmcalifornium-nand-dualwifi-mtp.dtb \
-	mdmcalifornium-v1.1-emmc-cdp.dtb \
-	mdmcalifornium-v1.1-nand-cdp.dtb \
-	mdmcalifornium-v1.1-emmc-mtp.dtb \
-	mdmcalifornium-v1.1-nand-mtp.dtb \
-	mdmcalifornium-v1.1-nand-dualwifi-mtp.dtb
+dtb-$(CONFIG_ARCH_MDM9650) += mdm9650-sim.dtb \
+	mdm9650-rumi.dtb \
+	mdm9650-emmc-cdp.dtb \
+	mdm9650-nand-cdp.dtb \
+	mdm9650-emmc-mtp.dtb \
+	mdm9650-nand-mtp.dtb \
+	mdm9650-nand-dualwifi-mtp.dtb \
+	mdm9650-v1.1-emmc-cdp.dtb \
+	mdm9650-v1.1-nand-cdp.dtb \
+	mdm9650-v1.1-emmc-mtp.dtb \
+	mdm9650-v1.1-nand-mtp.dtb \
+	mdm9650-v1.1-nand-dualwifi-mtp.dtb \
+	mdm9650-v1.1-nand-ccard.dtb
 
 dtb-$(CONFIG_ARCH_MSM8937) += msm8937-rumi.dtb \
 	msm8937-pmi8950-cdp.dtb \
@@ -215,9 +215,9 @@ dtb-$(CONFIG_ARCH_MSM8940) += msm8940-pmi8937-cdp.dtb \
 	msm8940-pmi8940-qrd-sku7.dtb
 
 dtb-$(CONFIG_MSM8940_SUPPORTED_PRODUCT) += huawei_msm8940_bah_al00_va.dtb \
-    huawei_msm8940_bah_l09_va.dtb \
-    huawei_msm8940_bah_l01_va.dtb \
-    huawei_msm8940_bah_w09_va.dtb
+	huawei_msm8940_bah_l09_va.dtb \
+	huawei_msm8940_bah_l01_va.dtb \
+	huawei_msm8940_bah_w09_va.dtb
 
 dtb-$(CONFIG_ARCH_MSM8953) += msm8953-sim.dtb \
 	msm8953-rumi.dtb \
