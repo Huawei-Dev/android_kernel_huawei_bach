@@ -2026,10 +2026,6 @@ static int adreno_dispatch_process_cmdqueue(struct adreno_device *adreno_dev,
 	if (adreno_cmdqueue_is_empty(cmdqueue))
 		return count;
 
-	/* Don't update the cmdqueue timeout if we are about to preempt out */
-	if (!adreno_in_preempt_state(adreno_dev, ADRENO_PREEMPT_NONE))
-		return count;
-
 	/* Don't update the cmdqueue timeout if it isn't active */
 	if (!cmdqueue_is_current(cmdqueue))
 		return count;
