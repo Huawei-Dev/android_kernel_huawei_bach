@@ -562,6 +562,7 @@ void activate_page(struct page *page)
 
 		page_cache_get(page);
 		if (!pagevec_add(pvec, page) || PageCompound(page))
+
 #ifdef CONFIG_TASK_PROTECT_LRU
 			/*lint -save -e747*/
 			pagevec_lru_move_fn(pvec, __activate_page, NULL, true);
@@ -891,6 +892,7 @@ void deactivate_file_page(struct page *page)
 		struct pagevec *pvec = &get_cpu_var(lru_deactivate_file_pvecs);
 
 		if (!pagevec_add(pvec, page) || PageCompound(page))
+
 #ifdef CONFIG_TASK_PROTECT_LRU
 			/*lint -save -e747*/
 			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, NULL, true);

@@ -3451,6 +3451,7 @@ blk_zero_latency_hist(struct io_latency_state *s)
 	s->latency_reads_elems = 0;
 	s->latency_writes_elems = 0;
 }
+EXPORT_SYMBOL(blk_zero_latency_hist);
 
 ssize_t
 blk_latency_hist_show(struct io_latency_state *s, char *buf)
@@ -3512,3 +3513,4 @@ blk_latency_hist_show(struct io_latency_state *s, char *buf)
 	}
 	return bytes_written;
 }
+EXPORT_SYMBOL(blk_latency_hist_show);

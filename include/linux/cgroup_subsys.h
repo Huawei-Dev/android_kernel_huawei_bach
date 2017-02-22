@@ -19,6 +19,14 @@ SUBSYS(pids)
 SUBSYS(cpuacct)
 #endif
 
+#if IS_ENABLED(CONFIG_CGROUP_SCHEDTUNE)
+SUBSYS(schedtune)
+#endif
+
+#if IS_ENABLED(CONFIG_BLK_CGROUP)
+SUBSYS(blkio)
+#endif
+
 #if IS_ENABLED(CONFIG_MEMCG)
 SUBSYS(memory)
 #endif
@@ -33,10 +41,6 @@ SUBSYS(freezer)
 
 #if IS_ENABLED(CONFIG_CGROUP_NET_CLASSID)
 SUBSYS(net_cls)
-#endif
-
-#if IS_ENABLED(CONFIG_BLK_CGROUP)
-SUBSYS(blkio)
 #endif
 
 #if IS_ENABLED(CONFIG_CGROUP_PERF)
