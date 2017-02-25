@@ -113,6 +113,9 @@ SoCs:
 - MDM9650
   compatible = "qcom,mdm9650"
 
+- SDX20
+  compatible = "qcom,sdx20"
+
 - VPIPA
   compatible = "qcom,msmvpipa"
 

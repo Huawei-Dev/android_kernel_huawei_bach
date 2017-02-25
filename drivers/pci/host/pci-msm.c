@@ -46,7 +46,20 @@
 #include <linux/ipc_logging.h>
 #include <linux/msm_pcie.h>
 
-#ifdef CONFIG_ARCH_MDM9650
+#ifdef CONFIG_ARCH_SDX20
+#define PCIE_VENDOR_ID_RCP		0x17cb
+#define PCIE_DEVICE_ID_RCP		0x0303
+
+#define PCIE20_PARF_DBI_BASE_ADDR	0x350
+#define PCIE20_PARF_SLV_ADDR_SPACE_SIZE	0x358
+
+#define PCIE_N_PCS_STATUS(n, m)			(PCS_PORT(n, m) + 0x174)
+
+#define TX_BASE 0x200
+#define RX_BASE 0x400
+#define PCS_BASE 0x800
+#define PCS_MISC_BASE 0x600
+#elif defined(CONFIG_ARCH_MDM9650)
 #define PCIE_VENDOR_ID_RCP		0x17cb
 #define PCIE_DEVICE_ID_RCP		0x0302
 
