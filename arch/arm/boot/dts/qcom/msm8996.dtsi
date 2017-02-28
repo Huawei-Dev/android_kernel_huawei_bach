@@ -1343,7 +1343,7 @@
 
 		iommus = <&anoc0_smmu>;
 
-		qcom,ep-wakeirq;
+		qcom,boot-option = <0x1>;
 
 		linux,pci-domain = <0>;
 
@@ -1494,7 +1494,7 @@
 
 		iommus = <&anoc0_smmu>;
 
-		qcom,ep-wakeirq;
+		qcom,boot-option = <0x1>;
 
 		qcom,ep-latency = <10>;
 
@@ -1645,7 +1645,7 @@
 
 		iommus = <&anoc0_smmu>;
 
-		qcom,ep-wakeirq;
+		qcom,boot-option = <0x1>;
 
 		qcom,ep-latency = <10>;
 
