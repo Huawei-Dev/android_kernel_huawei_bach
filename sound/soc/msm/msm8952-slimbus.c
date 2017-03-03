@@ -3130,7 +3130,7 @@ int msm_tdm_startup(struct snd_pcm_substream *substream)
 			return -EINVAL;
 		}
 
-		ret = msm_gpioset_activate(CLIENT_WCD_EXT, "pri_tdm");
+		ret = msm_gpioset_activate(CLIENT_WCD_EXT, "quat_i2s");
 		if (ret < 0)
 			pr_err("%s: failed to activate primary TDM gpio set\n",
 				   __func__);
@@ -3193,7 +3193,7 @@ int msm_tdm_startup(struct snd_pcm_substream *substream)
 		} else {
 			return -EINVAL;
 		}
-		ret = msm_gpioset_activate(CLIENT_WCD_EXT, "sec_tdm");
+		ret = msm_gpioset_activate(CLIENT_WCD_EXT, "quin_i2s");
 		if (ret < 0)
 			pr_err("%s: failed to activate secondary TDM gpio set\n",
 				   __func__);
@@ -3230,7 +3230,7 @@ void msm_tdm_shutdown(struct snd_pcm_substream *substream)
 	case AFE_PORT_ID_PRIMARY_TDM_TX_5:
 	case AFE_PORT_ID_PRIMARY_TDM_TX_6:
 	case AFE_PORT_ID_PRIMARY_TDM_TX_7:
-		ret = msm_gpioset_suspend(CLIENT_WCD_EXT, "pri_tdm");
+		ret = msm_gpioset_suspend(CLIENT_WCD_EXT, "quat_i2s");
 		if (ret < 0) {
 			pr_err("%s: gpio set cannot be de-activated %s\n",
 					__func__, "pri_tdm");
@@ -3253,7 +3253,7 @@ void msm_tdm_shutdown(struct snd_pcm_substream *substream)
 	case AFE_PORT_ID_SECONDARY_TDM_TX_5:
 	case AFE_PORT_ID_SECONDARY_TDM_TX_6:
 	case AFE_PORT_ID_SECONDARY_TDM_TX_7:
-		ret = msm_gpioset_suspend(CLIENT_WCD_EXT, "sec_tdm");
+		ret = msm_gpioset_suspend(CLIENT_WCD_EXT, "quin_i2s");
 		if (ret < 0) {
 			pr_err("%s: gpio set cannot be de-activated %s\n",
 				   __func__, "sec_tdm");
