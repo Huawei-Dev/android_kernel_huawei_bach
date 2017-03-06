@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -277,6 +277,10 @@ static int service_locator_send_msg(struct pd_qmi_client_data *pd)
 			kfree(pd->domain_list);
 			rc = -EAGAIN;
 			goto out;
+		}
+		if (resp->domain_list_len >  resp->total_domains) {
+			/* Always read total_domains from the response msg */
+			resp->domain_list_len = resp->total_domains;
 		}
 		/* Copy the response*/
 		store_get_domain_list_response(pd, resp, domains_read);
