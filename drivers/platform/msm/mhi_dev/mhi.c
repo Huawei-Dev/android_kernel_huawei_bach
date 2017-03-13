@@ -1620,6 +1620,10 @@ static void mhi_dev_enable(struct work_struct *work)
 		return;
 	}
 	mhi_uci_init();
+	/*Enable MHI dev network stack Interface*/
+	rc = mhi_dev_net_interface_init();
+	if (rc)
+		pr_err("%s Failed to initialize mhi_dev_net iface\n", __func__);
 
 	/* All set...let's notify the host */
 	mhi_dev_sm_set_ready();
