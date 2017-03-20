@@ -38,13 +38,12 @@
 #include <linux/of_batterydata.h>
 #include <linux/msm_bcl.h>
 #include <linux/ktime.h>
-#include "pmic-voter.h"
+#include <linux/pmic-voter.h>
 #include <linux/power/huawei_charger.h>
 #ifdef CONFIG_LOG_JANK
 #include <huawei_platform/log/log_jank.h>
 #endif
 #include <linux/power/huawei_dsm_charger.h>
-
 
 /* Mask/Bit helpers */
 #define _SMB_MASK(BITS, POS) \
