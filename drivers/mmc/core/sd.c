@@ -1672,6 +1672,11 @@ static int _mmc_sd_resume(struct mmc_host *host)
 #else
 	err = mmc_sd_init_card(host, host->card->ocr, host->card);
 #endif
+	if (err) {
+		pr_err("%s: %s: mmc_sd_init_card_failed (%d)\n",
+				mmc_hostname(host), __func__, err);
+		goto out;
+	}
 	mmc_card_clr_suspended(host->card);
        mmc_release_host(host);
 	err = mmc_resume_clk_scaling(host);
