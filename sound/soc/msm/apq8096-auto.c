@@ -313,9 +313,9 @@ static unsigned int tdm_slot_offset_custom[TDM_MAX][TDM_SLOT_OFFSET_MAX] = {
 	{0xFFFF}, /* not used */
 	{0xFFFF}, /* not used */
 	/* QUAT_TDM_TX */
-	{0, 2, 0xFFFF},
-	{4, 6, 8, 10, 12, 14, 16, 18},
-	{20, 22, 24, 26, 28, 30, 0xFFFF},
+	{0, 2, 4, 6, 8, 10, 12, 0xFFFF},
+	{14, 16, 0xFFFF},
+	{18, 20, 22, 24, 26, 28, 30, 0xFFFF},
 	{0xFFFF}, /* not used */
 	{0xFFFF}, /* not used */
 	{0xFFFF}, /* not used */
@@ -331,9 +331,9 @@ static unsigned int tdm_slot_offset_custom[TDM_MAX][TDM_SLOT_OFFSET_MAX] = {
 	{28, 30, 0xFFFF},
 	{0xFFFF}, /* not used */
 	/* TERT_TDM_TX */
-	{0, 2, 4, 6, 8, 10, 12, 0xFFFF},
-	{14, 16, 0xFFFF},
-	{18, 20, 22, 24, 26, 28, 30, 0xFFFF},
+	{0, 2, 0xFFFF},
+	{4, 6, 8, 10, 12, 14, 16, 18},
+	{20, 22, 24, 26, 28, 30, 0xFFFF},
 	{0xFFFF}, /* not used */
 	{0xFFFF}, /* not used */
 	{0xFFFF}, /* not used */
