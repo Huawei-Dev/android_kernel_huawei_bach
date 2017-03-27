@@ -300,10 +300,11 @@ static int service_locator_send_msg(struct pd_qmi_client_data *pd)
 		if (!domains_read) {
 			db_rev_count = pd->db_rev_count = resp->db_rev_count;
 			pd->total_domains = resp->total_domains;
-			if (!pd->total_domains && resp->domain_list_len) {
-				pr_err("total domains not set\n");
-				pd->total_domains = resp->domain_list_len;
+			if (!resp->total_domains) {
+				pr_err("No matching domains found\n");
+				goto out;
 			}
+
 			pd->domain_list = kmalloc(
 					sizeof(struct servreg_loc_entry_v01) *
 					resp->total_domains, GFP_KERNEL);
