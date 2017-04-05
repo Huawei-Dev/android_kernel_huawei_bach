@@ -526,3 +526,11 @@
 &dsi_adv7533_1080p {
 	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
 };
+
+&secure_mem {
+	status = "disabled";
+};
+
+&venus_mem {
+	status = "disabled";
+};

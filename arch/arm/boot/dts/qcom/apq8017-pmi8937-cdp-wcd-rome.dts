@@ -475,3 +475,11 @@
 };
 
 /delete-node/ &cont_splash_mem;
+
+&secure_mem {
+	status = "disabled";
+};
+
+&venus_mem {
+	status = "disabled";
+};
