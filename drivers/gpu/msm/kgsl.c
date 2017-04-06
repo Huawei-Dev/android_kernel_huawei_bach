@@ -1662,14 +1662,12 @@ long kgsl_ioctl_drawctxt_create(struct kgsl_device_private *dev_priv,
 	}
 	trace_kgsl_context_create(dev_priv->device, context, param->flags);
 
-    /* Commit the pointer to the context in context_idr */
-    write_lock(&device->context_lock);
-    /*lint -e516*/
-    idr_replace(&device->context_idr, context, context->id);
-    /*lint +e516*/
-    write_unlock(&device->context_lock);
-
+	/* Commit the pointer to the context in context_idr */
+	write_lock(&device->context_lock);
+	idr_replace(&device->context_idr, context, context->id);
 	param->drawctxt_id = context->id;
+	write_unlock(&device->context_lock);
+
 done:
 	return result;
 }
