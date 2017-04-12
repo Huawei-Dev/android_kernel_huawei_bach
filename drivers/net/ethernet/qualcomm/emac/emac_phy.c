@@ -66,6 +66,12 @@ int emac_hw_read_phy_reg(struct emac_adapter *adpt, bool ext, u8 dev, bool fast,
 	*phy_data = 0;
 	clk_sel = fast ? MDIO_CLK_25_4 : MDIO_CLK_25_28;
 
+	if (pm_runtime_enabled(adpt->netdev->dev.parent) &&
+	    pm_runtime_status_suspended(adpt->netdev->dev.parent)) {
+		emac_dbg(adpt, hw, "EMAC in suspended state\n");
+		return ret;
+	}
+
 	if (phy->external) {
 		retval = emac_disable_mdio_autopoll(hw);
 		if (retval)
@@ -125,6 +131,12 @@ int emac_hw_write_phy_reg(struct emac_adapter *adpt, bool ext, u8 dev,
 	int retval = 0;
 
 	clk_sel = fast ? MDIO_CLK_25_4 : MDIO_CLK_25_28;
+
+	if (pm_runtime_enabled(adpt->netdev->dev.parent) &&
+	    pm_runtime_status_suspended(adpt->netdev->dev.parent)) {
+		emac_dbg(adpt, hw, "EMAC in suspended state\n");
+		return ret;
+	}
 
 	if (phy->external) {
 		retval = emac_disable_mdio_autopoll(hw);
