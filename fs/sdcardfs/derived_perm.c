@@ -221,7 +221,7 @@ void fixup_lower_ownership(struct dentry *dentry, const char *name)
 			gid = multiuser_get_uid(info->userid, AID_MEDIA_RW);
 		break;
 	case PERM_ANDROID_PACKAGE_CACHE:
-		if (uid_is_app(info->d_uid))
+		if (info->d_uid != 0)
 			gid = multiuser_get_ext_cache_gid(info->d_uid);
 		else
 			gid = multiuser_get_uid(info->userid, AID_MEDIA_RW);
