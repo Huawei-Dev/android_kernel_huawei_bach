@@ -474,6 +474,18 @@
 	};
 };
 
+&modem_mem {
+	reg = <0x0 0x86800000 0x0 0x1500000>;
+};
+
+&adsp_fw_mem {
+	reg = <0x0 0x87d00000 0x0 0x1100000>;
+};
+
+&wcnss_fw_mem {
+	reg = <0x0 0x88e00000 0x0 0x700000>;
+};
+
 &tlmm {
 	tlmm_gpio_key {
 		gpio_key_active: gpio_key_active {
