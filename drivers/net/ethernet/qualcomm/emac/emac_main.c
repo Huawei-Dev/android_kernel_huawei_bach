@@ -1333,7 +1333,7 @@ static int emac_start_xmit(struct sk_buff *skb,
 }
 
 /* This funciton aquire spin-lock so should not call from sleeping context */
-static void emac_wol_gpio_irq(struct emac_adapter *adpt, bool enable)
+void emac_wol_gpio_irq(struct emac_adapter *adpt, bool enable)
 {
 	struct emac_irq_per_dev *wol_irq = &adpt->irq[EMAC_WOL_IRQ];
 	unsigned long flags;
@@ -1365,6 +1365,8 @@ static irqreturn_t emac_wol_isr(int irq, void *data)
 		if (!ret &&
 		    ((val & LINK_SUCCESS_INTERRUPT) || (val & LINK_SUCCESS_BX)))
 			emac_wol_gpio_irq(adpt, false);
+		if (val & WOL_INT)
+			__pm_stay_awake(&adpt->link_wlock);
 	}
 	return IRQ_HANDLED;
 }
@@ -2173,17 +2175,24 @@ static int emac_open(struct net_device *netdev)
 	if (retval)
 		goto err_up;
 
-	/* Register for EMAC WOL ISR */
-	retval = request_threaded_irq(irq->irq, NULL, irq_cmn->handler,
-				      IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-				      irq_cmn->name, irq);
-	if (retval) {
-		emac_err(adpt,
-			 "error:%d on request_irq(%d:%s flags:0x%lx)\n",
-			 retval, irq->irq, irq_cmn->name, irq_cmn->irqflags);
-		goto err_up;
-	} else {
-		emac_wol_gpio_irq(adpt, false);
+	if (irq->irq) {
+		/* Register for EMAC WOL ISR */
+		retval = request_threaded_irq(irq->irq, NULL, irq_cmn->handler,
+					      IRQF_TRIGGER_LOW
+					      | IRQF_ONESHOT,
+					      irq_cmn->name, irq);
+		enable_irq_wake(irq->irq);
+		if (retval) {
+			emac_err(adpt,
+				 "error:%d on request_irq(%d:%s flags:0x%lx)\n",
+				 retval, irq->irq, irq_cmn->name,
+				 irq_cmn->irqflags);
+			goto err_up;
+		} else {
+			phy->is_wol_irq_reg = 1;
+			phy->is_wol_enabled = true;
+			emac_wol_gpio_irq(adpt, false);
+		}
 	}
 	return retval;
 
@@ -2204,8 +2213,11 @@ static int emac_close(struct net_device *netdev)
 		msleep(20); /* Reset might take few 10s of ms */
 
 	pm_runtime_get_sync(netdev->dev.parent);
-	if (adpt->irq[EMAC_WOL_IRQ].irq)
+	if (adpt->irq[EMAC_WOL_IRQ].irq) {
 		free_irq(adpt->irq[EMAC_WOL_IRQ].irq, &adpt->irq[EMAC_WOL_IRQ]);
+		phy->is_wol_irq_reg = 0;
+		disable_irq_wake(adpt->irq[EMAC_WOL_IRQ].irq);
+	}
 
 	if (!TEST_FLAG(adpt, ADPT_STATE_DOWN))
 		emac_down(adpt, EMAC_HW_CTRL_RESET_MAC);
@@ -2757,7 +2769,7 @@ static void emac_init_adapter(struct emac_adapter *adpt)
 
 	/* others */
 	hw->preamble = EMAC_PREAMBLE_DEF;
-	adpt->wol = EMAC_WOL_MAGIC | EMAC_WOL_PHY;
+	adpt->wol = EMAC_WOL_PHY;
 
 	adpt->phy.is_ext_phy_connect = 0;
 }
@@ -3159,7 +3171,7 @@ static int emac_pm_suspend(struct device *device, bool wol_enable)
 	int retval = 0;
 
 	/* Check link state. Don't suspend if link is up */
-	if (netif_carrier_ok(adpt->netdev))
+	if (netif_carrier_ok(adpt->netdev) && !(adpt->wol & EMAC_WOL_MAGIC))
 		return -EPERM;
 
 	/* cannot suspend if WOL interrupt is not enabled */
@@ -3180,7 +3192,7 @@ static int emac_pm_suspend(struct device *device, bool wol_enable)
 	flush_delayed_work(&adpt->phydev->state_queue);
 	if (QCA8337_PHY_ID != adpt->phydev->phy_id)
 		emac_hw_config_pow_save(hw, adpt->phydev->speed, !!wufc,
-					!!(wufc & EMAC_WOL_MAGIC));
+					!!(wufc & EMAC_WOL_PHY));
 
 	if (!adpt->phydev->link && phy->is_wol_irq_reg) {
 		int value, i;
@@ -3341,17 +3353,24 @@ static int emac_pm_sys_suspend(struct device *device)
 
 	if (!pm_runtime_enabled(device) || !pm_runtime_suspended(device)) {
 		emac_pm_suspend(device, false);
+
 		/* Synchronize runtime-pm and system-pm states:
 		 * at this point we are already suspended. However, the
 		 * runtime-PM framework still thinks that we are active.
 		 * The three calls below let the runtime-PM know that we are
 		 * suspended already without re-invoking the suspend callback
 		 */
+		if (adpt->wol & EMAC_WOL_MAGIC) {
+			pm_runtime_mark_last_busy(netdev->dev.parent);
+			pm_runtime_put_autosuspend(netdev->dev.parent);
+		}
 		pm_runtime_disable(netdev->dev.parent);
 		pm_runtime_set_suspended(netdev->dev.parent);
 		pm_runtime_enable(netdev->dev.parent);
-	}
 
+		/* Clear the Magic packet flag */
+		adpt->wol &= ~EMAC_WOL_MAGIC;
+	}
 	netif_device_detach(netdev);
 	emac_disable_clks(adpt);
 	emac_disable_regulator(adpt, EMAC_VREG1, EMAC_VREG2);
