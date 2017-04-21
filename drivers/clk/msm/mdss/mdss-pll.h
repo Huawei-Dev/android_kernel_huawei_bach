@@ -184,6 +184,8 @@ struct mdss_pll_resources {
 	 */
 	struct dfps_info *dfps;
 
+	struct mutex mutex;
+
 };
 
 struct mdss_pll_vco_calc {
