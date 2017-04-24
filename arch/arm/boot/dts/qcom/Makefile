@@ -154,7 +154,8 @@ dtb-$(CONFIG_ARCH_MDM9650) += mdm9650-sim.dtb \
 	mdm9650-v1.1-emmc-mtp.dtb \
 	mdm9650-v1.1-nand-mtp.dtb \
 	mdm9650-v1.1-nand-dualwifi-mtp.dtb \
-	mdm9650-v1.1-nand-ccard.dtb
+	mdm9650-v1.1-nand-ccard.dtb \
+	mdm9650-v1.1-nand-ccard-v2.dtb
 
 dtb-$(CONFIG_ARCH_MSM8937) += msm8937-rumi.dtb \
 	msm8937-pmi8950-cdp.dtb \
