@@ -1074,6 +1074,7 @@ static int cnss_powerup(const struct subsys_desc *subsys_desc)
 	case QCA6174_DEVICE_ID:
 		ret = cnss_qca6174_powerup(plat_priv);
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		ret = cnss_qca6290_powerup(plat_priv);
 		break;
@@ -1100,6 +1101,7 @@ static int cnss_shutdown(const struct subsys_desc *subsys_desc, bool force_stop)
 	case QCA6174_DEVICE_ID:
 		ret = cnss_qca6174_shutdown(plat_priv);
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		ret = cnss_qca6290_shutdown(plat_priv);
 		break;
@@ -1184,6 +1186,7 @@ static int cnss_ramdump(int enable, const struct subsys_desc *subsys_desc)
 	case QCA6174_DEVICE_ID:
 		ret = cnss_qca6174_ramdump(plat_priv);
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		ret = cnss_qca6290_ramdump(plat_priv);
 		break;
@@ -1241,6 +1244,7 @@ static void cnss_crash_shutdown(const struct subsys_desc *subsys_desc)
 	case QCA6174_DEVICE_ID:
 		cnss_qca6174_crash_shutdown(plat_priv);
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		cnss_qca6290_crash_shutdown(plat_priv);
 		break;
@@ -1528,6 +1532,7 @@ int cnss_register_subsys(struct cnss_plat_data *plat_priv)
 	case QCA6174_DEVICE_ID:
 		subsys_info->subsys_desc.name = "AR6320";
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		subsys_info->subsys_desc.name = "QCA6290";
 		break;
@@ -1745,6 +1750,7 @@ int cnss_register_ramdump(struct cnss_plat_data *plat_priv)
 	case QCA6174_DEVICE_ID:
 		ret = cnss_qca6174_register_ramdump(plat_priv);
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		ret = cnss_qca6290_register_ramdump(plat_priv);
 		break;
@@ -1762,6 +1768,7 @@ void cnss_unregister_ramdump(struct cnss_plat_data *plat_priv)
 	case QCA6174_DEVICE_ID:
 		cnss_qca6174_unregister_ramdump(plat_priv);
 		break;
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		cnss_qca6290_unregister_ramdump(plat_priv);
 		break;
@@ -1831,6 +1838,7 @@ static ssize_t cnss_fs_ready_store(struct device *dev,
 	}
 
 	switch (plat_priv->device_id) {
+	case QCA6290_EMULATION_DEVICE_ID:
 	case QCA6290_DEVICE_ID:
 		break;
 	default:
