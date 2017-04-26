@@ -3683,6 +3683,9 @@ int dwc3_gadget_init(struct dwc3 *dwc)
 	 * sure we're starting from a well known location.
 	 */
 
+	dwc->gadget.usb_core_id = dwc->core_id;
+	dev_dbg(dwc->dev, "%s core_id : %d\n", __func__, dwc->core_id);
+
 	ret = dwc3_gadget_init_endpoints(dwc);
 	if (ret)
 		goto err4;
