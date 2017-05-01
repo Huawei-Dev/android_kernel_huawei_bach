@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 2 and
@@ -74,6 +74,16 @@ struct emac_phy {
 	enum emac_flow_ctrl		req_fc_mode;
 	bool				disable_fc_autoneg;
 	enum emac_phy_map_type		board_id;
+
+	int link_up;
+	int link_speed;
+	int link_duplex;
+	int link_pause;
+
+	bool	is_wol_irq_reg;
+	bool	is_wol_enabled;
+	spinlock_t	wol_irq_lock; /* lock for wol irq gpio enablement */
+	bool	is_ext_phy_connect;
 };
 
 int emac_phy_config(struct platform_device *pdev, struct emac_adapter *adpt);

@@ -406,9 +406,12 @@ static int emac_acpi_get_resources(struct platform_device *pdev,
 static int emac_clk_prepare_enable(struct emac_adapter *adpt,
 				   enum emac_clk_id id)
 {
-	int ret;
+	int ret = 0;
 
 	if (ACPI_HANDLE(adpt->netdev->dev.parent))
+		return 0;
+
+	if (adpt->clk[id].enabled)
 		return 0;
 
 	ret = clk_prepare_enable(adpt->clk[id].clk);
@@ -2068,7 +2071,17 @@ int emac_up(struct emac_adapter *adpt)
 	for (i = 0; i < adpt->num_rxques; i++)
 		emac_refresh_rx_buffer(&adpt->rx_queue[i]);
 
-	emac_napi_enable_all(adpt);
+	if (!adpt->phy.is_ext_phy_connect) {
+		ret = phy_connect_direct(netdev, adpt->phydev, emac_adjust_link,
+					 phy->phy_interface);
+		if (ret) {
+			netdev_err(adpt->netdev, "could not connect phy\n");
+			goto err_request_irq;
+		}
+		adpt->phy.is_ext_phy_connect = 1;
+	}
+
+	/* enable mac irq */
 	emac_enable_intr(adpt);
 
 	netif_start_queue(netdev);
@@ -2110,6 +2123,12 @@ void emac_down(struct emac_adapter *adpt, u32 ctrl)
 	for (i = 0; i < EMAC_NUM_CORE_IRQ; i++)
 		if (adpt->irq[i].irq)
 			free_irq(adpt->irq[i].irq, &adpt->irq[i]);
+
+	if ((ATH8030_PHY_ID == adpt->phydev->phy_id) &&
+	    (adpt->phy.is_ext_phy_connect)) {
+		phy_disconnect(adpt->phydev);
+		adpt->phy.is_ext_phy_connect = 0;
+	}
 
 	CLR_FLAG(adpt, ADPT_TASK_LSC_REQ);
 	CLR_FLAG(adpt, ADPT_TASK_REINIT_REQ);
@@ -2739,6 +2758,8 @@ static void emac_init_adapter(struct emac_adapter *adpt)
 	/* others */
 	hw->preamble = EMAC_PREAMBLE_DEF;
 	adpt->wol = EMAC_WOL_MAGIC | EMAC_WOL_PHY;
+
+	adpt->phy.is_ext_phy_connect = 0;
 }
 
 /* Get the clock */
@@ -3066,6 +3087,9 @@ static int emac_enable_regulator(struct emac_adapter *adpt, u8 start, u8 end)
 	u8 i;
 
 	for (i = start; i <= end; i++) {
+		if (adpt->vreg[i].enabled)
+			continue;
+
 		if (adpt->vreg[i].voltage_uv) {
 			retval = emac_set_voltage(adpt, i,
 						  adpt->vreg[i].voltage_uv,
@@ -3095,10 +3119,11 @@ static void emac_disable_regulator(struct emac_adapter *adpt, u8 start, u8 end)
 	for (i = start; i <= end; i++) {
 		struct emac_regulator *vreg = &adpt->vreg[i];
 
-		if (vreg->enabled) {
-			regulator_disable(vreg->vreg);
-			vreg->enabled = false;
-		}
+		if (!vreg->enabled)
+			continue;
+
+		regulator_disable(vreg->vreg);
+		vreg->enabled = false;
 
 		if (adpt->vreg[i].voltage_uv) {
 			emac_set_voltage(adpt, i,
@@ -3151,24 +3176,40 @@ static int emac_pm_suspend(struct device *device, bool wol_enable)
 		CLR_FLAG(adpt, ADPT_STATE_RESETTING);
 	}
 
-	emac_hw_config_pow_save(hw, adpt->phy.link_speed, !!wufc,
-				!!(wufc & EMAC_WOL_MAGIC));
+	phy_suspend(adpt->phydev);
+	flush_delayed_work(&adpt->phydev->state_queue);
+	if (QCA8337_PHY_ID != adpt->phydev->phy_id)
+		emac_hw_config_pow_save(hw, adpt->phydev->speed, !!wufc,
+					!!(wufc & EMAC_WOL_MAGIC));
 
-	/* Enable EPHY Link UP interrupt */
-	if (!phy->link_up) {
-		retval = emac_phy_write(adpt, phy->addr, MII_INT_ENABLE,
-					LINK_SUCCESS_INTERRUPT |
-					LINK_SUCCESS_BX);
-		if (retval)
-			return retval;
+	if (!adpt->phydev->link && phy->is_wol_irq_reg) {
+		int value, i;
+
+		for (i = 0; i < QCA8337_NUM_PHYS ; i++) {
+			/* ePHY driver keep external phy into power down mode
+			 * if WOL is not enabled. This change is to make sure
+			 * to keep ePHY in active state for LINK UP to work
+			 */
+			value = mdiobus_read(adpt->phydev->bus, i, MII_BMCR);
+			value &= ~BMCR_PDOWN;
+			mdiobus_write(adpt->phydev->bus, i, MII_BMCR, value);
+
+			/* Enable EPHY Link UP interrupt */
+			mdiobus_write(adpt->phydev->bus, i, MII_INT_ENABLE,
+				      LINK_SUCCESS_INTERRUPT |
+				      LINK_SUCCESS_BX);
+		}
+
+		/* enable switch interrupts */
+		if (QCA8337_PHY_ID == adpt->phydev->phy_id)
+			qca8337_write(adpt->phydev->priv,
+				      QCA8337_GLOBAL_INT1_MASK, 0x8000);
 
 		if (wol_enable)
 			emac_wol_gpio_irq(adpt, true);
 	}
 
 	adpt->gpio_off(adpt, true, false);
-	emac_disable_clks(adpt);
-	emac_disable_regulator(adpt, EMAC_VREG1, EMAC_VREG2);
 	return 0;
 }
 
@@ -3182,9 +3223,6 @@ static int emac_pm_resume(struct device *device)
 	int retval = 0;
 
 	adpt->gpio_on(adpt, true, false);
-	emac_enable_regulator(adpt, EMAC_VREG1, EMAC_VREG2);
-	emac_init_clks(adpt);
-	emac_enable_clks(adpt);
 	emac_hw_reset_mac(hw);
 	emac_phy_reset_external(adpt);
 
@@ -3315,6 +3353,8 @@ static int emac_pm_sys_suspend(struct device *device)
 	}
 
 	netif_device_detach(netdev);
+	emac_disable_clks(adpt);
+	emac_disable_regulator(adpt, EMAC_VREG1, EMAC_VREG2);
 	return 0;
 }
 
@@ -3334,6 +3374,9 @@ static int emac_pm_sys_resume(struct device *device)
 	struct net_device *netdev = dev_get_drvdata(&pdev->dev);
 	struct emac_adapter *adpt = netdev_priv(netdev);
 
+	emac_enable_regulator(adpt, EMAC_VREG1, EMAC_VREG2);
+	emac_clks_phase1_init(pdev, adpt);
+	emac_clks_phase2_init(adpt);
 	netif_device_attach(netdev);
 
 	if (!pm_runtime_enabled(device) || !pm_runtime_suspended(device)) {
@@ -3455,21 +3498,6 @@ static int emac_probe(struct platform_device *pdev)
 	/* reset mac */
 	emac_hw_reset_mac(hw);
 
-	/* setup link to put it in a known good starting state */
-	retval = emac_phy_setup_link(adpt, phy->autoneg_advertised, true,
-				     !phy->disable_fc_autoneg);
-	if (retval)
-		goto err_phy_link;
-
-	/* set mac address */
-	memcpy(hw->mac_addr, hw->mac_perm_addr, netdev->addr_len);
-	memcpy(netdev->dev_addr, hw->mac_addr, netdev->addr_len);
-	emac_hw_set_mac_addr(hw, hw->mac_addr);
-
-	/* disable emac core and phy regulator */
-	emac_disable_regulator(adpt, EMAC_VREG1, EMAC_VREG2);
-	emac_disable_clks(adpt);
-
 	/* set hw features */
 	netdev->features = NETIF_F_SG | NETIF_F_HW_CSUM | NETIF_F_RXCSUM |
 			NETIF_F_TSO | NETIF_F_TSO6 | NETIF_F_HW_VLAN_CTAG_RX |
@@ -3544,11 +3572,12 @@ err_init_mdio_gpio:
 err_clk_en:
 err_init_phy:
 err_clk_init:
-	emac_disable_clks(adpt);
+	if (ATH8030_PHY_ID == adpt->phydev->phy_id)
+		emac_disable_clks(adpt);
 err_ldo_init:
-	emac_disable_regulator(adpt, EMAC_VREG1, EMAC_VREG5);
-	emac_release_resources(adpt);
-err_res:
+	if (ATH8030_PHY_ID == adpt->phydev->phy_id)
+		emac_disable_regulator(adpt, EMAC_VREG1, EMAC_VREG5);
+err_get_resource:
 	free_netdev(netdev);
 err_alloc_netdev:
 	return retval;

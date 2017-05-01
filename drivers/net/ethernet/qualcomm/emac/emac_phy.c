@@ -82,11 +82,15 @@ int emac_hw_read_phy_reg(struct emac_adapter *adpt, bool ext, u8 dev, bool fast,
 			  (dev << PHY_ADDR_SHFT));
 	wmb(); /* ensure PHY address is set before we proceed */
 
-	if (ext) {
-		val = ((dev << DEVAD_SHFT) & DEVAD_BMSK) |
-		      ((reg_addr << EX_REG_ADDR_SHFT) & EX_REG_ADDR_BMSK);
-		emac_reg_w32(hw, EMAC, EMAC_MDIO_EX_CTRL, val);
-		wmb(); /* ensure proper address is set before proceeding */
+	reg = reg & ~(MDIO_REG_ADDR_BMSK | MDIO_CLK_SEL_BMSK |
+			MDIO_MODE | MDIO_PR);
+	reg = SUP_PREAMBLE |
+	      ((MDIO_CLK_25_8 << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
+	      ((regnum << MDIO_REG_ADDR_SHFT) & MDIO_REG_ADDR_BMSK) |
+	      MDIO_START | MDIO_RD_NWR;
+
+	emac_reg_w32(hw, EMAC, EMAC_MDIO_CTRL, reg);
+	mb(); /* ensure hw starts the operation before we check for result */
 
 		val = SUP_PREAMBLE |
 		      ((clk_sel << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
@@ -148,25 +152,13 @@ int emac_hw_write_phy_reg(struct emac_adapter *adpt, bool ext, u8 dev,
 			  (dev << PHY_ADDR_SHFT));
 	wmb(); /* ensure PHY address is set before we proceed */
 
-	if (ext) {
-		val = ((dev << DEVAD_SHFT) & DEVAD_BMSK) |
-		      ((reg_addr << EX_REG_ADDR_SHFT) & EX_REG_ADDR_BMSK);
-		emac_reg_w32(hw, EMAC, EMAC_MDIO_EX_CTRL, val);
-		wmb(); /* ensure proper address is set before proceeding */
-
-		val = SUP_PREAMBLE |
-			((clk_sel << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
-			((phy_data << MDIO_DATA_SHFT) & MDIO_DATA_BMSK) |
-			MDIO_START | MDIO_MODE;
-	} else {
-		val = val & ~(MDIO_REG_ADDR_BMSK | MDIO_CLK_SEL_BMSK |
-			MDIO_DATA_BMSK | MDIO_MODE | MDIO_PR);
-		val = SUP_PREAMBLE |
-		((clk_sel << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
-		((reg_addr << MDIO_REG_ADDR_SHFT) & MDIO_REG_ADDR_BMSK) |
-		((phy_data << MDIO_DATA_SHFT) & MDIO_DATA_BMSK) |
-		MDIO_START;
-	}
+	reg = reg & ~(MDIO_REG_ADDR_BMSK | MDIO_CLK_SEL_BMSK |
+		MDIO_DATA_BMSK | MDIO_MODE | MDIO_PR);
+	reg = SUP_PREAMBLE |
+	((MDIO_CLK_25_8 << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
+	((regnum << MDIO_REG_ADDR_SHFT) & MDIO_REG_ADDR_BMSK) |
+	((val << MDIO_DATA_SHFT) & MDIO_DATA_BMSK) |
+	MDIO_START;
 
 	emac_reg_w32(hw, EMAC, EMAC_MDIO_CTRL, val);
 	mb(); /* ensure hw starts the operation before we check for result */
