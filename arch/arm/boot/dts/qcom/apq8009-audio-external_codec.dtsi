@@ -149,8 +149,8 @@
 		compatible = "qcom,audio-ref-clk";
 		qcom,codec-mclk-clk-freq = <9600000>;
 		qcom,lpass-clock = <1>;
-		pinctrl-names = "i2s_mclk_sleep",
-				"i2s_mclk_active";
+		pinctrl-names = "sleep", "active";
+		reg = <0x07702004 0x4>;
 		pinctrl-0 = <&i2s_mclk_sleep>;
 		pinctrl-1 = <&i2s_mclk_active>;
 		#clock-cells = <1>;
