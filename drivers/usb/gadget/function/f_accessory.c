@@ -973,8 +973,7 @@ err:
 EXPORT_SYMBOL_GPL(acc_ctrlrequest);
 
 static int
-__acc_function_bind(struct usb_configuration *c,
-			struct usb_function *f, bool configfs)
+acc_function_bind_configfs(struct usb_configuration *c, struct usb_function *f)
 {
 	struct usb_composite_dev *cdev = c->cdev;
 	struct acc_dev	*dev = func_to_dev(f);
@@ -983,16 +982,15 @@ __acc_function_bind(struct usb_configuration *c,
 
 	DBG(cdev, "acc_function_bind dev: %pK\n", dev);
 
-	if (configfs) {
-		if (acc_string_defs[INTERFACE_STRING_INDEX].id == 0) {
-			ret = usb_string_id(c->cdev);
-			if (ret < 0)
-				return ret;
-			acc_string_defs[INTERFACE_STRING_INDEX].id = ret;
-			acc_interface_desc.iInterface = ret;
-		}
-		dev->cdev = c->cdev;
+	if (acc_string_defs[INTERFACE_STRING_INDEX].id == 0) {
+		ret = usb_string_id(c->cdev);
+		if (ret < 0)
+			return ret;
+		acc_string_defs[INTERFACE_STRING_INDEX].id = ret;
+		acc_interface_desc.iInterface = ret;
 	}
+	dev->cdev = c->cdev;
+
 	ret = hid_register_driver(&acc_hid_driver);
 	if (ret)
 		return ret;
@@ -1031,17 +1029,6 @@ __acc_function_bind(struct usb_configuration *c,
 			gadget_is_dualspeed(c->cdev->gadget) ? "dual" : "full",
 			f->name, dev->ep_in->name, dev->ep_out->name);
 	return 0;
-}
-
-static int
-acc_function_bind(struct usb_configuration *c, struct usb_function *f) {
-	return __acc_function_bind(c, f, false);
-}
-
-static int
-acc_function_bind_configfs(struct usb_configuration *c,
-			struct usb_function *f) {
-	return __acc_function_bind(c, f, true);
 }
 
 static void
