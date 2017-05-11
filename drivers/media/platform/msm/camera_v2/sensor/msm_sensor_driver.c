@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -920,11 +920,14 @@ int32_t msm_sensor_driver_probe(void *setting,
 		 * and probe already succeeded for that sensor. Ignore this
 		 * probe
 		 */
-		// Only if the sensor name is the same, we consider that the sesnor has been probed
-		// Because there are different cameras have the same sensor id
-		if (!strcmp(slave_info->sensor_name, s_ctrl->sensordata->sensor_name)) {
-			pr_err("slot%d: sensor id:0x%X sensor name:%s already probed\n",
+		if (slave_info->sensor_id_info.sensor_id ==
+			s_ctrl->sensordata->cam_slave_info->
+				sensor_id_info.sensor_id &&
+			!(strcmp(slave_info->sensor_name,
+			s_ctrl->sensordata->cam_slave_info->sensor_name))) {
+			pr_err("slot%d: sensor name: %s sensor id%d already probed\n",
 				slave_info->camera_id,
+				slave_info->sensor_name,
 				s_ctrl->sensordata->cam_slave_info->
 					sensor_id_info.sensor_id,
 				slave_info->sensor_name);
