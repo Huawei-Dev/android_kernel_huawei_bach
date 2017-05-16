@@ -4677,26 +4677,6 @@ static int _mmc_blk_suspend(struct mmc_card *card, bool wait)
 static void mmc_blk_shutdown(struct mmc_card *card)
 {
 	_mmc_blk_suspend(card, 1);
-
-	/* stop the bkops */
-	if(card->ext_csd.bkops_en)
-	{
-		mmc_claim_host(card->host);
-		mmc_stop_bkops(card);
-		mmc_release_host(card->host);
-	}
-
-	/* send power off notification or cmd7->cmd5 */
-	if (mmc_card_mmc(card)) {
-		if((card->pon_type) && mmc_can_poweroff_notify(card)) {
-			pr_info("host will send power off notification to eMMC.\n");
-			mmc_send_pon(card);
-		}
-		else {
-			pr_info("host will send cmd7 and cmd5 to eMMC.\n");
-			mmc_suspend(card->host);
-		}
-	}
 }
 
 #ifdef CONFIG_PM

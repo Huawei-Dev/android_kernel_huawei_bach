@@ -2846,6 +2846,35 @@ static int mmc_power_restore(struct mmc_host *host)
 	return ret;
 }
 
+static int mmc_shutdown(struct mmc_host *host)
+{
+	struct mmc_card *card = host->card;
+
+	/*
+	 * Exit clock scaling so that it doesn't kick in after
+	 * power off notification is sent
+	 */
+	if ((host->caps2 & MMC_CAP2_CLK_SCALE) || card->ext_csd.bkops_en) {
+		mmc_claim_host(card->host);
+		mmc_stop_bkops(card);
+		mmc_release_host(card->host);
+		mmc_exit_clk_scaling(card->host);
+	}
+	/* send power off notification */
+	if (mmc_card_mmc(card)) {
+		if((card->pon_type) && mmc_can_poweroff_notify(card)) {
+			pr_info("host will send power off notification to eMMC.\n");
+			mmc_send_pon(card);
+		}
+		else {
+			pr_info("host will send cmd7 and cmd5 to eMMC.\n");
+			mmc_suspend(card->host);
+		}
+	}
+
+	return 0;
+}
+
 static const struct mmc_bus_ops mmc_ops = {
 	.remove = mmc_remove,
 	.detect = mmc_detect,
@@ -2856,6 +2885,7 @@ static const struct mmc_bus_ops mmc_ops = {
 	.power_restore = mmc_power_restore,
 	.alive = mmc_alive,
 	.change_bus_speed = mmc_change_bus_speed,
+	.shutdown = mmc_shutdown,
 #ifdef CONFIG_MMC_PASSWORDS
 	.sysfs_add = NULL,
 	.sysfs_remove = NULL,
