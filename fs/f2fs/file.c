@@ -1335,9 +1335,11 @@ static int f2fs_ioc_setflags(struct file *filp, unsigned long arg)
 	fi->i_flags = flags;
 	mutex_unlock(&inode->i_mutex);
 
-	f2fs_set_inode_flags(inode);
 	inode->i_ctime = CURRENT_TIME;
-	mark_inode_dirty(inode);
+	f2fs_set_inode_flags(inode);
+	f2fs_mark_inode_dirty_sync(inode, false);
+
+	inode_unlock(inode);
 out:
 	mnt_drop_write_file(filp);
 	return ret;
