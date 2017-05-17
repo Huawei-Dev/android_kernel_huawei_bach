@@ -564,16 +564,11 @@ static int32_t msm_sensor_create_pd_settings(void *setting,
 #ifdef CONFIG_COMPAT
 	if (is_compat_task()) {
 		int i = 0;
-		struct msm_sensor_power_setting32 *power_setting_iter =
-		(struct msm_sensor_power_setting32 *)compat_ptr((
-		(struct msm_camera_sensor_slave_info32 *)setting)->
-		power_setting_array.power_setting);
-
-		for (i = 0; i < size_down; i++) {
-			pd[i].config_val = power_setting_iter[i].config_val;
-			pd[i].delay = power_setting_iter[i].delay;
-			pd[i].seq_type = power_setting_iter[i].seq_type;
-			pd[i].seq_val = power_setting_iter[i].seq_val;
+		rc = msm_sensor_get_pw_settings_compat(
+			pd, pu, size_down);
+		if (rc < 0) {
+			pr_err("failed");
+			return -EFAULT;
 		}
 	} else
 #endif
@@ -1658,15 +1653,15 @@ static int pt_test_set_camera_power(struct msm_camera_power_ctrl_t *power_info, 
 /*bit0: 1->power up, 0->power off*/
 /********for milan**************/
 /*main camera power*/
-/*bit1: DVDD£ºL2*/
-/*bit2: AF_AVDD£ºL17*/
-/*bit3: AVDD£ºL22*/
-/*bit4: VREG_DOVDD_1P8£ºGPIO134*/
+/*bit1: DVDD\A3\BAL2*/
+/*bit2: AF_AVDD\A3\BAL17*/
+/*bit3: AVDD\A3\BAL22*/
+/*bit4: VREG_DOVDD_1P8\A3\BAGPIO134*/
 
 /*slave camera power*/
-/*bit5: DVDD£ºL23*/
-/*bit6: AVDD£ºGPIO128*/
-/*bit7: VREG_DOVDD_1P8£ºGPIO134*/
+/*bit5: DVDD\A3\BAL23*/
+/*bit6: AVDD\A3\BAGPIO128*/
+/*bit7: VREG_DOVDD_1P8\A3\BAGPIO134*/
 int ctrl_camera_power_status(int pt_action_value)
 {
     struct msm_sensor_ctrl_t  *s_ctrl_all[2] = {0};
