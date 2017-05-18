@@ -200,8 +200,6 @@ source "drivers/huawei_cc/Kconfig"
 
 source "drivers/bif/Kconfig"
 
-source "drivers/gud/Kconfig"
-
 source "drivers/dsm/Kconfig"
 
 source "drivers/huawei_platform/Kconfig"
@@ -219,4 +217,5 @@ source "drivers/devkit/lcdkit/Kconfig"
 source "drivers/devkit/tpkit/Kconfig"
 
 source "drivers/cpu_stress/Kconfig"
+
 endmenu

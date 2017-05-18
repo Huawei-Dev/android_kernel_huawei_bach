@@ -176,7 +176,6 @@ obj-$(CONFIG_HUAWEI_CC_DRV)		+= huawei_cc/
 
 obj-$(CONFIG_HUAWEI_HW_DEV_DCT) += devdetect/
 # <t-base drivers
-obj-$(CONFIG_MOBICORE_DRIVER)	+= gud/
 obj-y     += dsm/
 obj-$(CONFIG_HUAWEI_DRIVERS)	+=huawei_platform/
 
