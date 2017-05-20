@@ -77,8 +77,8 @@
 #define dev_dbg usb_dev_info
 #endif
 
-#define DWC3_IDEV_CHG_MAX 1500
-#define DWC3_HVDCP_CHG_MAX 1800
+#define DWC3_IDEV_CHG_MAX 2000
+#define DWC3_HVDCP_CHG_MAX 2000
 #define DWC3_WAKEUP_SRC_TIMEOUT 5000
 
 #define USB_SDP_CURRENT 500
