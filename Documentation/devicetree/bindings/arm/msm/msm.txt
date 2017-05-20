@@ -157,7 +157,11 @@ Generic board variants:
 - RUMI device:
   compatible = "qcom,rumi"
 
+- IPC device:
+  compatible = "qcom,ipc"
 
+- TTP device:
+  compatible = "qcom,ttp"
 
 Boards (SoC type + board variant):
 
@@ -304,6 +308,7 @@ compatible = "qcom,msmvpipa-sim"
 compatible = "qcom,mdm9607-rumi"
 compatible = "qcom,mdm9607-cdp"
 compatible = "qcom,mdm9607-mtp"
+compatible = "qcom,mdm9607-ttp"
 compatible = "qcom,mdm9650-rumi"
 compatible = "qcom,mdm9650-sim"
 compatible = "qcom,mdm9650-cdp"
