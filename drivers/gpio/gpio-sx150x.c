@@ -22,6 +22,9 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
+#include <linux/workqueue.h>
+#include <linux/of_gpio.h>
+#include <linux/regulator/consumer.h>
 #include <linux/i2c/sx150x.h>
 
 #define NO_UPDATE_PENDING	-1
@@ -573,6 +576,90 @@ static void sx150x_remove_irq_chip(struct sx150x_chip *chip)
 	}
 }
 
+#ifdef CONFIG_OF
+static int sx150x_parse_dt(struct device *dev,
+			struct sx150x_platform_data *pdata)
+{
+	int rc;
+	unsigned int temp;
+	struct device_node *np = dev->of_node;
+
+	if (!np)
+		return -ENODEV;
+
+	pdata->oscio_is_gpo = of_property_read_bool(np, "sx150x,oscio_is_gpo");
+	pdata->reset_during_probe =
+			of_property_read_bool(np, "sx150x,reset_onprobe");
+
+	rc = of_property_read_u32(np, "sx150x,pullup_ena", &temp);
+	if (rc) {
+		pr_err("%s: Failed to find pullup_ena %d\n", __func__, rc);
+		return rc;
+	}
+	pdata->io_pullup_ena = temp;
+
+	rc = of_property_read_u32(np, "sx150x,pulldn_ena", &temp);
+	if (rc) {
+		pr_err("%s: Failed to find pulldn_ena %d\n", __func__, rc);
+		return rc;
+	}
+	pdata->io_pulldn_ena = temp;
+
+	rc = of_property_read_u32(np, "sx150x,float_ena", &temp);
+	if (rc) {
+		pr_err("%s: Failed to find float_ena %d\n", __func__, rc);
+		return rc;
+	}
+	pdata->io_open_drain_ena = temp;
+
+	rc = of_property_read_u32(np, "sx150x,polarity", &temp);
+	if (rc) {
+		pr_err("%s: Failed to find polarity %d\n", __func__, rc);
+		return rc;
+	}
+	pdata->io_polarity = temp;
+
+	rc = of_property_read_u32(np, "sx150x,gpio_base", &temp);
+	if (rc) {
+		pr_err("%s: Failed to find gpio_base %d\n", __func__, rc);
+		pdata->gpio_base   = -1;
+	}
+	pdata->gpio_base = temp;
+
+
+	/* TODO: Add support for Interrupts */
+	pdata->irq_summary = -1;
+	/* Check: pdata->gpio_base   = -1; */
+
+	pdata->vdd_in = devm_regulator_get(dev, "vdd");
+	if (IS_ERR(pdata->vdd_in)) {
+		pr_err("Failed to get regulator: %ld\n",
+			PTR_ERR(pdata->vdd_in));
+		return PTR_ERR(pdata->vdd_in);
+	}
+
+	rc = of_property_read_u32(np, "qcom,vdd-max-voltage", &temp);
+	if (rc)
+		pr_err("%s: No vdd_max voltage entries in dts %d\n",
+				__func__, rc);
+	pdata->vdd_in_maxv = temp;
+
+	rc = of_property_read_u32(np, "qcom,vdd-min-voltage", &temp);
+	if (rc)
+		pr_err("%s: No vdd_min voltage entries in dts %d\n",
+				__func__, rc);
+	pdata->vdd_in_minv = temp;
+
+	return 0;
+}
+#else
+static int sx150x_parse_dt(struct device *dev,
+			struct sx150x_platform_data *pdata)
+{
+	return -ENODEV;
+}
+#endif
+
 static int sx150x_probe(struct i2c_client *client,
 				const struct i2c_device_id *id)
 {
@@ -585,6 +672,25 @@ static int sx150x_probe(struct i2c_client *client,
 	pdata = dev_get_platdata(&client->dev);
 	if (!pdata)
 		return -EINVAL;
+
+	if (pdata->vdd_in) {
+		if (regulator_count_voltages(pdata->vdd_in) > 0) {
+			rc = regulator_set_voltage(pdata->vdd_in,
+				pdata->vdd_in_minv, pdata->vdd_in_maxv);
+			if (rc) {
+				pr_err("unable to set volt for vdd_in\n");
+				return rc;
+			}
+
+			rc = regulator_enable(pdata->vdd_in);
+			if (rc) {
+				pr_err("unable to enable vdd_in\n");
+				regulator_set_voltage(pdata->vdd_in, 0,
+						pdata->vdd_in_maxv);
+				return rc;
+			}
+		}
+	}
 
 	if (!i2c_check_functionality(client->adapter, i2c_funcs))
 		return -ENOSYS;
