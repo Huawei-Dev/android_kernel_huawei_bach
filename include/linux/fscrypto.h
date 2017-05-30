@@ -24,20 +24,6 @@
 #define FS_KEY_DERIVATION_CIPHER_SIZE		(64 + 16) /* nonce + tag */
 #define FS_ENCRYPTION_CONTEXT_FORMAT_V2		2
 
-#define FS_POLICY_FLAGS_PAD_4		0x00
-#define FS_POLICY_FLAGS_PAD_8		0x01
-#define FS_POLICY_FLAGS_PAD_16		0x02
-#define FS_POLICY_FLAGS_PAD_32		0x03
-#define FS_POLICY_FLAGS_PAD_MASK	0x03
-#define FS_POLICY_FLAGS_VALID		0x03
-
-/* Encryption algorithms */
-#define FS_ENCRYPTION_MODE_INVALID		0
-#define FS_ENCRYPTION_MODE_AES_256_XTS		1
-#define FS_ENCRYPTION_MODE_AES_256_GCM		2
-#define FS_ENCRYPTION_MODE_AES_256_CBC		3
-#define FS_ENCRYPTION_MODE_AES_256_CTS		4
-
 /**
  * Encryption context for inode
  *
@@ -67,17 +53,6 @@ struct fscrypt_context {
 #define FS_AES_256_CBC_KEY_SIZE		32
 #define FS_AES_256_CTS_KEY_SIZE		32
 #define FS_AES_256_XTS_KEY_SIZE		64
-#define FS_MAX_KEY_SIZE			64
-
-#define FS_KEY_DESC_PREFIX		"fscrypt:"
-#define FS_KEY_DESC_PREFIX_SIZE		8
-
-/* This is passed in from userspace into the kernel keyring */
-struct fscrypt_key {
-	u32 mode;
-	u8 raw[FS_MAX_KEY_SIZE];
-	u32 size;
-} __packed;
 
 struct fscrypt_info {
 	u8 ci_data_mode;
