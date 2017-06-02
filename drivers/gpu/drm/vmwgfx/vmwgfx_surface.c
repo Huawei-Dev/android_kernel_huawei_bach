@@ -1292,7 +1292,7 @@ int vmw_gb_surface_define_ioctl(struct drm_device *dev, void *data,
 	uint32_t size;
 	uint32_t backup_handle;
 
-	if (req->multisample_count != 0)
+	if (req->mip_levels > DRM_VMW_MAX_MIP_LEVELS)
 		return -EINVAL;
 
 	if (unlikely(vmw_user_surface_size == 0))
