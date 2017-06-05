@@ -651,6 +651,7 @@ int cpufreq_generic_init(struct cpufreq_policy *policy,
  *********************************************************************/
 
 void acct_update_power(struct task_struct *p, cputime_t cputime);
+void cpufreq_task_stats_remove_uids(uid_t uid_start, uid_t uid_end);
 
 struct sched_domain;
 unsigned long cpufreq_scale_freq_capacity(struct sched_domain *sd, int cpu);
