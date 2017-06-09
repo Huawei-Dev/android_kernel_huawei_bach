@@ -442,10 +442,6 @@
 	gpio_keys {
 		/delete-node/ home;
 	};
-
-	usb_detect {
-		status = "ok";
-	};
 };
 
 &usb_otg {
