@@ -270,14 +270,6 @@
 	status = "ok";
 };
 
-&pm8937_gpios {
-	gpio@c100 {
-		qcom,mode = <0>;
-		qcom,vin-sel = <3>;
-		status = "okay";
-	};
-};
-
 /* SX1508q i/o expander */
 &i2c_4 {
 	status = "ok";
