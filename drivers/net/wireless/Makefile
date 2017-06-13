@@ -69,3 +69,5 @@ obj-$(CONFIG_WCNSS_MEM_PRE_ALLOC) += cnss_prealloc/
 obj-$(CONFIG_CNSS_CRYPTO)	+= cnss_crypto/
 
 obj-$(CONFIG_HUAWEI_WIFI)	+= wlan_feature.o
+
+obj-$(CONFIG_CNSS_UTILS) += cnss_utils/
