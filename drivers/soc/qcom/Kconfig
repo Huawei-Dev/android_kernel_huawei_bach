@@ -900,6 +900,15 @@ config HUAWEI_MODEM_CRASH_LOG
 	help
 	huawei modem crash log control
 
+config QCOM_QDSS_BRIDGE
+	bool "Configure bridge driver for Qualcomm MDM"
+	depends on MSM_MHI
+	help
+	  The driver will help route diag traffic over the QDSS sub-system to
+	  USB on APPS side. The driver acts as a bridge between the PCIE MHI
+	  and USB interface. The amount of buffer memory allocated at runtime
+	  can be modified via module params. If unsure, say N.
+
 config WCD_DSP_GLINK
 	tristate "WCD DSP GLINK Driver"
 	depends on MSM_GLINK
