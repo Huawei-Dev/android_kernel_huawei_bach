@@ -109,11 +109,8 @@ int ep_pcie_register_event(struct ep_pcie_hw *phandle,
 {
 	if (phandle) {
 		return phandle->register_event(reg);
-	} else {
-		pr_err("ep_pcie:%s: the input driver handle is NULL.",
-			__func__);
-		return -EINVAL;
-	}
+
+	return ep_pcie_core_register_event(reg);
 }
 EXPORT_SYMBOL(ep_pcie_register_event);
 

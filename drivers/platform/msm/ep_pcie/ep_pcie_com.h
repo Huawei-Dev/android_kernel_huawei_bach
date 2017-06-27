@@ -209,6 +209,7 @@ enum ep_pcie_irq {
 	EP_PCIE_INT_LINK_UP,
 	EP_PCIE_INT_LINK_DOWN,
 	EP_PCIE_INT_BRIDGE_FLUSH_N,
+	EP_PCIE_INT_BME,
 	EP_PCIE_INT_GLOBAL,
 	EP_PCIE_MAX_IRQ,
 };
@@ -294,6 +295,7 @@ struct ep_pcie_dev_t {
 	unsigned long                isr_save_flags;
 	ulong                        linkdown_counter;
 	ulong                        linkup_counter;
+	ulong                        bme_counter;
 	ulong                        pm_to_counter;
 	ulong                        d0_counter;
 	ulong                        d3_counter;
@@ -315,6 +317,8 @@ struct ep_pcie_dev_t {
 	struct ep_pcie_msi_config    msi_cfg;
 
 	struct ep_pcie_register_event *event_reg;
+	struct work_struct	     handle_perst_work;
+	struct work_struct           handle_bme_work;
 };
 
 extern struct ep_pcie_dev_t ep_pcie_dev;
