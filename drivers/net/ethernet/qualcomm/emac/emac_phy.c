@@ -85,7 +85,7 @@ int emac_hw_read_phy_reg(struct emac_adapter *adpt, bool ext, u8 dev, bool fast,
 	reg = reg & ~(MDIO_REG_ADDR_BMSK | MDIO_CLK_SEL_BMSK |
 			MDIO_MODE | MDIO_PR);
 	reg = SUP_PREAMBLE |
-	      ((MDIO_CLK_25_8 << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
+	      ((MDIO_CLK_25_10 << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
 	      ((regnum << MDIO_REG_ADDR_SHFT) & MDIO_REG_ADDR_BMSK) |
 	      MDIO_START | MDIO_RD_NWR;
 
@@ -155,7 +155,7 @@ int emac_hw_write_phy_reg(struct emac_adapter *adpt, bool ext, u8 dev,
 	reg = reg & ~(MDIO_REG_ADDR_BMSK | MDIO_CLK_SEL_BMSK |
 		MDIO_DATA_BMSK | MDIO_MODE | MDIO_PR);
 	reg = SUP_PREAMBLE |
-	((MDIO_CLK_25_8 << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
+	((MDIO_CLK_25_10 << MDIO_CLK_SEL_SHFT) & MDIO_CLK_SEL_BMSK) |
 	((regnum << MDIO_REG_ADDR_SHFT) & MDIO_REG_ADDR_BMSK) |
 	((val << MDIO_DATA_SHFT) & MDIO_DATA_BMSK) |
 	MDIO_START;
