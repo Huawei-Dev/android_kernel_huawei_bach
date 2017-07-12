@@ -77,11 +77,6 @@ int wifi_dsm_report_num(int dsm_err_no, char *err_msg, int err_code);
 int wifi_dsm_report_info(int error_no, void *log, int size);
 #endif
 
-#define WCNSS_EXTERNAL_GPIO_NAME "qcom,wcn-external-gpio"
-#define WCNSS_EXTERNAL_GPIO_HIGH 1
-#define WCNSS_EXTERNAL_GPIO_LOW 0
-#define WCNSS_EXTERNAL_GPIO_DIR_OUT 1
-
 enum wcnss_opcode {
 	WCNSS_WLAN_SWITCH_OFF = 0,
 	WCNSS_WLAN_SWITCH_ON,
@@ -101,7 +96,6 @@ struct vregs_level {
 
 struct wcnss_wlan_config {
 	bool	wcn_external_gpio_support;
-	int	wcn_external_gpio;
 	int	use_48mhz_xo;
 	int	is_pronto_vadc;
 	int	is_pronto_v3;
