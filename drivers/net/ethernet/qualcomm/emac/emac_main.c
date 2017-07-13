@@ -1357,7 +1357,20 @@ static irqreturn_t emac_wol_isr(int irq, void *data)
 	u16 val = 0;
 
 	pm_runtime_get_sync(netdev->dev.parent);
-	ret = emac_phy_read(adpt, phy->addr, MII_INT_STATUS, &val);
+
+	/* read switch interrupt status reg */
+	if (QCA8337_PHY_ID == adpt->phydev->phy_id)
+		ret = qca8337_read(adpt->phydev->priv, QCA8337_GLOBAL_INT1);
+
+	for (i = 0; i < QCA8337_NUM_PHYS ; i++) {
+		ret = mdiobus_read(adpt->phydev->bus, i, MII_INT_STATUS);
+		if ((ret & LINK_SUCCESS_INTERRUPT) || (ret & LINK_SUCCESS_BX) ||
+		    (ret & WOL_INT))
+			val |= 1 << i;
+		if (QCA8337_PHY_ID != adpt->phydev->phy_id)
+			break;
+	}
+
 	pm_runtime_mark_last_busy(netdev->dev.parent);
 	pm_runtime_put_autosuspend(netdev->dev.parent);
 
@@ -1365,7 +1378,7 @@ static irqreturn_t emac_wol_isr(int irq, void *data)
 		if (!ret &&
 		    ((val & LINK_SUCCESS_INTERRUPT) || (val & LINK_SUCCESS_BX)))
 			emac_wol_gpio_irq(adpt, false);
-		if (val & WOL_INT)
+		if (ret & WOL_INT)
 			__pm_stay_awake(&adpt->link_wlock);
 	}
 	return IRQ_HANDLED;
