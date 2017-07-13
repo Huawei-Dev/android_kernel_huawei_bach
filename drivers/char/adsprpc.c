@@ -2019,6 +2019,18 @@ bail:
 	return err;
 }
 
+static int fastrpc_get_info(struct fastrpc_file *fl, uint32_t *info)
+{
+	int err = 0;
+
+	VERIFY(err, fl && fl->sctx);
+	if (err)
+		goto bail;
+	if (fl->sctx)
+		*info = (fl->sctx->smmu.enabled ? 1 : 0);
+bail:
+	return err;
+}
 
 static long fastrpc_device_ioctl(struct file *file, unsigned int ioctl_num,
 				 unsigned long ioctl_param)
