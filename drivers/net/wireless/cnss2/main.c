@@ -55,6 +55,7 @@ MODULE_PARM_DESC(enable_waltest, "Enable to handle firmware waltest");
 
 enum cnss_debug_quirks {
 	LINK_DOWN_SELF_RECOVERY,
+	SKIP_DEVICE_BOOT,
 };
 
 unsigned long quirks;
@@ -2124,13 +2125,15 @@ static int cnss_probe(struct platform_device *plat_dev)
 	if (ret)
 		goto reset_ctx;
 
-	ret = cnss_power_on_device(plat_priv);
-	if (ret)
-		goto free_res;
+	if (!test_bit(SKIP_DEVICE_BOOT, &quirks)) {
+		ret = cnss_power_on_device(plat_priv);
+		if (ret)
+			goto free_res;
 
-	ret = cnss_pci_init(plat_priv);
-	if (ret)
-		goto power_off;
+		ret = cnss_pci_init(plat_priv);
+		if (ret)
+			goto power_off;
+	}
 
 	ret = cnss_register_esoc(plat_priv);
 	if (ret)
@@ -2181,9 +2184,11 @@ unreg_bus_scale:
 unreg_esoc:
 	cnss_unregister_esoc(plat_priv);
 deinit_pci:
-	cnss_pci_deinit(plat_priv);
+	if (!test_bit(SKIP_DEVICE_BOOT, &quirks))
+		cnss_pci_deinit(plat_priv);
 power_off:
-	cnss_power_off_device(plat_priv);
+	if (!test_bit(SKIP_DEVICE_BOOT, &quirks))
+		cnss_power_off_device(plat_priv);
 free_res:
 	cnss_put_resources(plat_priv);
 reset_ctx:
