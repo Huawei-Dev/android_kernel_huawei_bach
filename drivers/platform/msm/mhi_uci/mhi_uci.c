@@ -947,8 +947,8 @@ static int process_mhi_disabled_notif_sync(struct uci_client *uci_handle)
 
 static void process_rs232_state(struct mhi_result *result)
 {
-	struct rs232_ctrl_msg *rs232_pkt;
-	struct uci_client *client;
+	struct rs232_ctrl_msg *rs232_pkt = result->buf_addr;
+	struct uci_client *client = NULL;
 	u32 msg_id;
 	int ret_val;
 	u32 chan;
@@ -966,7 +966,6 @@ static void process_rs232_state(struct mhi_result *result)
 		result->bytes_xferd, sizeof(struct rs232_ctrl_msg));
 		goto error_size;
 	}
-	rs232_pkt = result->buf_addr;
 	MHI_GET_CTRL_DEST_ID(CTRL_DEST_ID, rs232_pkt, chan);
 	client = &uci_ctxt.client_handles[chan / 2];
 
