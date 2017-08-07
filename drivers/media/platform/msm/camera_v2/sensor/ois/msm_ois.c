@@ -799,11 +799,13 @@ static long msm_ois_subdev_ioctl(struct v4l2_subdev *sd,
 			pr_err("o_ctrl->i2c_client.i2c_func_tbl NULL\n");
 			return -EINVAL;
 		}
+		mutex_lock(o_ctrl->ois_mutex);
 		rc = msm_ois_power_down(o_ctrl);
 		if (rc < 0) {
 			pr_err("%s:%d OIS Power down failed\n",
 				__func__, __LINE__);
 		}
+		mutex_unlock(o_ctrl->ois_mutex);
 		return msm_ois_close(sd, NULL);
 	default:
 		pr_err("%s: error invalid cmd = %d, %ld, %ld, %ld \n", __func__, cmd, VIDIOC_MSM_SENSOR_GET_SUBDEV_ID, VIDIOC_MSM_OIS_CFG, MSM_SD_SHUTDOWN);
