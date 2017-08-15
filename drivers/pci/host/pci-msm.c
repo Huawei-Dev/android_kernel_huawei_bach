@@ -686,6 +686,9 @@ static u32 num_rc_on;
 /* global lock for PCIe common PHY */
 static struct mutex com_phy_lock;
 
+/* global lock for PCIe enumeration */
+static struct mutex enumerate_lock;
+
 /* Table to track info of PCIe devices */
 static struct msm_pcie_device_info
 	msm_pcie_dev_tbl[MAX_RC_NUM * MAX_DEVICE_NUM];
@@ -4849,12 +4852,15 @@ int msm_pcie_enumerate(u32 rc_idx)
 	int ret = 0, bus_ret = 0, scan_ret = 0;
 	struct msm_pcie_dev_t *dev = &msm_pcie_dev[rc_idx];
 
+	mutex_lock(&enumerate_lock);
+
 	PCIE_DBG(dev, "Enumerate RC%d\n", rc_idx);
 
 	if (!dev->drv_ready) {
 		PCIE_DBG(dev, "RC%d has not been successfully probed yet\n",
 			rc_idx);
-		return -EPROBE_DEFER;
+		ret = -EPROBE_DEFER;
+		goto out;
 	}
 
 	if (!dev->enumerated) {
@@ -4882,7 +4888,7 @@ int msm_pcie_enumerate(u32 rc_idx)
 					"PCIe: failed to get host bridge resources for RC%d: %d\n",
 					dev->rc_idx, ret);
 
-				return ret;
+				goto out;
 			}
 
 			if (dev->ep_latency) {
@@ -4901,8 +4907,8 @@ int msm_pcie_enumerate(u32 rc_idx)
 				PCIE_ERR(dev,
 					"PCIe: failed to create root bus for RC%d\n",
 					dev->rc_idx);
-
-				return -ENOMEM;
+				ret = -ENOMEM;
+				goto out;
 			}
 
 			scan_ret = pci_scan_child_bus(bus);
@@ -4950,7 +4956,8 @@ int msm_pcie_enumerate(u32 rc_idx)
 				PCIE_ERR(dev,
 					"PCIe: Did not find PCI device for RC%d.\n",
 					dev->rc_idx);
-				return -ENODEV;
+				ret = -ENODEV;
+				goto out;
 			}
 
 			bus_ret = bus_for_each_dev(&pci_bus_type, NULL, dev,
@@ -4960,7 +4967,8 @@ int msm_pcie_enumerate(u32 rc_idx)
 				PCIE_ERR(dev,
 					"PCIe: Failed to set up device table for RC%d\n",
 					dev->rc_idx);
-				return -ENODEV;
+				ret = -ENODEV;
+				goto out;
 			}
 		} else {
 			PCIE_ERR(dev, "PCIe: failed to enable RC%d.\n",
@@ -4970,6 +4978,9 @@ int msm_pcie_enumerate(u32 rc_idx)
 		PCIE_ERR(dev, "PCIe: RC%d has already been enumerated.\n",
 			dev->rc_idx);
 	}
+
+out:
+	mutex_unlock(&enumerate_lock);
 
 	return ret;
 }
@@ -6282,6 +6293,7 @@ int __init pcie_init(void)
 	pcie_drv.rc_num = 0;
 	mutex_init(&pcie_drv.drv_lock);
 	mutex_init(&com_phy_lock);
+	mutex_init(&enumerate_lock);
 
 	for (i = 0; i < MAX_RC_NUM; i++) {
 		snprintf(rc_name, MAX_RC_NAME_LEN, "pcie%d-short", i);
