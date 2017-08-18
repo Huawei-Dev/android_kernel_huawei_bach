@@ -358,6 +358,7 @@ struct msm_fb_data_type {
 	bool mdss_fb_split_stored;
 
 	u32 wait_for_kickoff;
+	u32 skip_koff_wait;
 	u32 thermal_level;
 
 #ifndef CONFIG_LCDKIT_DRIVER
