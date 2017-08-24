@@ -1327,6 +1327,9 @@ static long msm_flash_subdev_do_ioctl(
 			break;
 		}
 		break;
+	case VIDIOC_MSM_FLASH_CFG:
+		pr_err("invalid cmd 0x%x received\n", cmd);
+		return -EINVAL;
 	default:
 		return msm_flash_subdev_ioctl(sd, cmd, arg);
 	}
@@ -1337,7 +1340,7 @@ static long msm_flash_subdev_do_ioctl(
 		u32->flash_duration[i] = flash_data.flash_duration[i];
 	}
 
-       u32->flash_hw_cnt = flash_data.flash_hw_cnt;
+        u32->flash_hw_cnt = flash_data.flash_hw_cnt;
 	CDBG("Exit");
 	return rc;
 }
