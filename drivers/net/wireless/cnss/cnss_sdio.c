@@ -995,8 +995,6 @@ int cnss_sdio_wlan_register_driver(struct cnss_sdio_wlan_driver *driver)
 		pr_debug("wdrv already exists wdrv(%p)\n",
 			 cnss_info->wdrv);
 
-	cnss_info->wdrv = driver;
-
 	if (!driver)
 		return error;
 
@@ -1026,6 +1024,8 @@ int cnss_sdio_wlan_register_driver(struct cnss_sdio_wlan_driver *driver)
 		wcnss_skb_pre_alloc_reset();
 		goto pinctrl_sleep;
 	}
+
+	cnss_info->wdrv = driver;
 
 	return error;
 
