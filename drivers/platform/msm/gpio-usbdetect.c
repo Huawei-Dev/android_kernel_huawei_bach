@@ -112,11 +112,30 @@ static int gpio_usbdetect_probe(struct platform_device *pdev)
 	if (rc)
 		return rc;
 
+	usb->gpio_usbdetect = of_get_named_gpio(pdev->dev.of_node,
+					"qcom,gpio-mode-sel", 0);
+
+	if (gpio_is_valid(usb->gpio_usbdetect)) {
+		rc = devm_gpio_request(&pdev->dev, usb->gpio_usbdetect,
+					"GPIO_MODE_SEL");
+		if (rc) {
+			dev_err(&pdev->dev, "gpio req failed for gpio_%d\n",
+						 usb->gpio_usbdetect);
+			goto disable_ldo;
+		}
+		rc = gpio_direction_input(usb->gpio_usbdetect);
+		if (rc) {
+			dev_err(&pdev->dev, "Invalid input from GPIO_%d\n",
+					usb->gpio_usbdetect);
+			goto disable_ldo;
+		}
+	}
+
 	usb->vbus_det_irq = platform_get_irq_byname(pdev, "vbus_det_irq");
 	if (usb->vbus_det_irq < 0) {
-		if (usb->vin)
-			regulator_disable(usb->vin);
-		return usb->vbus_det_irq;
+		dev_err(&pdev->dev, "vbus_det_irq failed\n");
+		rc = usb->vbus_det_irq;
+		goto disable_ldo;
 	}
 
 	rc = devm_request_irq(&pdev->dev, usb->vbus_det_irq,
@@ -126,9 +145,7 @@ static int gpio_usbdetect_probe(struct platform_device *pdev)
 	if (rc) {
 		dev_err(&pdev->dev, "request for vbus_det_irq failed: %d\n",
 			rc);
-		if (usb->vin)
-			regulator_disable(usb->vin);
-		return rc;
+		goto disable_ldo;
 	}
 
 	device_init_wakeup(&pdev->dev, 1);
