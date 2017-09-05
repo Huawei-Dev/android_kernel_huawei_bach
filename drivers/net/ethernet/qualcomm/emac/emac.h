@@ -44,6 +44,20 @@
 /* mdio/mdc gpios */
 #define EMAC_GPIO_CNT		2
 
+#define EMAC_ADPT_RESET_WAIT_TIME	20
+
+/**
+ * Requested EMAC votes for BUS bandwidth
+ *
+ * EMAC_NO_PERF_VOTE      BUS Vote for inactive EMAC session or disconnect
+ * EMAC_MAX_PERF_VOTE    Maximum BUS bandwidth vote
+ *
+ */
+enum emac_bus_vote {
+	EMAC_NO_PERF_VOTE = 0,
+	EMAC_MAX_PERF_VOTE
+};
+
 enum emac_vreg_id {
 	EMAC_VREG1,
 	EMAC_VREG2,
@@ -733,6 +747,9 @@ struct emac_adapter {
 	bool		runtime_enable;
 	bool		is_wol_enabled;
 	spinlock_t	wol_irq_lock; /* lock for wol irq gpio enablement */
+
+	u32       bus_cl_hdl;
+	struct msm_bus_scale_pdata *bus_scale_table;
 };
 
 static inline struct emac_adapter *emac_hw_get_adap(struct emac_hw *hw)
