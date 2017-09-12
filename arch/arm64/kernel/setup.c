@@ -100,6 +100,7 @@ EXPORT_SYMBOL(cold_boot);
 
 static const char *cpu_name;
 static const char *machine_name;
+
 phys_addr_t __fdt_pointer __initdata;
 
 #ifdef CONFIG_DUMP_SYS_INFO
