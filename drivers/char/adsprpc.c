@@ -60,6 +60,7 @@
 #define VMID_SSC_Q6     5
 
 #define RPC_TIMEOUT	(5 * HZ)
+#define OPEN_TIMEOUT    (0.5 * HZ)
 #define BALIGN		128
 #define NUM_CHANNELS	3		/*1 compute 1 cpz 1 mdsp*/
 #define NUM_SESSIONS	8		/*8 compute*/
@@ -1977,9 +1978,9 @@ static int fastrpc_device_open(struct inode *inode, struct file *filp)
 
 	if (me->pending_free) {
 		event = wait_event_interruptible_timeout(wait_queue,
-						me->pending_free, RPC_TIMEOUT);
+				!me->pending_free, OPEN_TIMEOUT);
 		if (event == 0)
-			pr_err("timed out..list is still not empty\n");
+			pr_err("fastrpc:timed out..list is still not empty\n");
 	}
 
 	VERIFY(err, fl = kzalloc(sizeof(*fl), GFP_KERNEL));
