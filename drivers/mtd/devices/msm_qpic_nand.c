@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007 Google, Inc.
- * Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -14,8 +14,10 @@
  */
 
 #include "msm_qpic_nand.h"
+#include <linux/timer.h>
 
 #define QPIC_BAM_DEFAULT_IPC_LOGLVL 2
+#define SW_REQ_TIMEOUT_SEC 10
 
 static bool enable_euclean;
 static bool enable_perfstats;
@@ -194,6 +196,25 @@ static void msm_nand_update_erase_perf_stats(struct msm_nand_info *info,
 		info->perf.min_erase_time = time_delta;
 
 	spin_unlock(&info->perf.lock);
+}
+
+static struct timer_list timer;
+
+static void msm_nand_tout_work_fn(struct work_struct *work)
+{
+	struct msm_nand_info *info = container_of(work, struct msm_nand_info,
+					    tout_work);
+
+	sps_get_bam_debug_info(info->sps.bam_handle, 93,
+			(SPS_BAM_PIPE(0) | SPS_BAM_PIPE(1) | SPS_BAM_PIPE(2)),
+				 0, 2);
+}
+static void msm_nand_transfer_timeout(unsigned long data)
+{
+	struct msm_nand_info *info = (struct msm_nand_info *)data;
+
+	pr_err("NAND request timeout\n");
+	schedule_work(&info->tout_work);
 }
 
 /*
@@ -1909,6 +1930,7 @@ static int msm_nand_read_oob(struct mtd_info *mtd, loff_t from,
 			iovec++;
 		}
 		mutex_lock(&info->lock);
+		mod_timer(&timer, jiffies + SW_REQ_TIMEOUT_SEC * HZ);
 		err = msm_nand_get_device(chip->dev);
 		if (err)
 			goto unlock_mutex;
@@ -1960,6 +1982,7 @@ static int msm_nand_read_oob(struct mtd_info *mtd, loff_t from,
 		}
 
 		err = msm_nand_put_device(chip->dev);
+		del_timer_sync(&timer);
 		mutex_unlock(&info->lock);
 		if (err)
 			goto free_dma;
@@ -2086,6 +2109,7 @@ static int msm_nand_read_oob(struct mtd_info *mtd, loff_t from,
 put_dev:
 	msm_nand_put_device(chip->dev);
 unlock_mutex:
+	del_timer_sync(&timer);
 	mutex_unlock(&info->lock);
 free_dma:
 	msm_nand_release_dma_buffer(chip, dma_buffer, sizeof(*dma_buffer));
@@ -2441,6 +2465,7 @@ static int msm_nand_write_oob(struct mtd_info *mtd, loff_t to,
 			iovec++;
 		}
 		mutex_lock(&info->lock);
+		mod_timer(&timer, jiffies + SW_REQ_TIMEOUT_SEC * HZ);
 		err = msm_nand_get_device(chip->dev);
 		if (err)
 			goto unlock_mutex;
@@ -2491,6 +2516,7 @@ static int msm_nand_write_oob(struct mtd_info *mtd, loff_t to,
 		}
 
 		err = msm_nand_put_device(chip->dev);
+		del_timer_sync(&timer);
 		mutex_unlock(&info->lock);
 		if (err)
 			goto free_dma;
@@ -2524,6 +2550,7 @@ static int msm_nand_write_oob(struct mtd_info *mtd, loff_t to,
 put_dev:
 	msm_nand_put_device(chip->dev);
 unlock_mutex:
+	del_timer_sync(&timer);
 	mutex_unlock(&info->lock);
 free_dma:
 	msm_nand_release_dma_buffer(chip, dma_buffer, sizeof(*dma_buffer));
@@ -2730,6 +2757,7 @@ static int msm_nand_erase(struct mtd_info *mtd, struct erase_info *instr)
 		iovec++;
 	}
 	mutex_lock(&info->lock);
+	mod_timer(&timer, jiffies + SW_REQ_TIMEOUT_SEC * HZ);
 	err = msm_nand_get_device(chip->dev);
 	if (err)
 		goto unlock_mutex;
@@ -2774,6 +2802,7 @@ static int msm_nand_erase(struct mtd_info *mtd, struct erase_info *instr)
 put_dev:
 	msm_nand_put_device(chip->dev);
 unlock_mutex:
+	del_timer_sync(&timer);
 	mutex_unlock(&info->lock);
 	msm_nand_release_dma_buffer(chip, dma_buffer, sizeof(*dma_buffer));
 out:
@@ -2901,8 +2930,10 @@ static int msm_nand_block_isbad(struct mtd_info *mtd, loff_t ofs)
 		iovec++;
 	}
 	mutex_lock(&info->lock);
+	mod_timer(&timer, jiffies + SW_REQ_TIMEOUT_SEC * HZ);
 	ret = msm_nand_get_device(chip->dev);
 	if (ret) {
+		del_timer_sync(&timer);
 		mutex_unlock(&info->lock);
 		goto free_dma;
 	}
@@ -2940,6 +2971,7 @@ static int msm_nand_block_isbad(struct mtd_info *mtd, loff_t ofs)
 	}
 
 	ret = msm_nand_put_device(chip->dev);
+	del_timer_sync(&timer);
 	mutex_unlock(&info->lock);
 	if (ret)
 		goto free_dma;
@@ -2962,6 +2994,7 @@ static int msm_nand_block_isbad(struct mtd_info *mtd, loff_t ofs)
 	goto free_dma;
 put_dev:
 	msm_nand_put_device(chip->dev);
+	del_timer_sync(&timer);
 	mutex_unlock(&info->lock);
 free_dma:
 	msm_nand_release_dma_buffer(chip, dma_buffer, sizeof(*dma_buffer) + 4);
@@ -3694,6 +3727,8 @@ static int msm_nand_probe(struct platform_device *pdev)
 		err = -ENXIO;
 		goto free_bam;
 	}
+	INIT_WORK(&info->tout_work, msm_nand_tout_work_fn);
+	setup_timer(&timer, msm_nand_transfer_timeout, (unsigned long)info);
 	for (i = 0; i < nr_parts; i++) {
 		mtd_part[i].offset *= info->mtd.erasesize;
 		mtd_part[i].size *= info->mtd.erasesize;
