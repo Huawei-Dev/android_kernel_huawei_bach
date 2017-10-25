@@ -63,6 +63,11 @@
 #define CREATE_TRACE_POINTS
 #include "trace/lowmemorykiller.h"
 
+/* to enable lowmemorykiller */
+static int enable_lmk = 1;
+module_param_named(enable_lmk, enable_lmk, int,
+	S_IRUGO | S_IWUSR);
+
 #ifdef CONFIG_HUAWEI_KERNEL_DEBUG
 extern ssize_t write_log_to_exception(const char* category, char level, const char* msg);
 static uint32_t lowmem_debug_level = 2;
@@ -104,6 +109,9 @@ static unsigned long lowmem_deathpending_timeout;
 static unsigned long lowmem_count(struct shrinker *s,
 				  struct shrink_control *sc)
 {
+	if (!enable_lmk)
+		return 0;
+
 	return global_page_state(NR_ACTIVE_ANON) +
 		global_page_state(NR_ACTIVE_FILE) +
 		global_page_state(NR_INACTIVE_ANON) +
