@@ -901,7 +901,7 @@ config HUAWEI_MODEM_CRASH_LOG
 	huawei modem crash log control
 
 config QCOM_QDSS_BRIDGE
-	bool "Configure bridge driver for Qualcomm MDM"
+	bool "Configure bridge driver for Qualcomm Technologies, Inc. MDM"
 	depends on MSM_MHI
 	help
 	  The driver will help route diag traffic over the QDSS sub-system to
