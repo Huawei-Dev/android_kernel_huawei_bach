@@ -252,6 +252,16 @@ static int fb_event_callback(struct notifier_block *self,
 #endif
 #endif
 
+/*
+ * disable_esd_thread() - Cancels work item for the esd check.
+ */
+void disable_esd_thread(void)
+{
+	if (pstatus_data &&
+		cancel_delayed_work_sync(&pstatus_data->check_status))
+			pr_debug("esd thread killed\n");
+}
+
 static int param_dsi_status_disable(const char *val, struct kernel_param *kp)
 {
 	int ret = 0;
