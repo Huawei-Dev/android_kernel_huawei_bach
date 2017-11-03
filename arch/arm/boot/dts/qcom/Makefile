@@ -181,6 +181,7 @@ dtb-$(CONFIG_ARCH_MSM8917) += msm8917-rumi.dtb \
 	msm8917-pmi8937-cdp.dtb \
 	msm8917-pmi8937-mtp.dtb \
 	msm8917-pmi8950-cdp.dtb \
+	msm8917-pmi8950-cdp-mirror-lake-touch.dtb \
 	msm8917-pmi8950-ext-codec-cdp.dtb \
 	msm8917-pmi8950-mtp.dtb \
 	msm8917-pmi8937-rcm.dtb \
