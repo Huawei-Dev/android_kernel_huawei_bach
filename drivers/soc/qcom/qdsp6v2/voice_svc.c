@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -719,7 +719,6 @@ static int voice_svc_release(struct inode *inode, struct file *file)
 			pr_err("%s: Failed to dereg MVM %d\n", __func__, ret);
 	}
 
-	mutex_lock(&prtd->response_mutex_lock);
 	spin_lock_irqsave(&prtd->response_lock, spin_flags);
 
 	while (!list_empty(&prtd->response_queue)) {
