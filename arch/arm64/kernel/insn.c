@@ -97,7 +97,7 @@ static void __kprobes *patch_map(void *addr, int fixmap)
 		page = vmalloc_to_page(addr);
 	else if (!module && (IS_ENABLED(CONFIG_DEBUG_RODATA) ||
 			IS_ENABLED(CONFIG_KERNEL_TEXT_RDONLY)))
-		page = phys_to_page(__pa_symbol(addr));
+		page = virt_to_page(addr);
 	else
 		return addr;
 
