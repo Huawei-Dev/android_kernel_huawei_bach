@@ -648,7 +648,16 @@ static void subsystem_powerup(struct subsys_device *dev, void *data)
 	if (dev->desc->powerup(dev->desc) < 0) {
 		notify_each_subsys_device(&dev, 1, SUBSYS_POWERUP_FAILURE,
 								NULL);
-		panic("[%p]: Powerup error: %s!", current, name);
+		if (system_state == SYSTEM_RESTART
+			|| system_state == SYSTEM_POWER_OFF)
+			WARN(1, "SSR aborted: %s, system reboot/shutdown is under way\n",
+				name);
+		else if (!dev->desc->ignore_ssr_failure)
+			panic("[%s:%d]: Powerup error: %s!",
+				current->comm, current->pid, name);
+		else
+			pr_err("Powerup failure on %s\n", name);
+		return ret;
 	}
 	enable_all_irqs(dev);
 
