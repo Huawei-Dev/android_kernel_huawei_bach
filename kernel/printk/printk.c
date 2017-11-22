@@ -53,14 +53,6 @@
 #include <linux/srecorder.h>
 #endif
 
-#ifdef CONFIG_HUAWEI_KERNEL
-#define KMSGCAT_TASK_NAME "kmsgcat"
-#define LOGD_TASK_NAME "logd"
-#define LEN_KMSGCAT_TASK_NAME 8
-
-static bool is_first_printed = false;
-#endif
-
 #define CREATE_TRACE_POINTS
 #include <trace/events/printk.h>
 
@@ -1425,21 +1417,6 @@ int do_syslog(int type, char __user *buf, int len, bool from_file)
 			error = -EFAULT;
 			goto out;
 		}
-#ifdef CONFIG_HUAWEI_KERNEL
-		if(strncmp(KMSGCAT_TASK_NAME,current->comm, LEN_KMSGCAT_TASK_NAME))
-		{
-			error = -EFAULT;
-			if(!strstr(current->comm, LOGD_TASK_NAME))
-			{
-				if(!is_first_printed)
-				{
-					printk(KERN_ERR"Process %s attempt to read logbuf, not allow!\n", current->comm);
-					is_first_printed = true;
-				}
-			}
-			goto out;
-		}
-#endif
 		error = wait_event_interruptible(log_wait,
 						 syslog_seq != log_next_seq);
 		if (error)
