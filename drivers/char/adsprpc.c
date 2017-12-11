@@ -2159,10 +2159,13 @@ static long fastrpc_device_ioctl(struct file *file, unsigned int ioctl_num,
 		}
 		break;
 	case FASTRPC_IOCTL_GETINFO:
+	    K_COPY_FROM_USER(err, 0, &info, param, sizeof(info));
+		if (err)
+			goto bail;
 		VERIFY(err, 0 == (err = fastrpc_get_info(fl, &info)));
 		if (err)
 			goto bail;
-		VERIFY(err, 0 == copy_to_user(param, &info, sizeof(info)));
+		K_COPY_TO_USER(err, 0, param, &info, sizeof(info));
 		if (err)
 			goto bail;
 		break;
