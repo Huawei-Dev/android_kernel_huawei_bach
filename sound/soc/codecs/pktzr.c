@@ -208,6 +208,12 @@ int pktzr_cmd_data(void *payload, uint32_t size, void *priv_data)
 	return pktzr_send_pkt(payload, size, priv_data, PKTZR_CMD_DATA, false);
 }
 
+int pktzr_cmd_init_params(void *payload, uint32_t size,
+				struct pktzr_cmd_rsp *rsp)
+{
+	return pktzr_send_pkt(payload, size, rsp, PKTZR_CMD_INIT_PARAM, true);
+}
+
 int pktzr_init(void *pdev, struct bg_glink_ch_cfg *ch_info, int num_channels,
 	       pktzr_data_cmd_cb_fn func)
 {
