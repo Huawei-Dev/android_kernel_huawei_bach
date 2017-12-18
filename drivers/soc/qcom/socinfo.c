@@ -68,6 +68,7 @@ enum {
 	HW_PLATFORM_STP = 23,
 	HW_PLATFORM_SBC = 24,
 	HW_PLATFORM_ADP = 25,
+	HW_PLATFORM_TTP = 30,
 	HW_PLATFORM_INVALID
 };
 
@@ -89,6 +90,7 @@ const char *hw_platform[] = {
 	[HW_PLATFORM_STP] = "STP",
 	[HW_PLATFORM_SBC] = "SBC",
 	[HW_PLATFORM_ADP] = "ADP",
+	[HW_PLATFORM_TTP] = "TTP",
 };
 
 enum {
