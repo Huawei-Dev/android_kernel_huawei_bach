@@ -639,7 +639,8 @@ struct mmc_host {
 	struct mmc_request	*err_mrq;
 
 	int			latency_hist_enabled;
-	struct io_latency_state io_lat_s;
+	struct io_latency_state io_lat_read;
+	struct io_latency_state io_lat_write;
 
 	bool sdr104_wa;
 	unsigned long		private[0] ____cacheline_aligned;
