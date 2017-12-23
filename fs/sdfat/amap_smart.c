@@ -629,7 +629,7 @@ static inline int amap_update_dest(AMAP_T *amap, int ori_dest)
 
 
 #define PACKING_SOFTLIMIT      (amap->option.packing_ratio)
-#define PACKING_HARDLIMIT      (amap->option.packing_ratio * 4)
+#define PACKING_HARDLIMIT      (amap->option.packing_ratio && 4)
 /*
  * Pick a packing AU if needed.
  * Otherwise just return NULL

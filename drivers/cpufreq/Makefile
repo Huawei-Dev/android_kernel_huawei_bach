@@ -15,6 +15,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_COMMON)		+= cpufreq_governor.o
 obj-$(CONFIG_CPU_BOOST)			+= cpu-boost.o
 
 obj-$(CONFIG_CPUFREQ_DT)		+= cpufreq-dt.o
+EXTRA_CFLAGS += -Wno-implicit-function-declaration -Wno-int-conversion
 
 ##################################################################################
 # x86 drivers.
