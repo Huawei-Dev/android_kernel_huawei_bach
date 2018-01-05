@@ -5,6 +5,7 @@
  */
 
 #include <linux/ratelimit.h>
+#include <linux/namei.h>
 #include "fscrypt_private.h"
 
 /**
