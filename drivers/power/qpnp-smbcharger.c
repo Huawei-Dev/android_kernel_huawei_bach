@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2017 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2018 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -4251,7 +4251,7 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 		current_limit = prop.intval / 1000;
 
 	if (chip->ignore_usb_ibus_setting) {
-		rc = chip->usb_psy->get_property(chip->usb_psy, POWER_SUPPLY_PROP_TYPE, &prop);
+		rc = chip->usb_psy->get_property(chip->usb_psy, POWER_SUPPLY_PROP_REAL_TYPE, &prop);
 		if ((rc == 0 && prop.intval != POWER_SUPPLY_TYPE_USB_DCP) && current_limit < 500)
 			current_limit = 500;
 	}
@@ -5015,6 +5015,7 @@ static int smbchg_change_usb_supply_type(struct smbchg_chip *chip,
 						enum power_supply_type type)
 {
 	int rc, current_limit_ma;
+	union power_supply_propval propval;
 
 	/*
 	 * if the type is not unknown, set the type before changing ICL vote
@@ -5053,8 +5054,12 @@ static int smbchg_change_usb_supply_type(struct smbchg_chip *chip,
 		goto out;
 	}
 
-	if (!chip->skip_usb_notification)
-		power_supply_set_supply_type(chip->usb_psy, type);
+	if (!chip->skip_usb_notification) {
+		propval.intval = type;
+		chip->usb_psy->set_property(chip->usb_psy,
+				POWER_SUPPLY_PROP_REAL_TYPE,
+				&propval);
+	}
 
 	/*
 	 * otherwise if it is unknown, remove vote
