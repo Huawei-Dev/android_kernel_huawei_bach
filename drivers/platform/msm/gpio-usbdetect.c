@@ -224,7 +224,7 @@ static void gpio_usbdetect_chg_work(struct work_struct *w)
 		dev_dbg(&usb->pdev->dev, "ID:%d VBUS:%d\n",
 						usb->id, usb->vbus);
 		if (!usb->id) {
-			power_supply_set_supply_type(usb->usb_psy,
+			gpio_usbdetect_notify_usb_type(usb,
 					POWER_SUPPLY_TYPE_UNKNOWN);
 			power_supply_set_present(usb->usb_psy, 0);
 			power_supply_set_usb_otg(usb->usb_psy, 1);
@@ -239,11 +239,11 @@ static void gpio_usbdetect_chg_work(struct work_struct *w)
 			gpio_set_value(usb->dpdm_switch_gpio, 0);
 
 		if (usb->vbus) {
-			power_supply_set_supply_type(usb->usb_psy,
+			gpio_usbdetect_notify_usb_type(usb,
 						POWER_SUPPLY_TYPE_USB);
 			power_supply_set_present(usb->usb_psy, usb->vbus);
 		} else {
-			power_supply_set_supply_type(usb->usb_psy,
+			gpio_usbdetect_notify_usb_type(usb,
 					POWER_SUPPLY_TYPE_UNKNOWN);
 			power_supply_set_present(usb->usb_psy, usb->vbus);
 		}
