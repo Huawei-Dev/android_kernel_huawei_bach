@@ -19,34 +19,7 @@
 
 #include <linux/module.h>
 #include <linux/reboot.h>
-
-
-
-#if defined (CONFIG_HUAWEI_DSM)
-#include <linux/jiffies.h>
-#include <dsm/dsm_pub.h>
-#include <linux/ctype.h>
-
-static struct dsm_dev dm_dsm_dev = {
-      .name = "dsm_dm_verity",
-      .device_name = NULL,
-      .ic_name = NULL,
-      .module_name = NULL,
-      .fops = NULL,
-      .buff_size = 1024,
-};
-
-
-static unsigned long timeout;
-#define DSM_REPORT_INTERVAL      (1)
-
-static struct dsm_client *dm_dsm_dclient = NULL;
-
-#define DM_VERITY_MAX_PRINT_ERRS	20
-static unsigned long err_count;
-
-#define HASH_ERR_VALUE		1
-#endif
+#include <linux/vmalloc.h>
 
 #define DM_MSG_PREFIX			"verity"
 
@@ -60,6 +33,7 @@ static unsigned long err_count;
 #define DM_VERITY_OPT_LOGGING		"ignore_corruption"
 #define DM_VERITY_OPT_RESTART		"restart_on_corruption"
 #define DM_VERITY_OPT_IGN_ZEROES	"ignore_zero_blocks"
+#define DM_VERITY_OPT_AT_MOST_ONCE	"check_at_most_once"
 
 #define DM_VERITY_OPTS_MAX		(2 + DM_VERITY_OPTS_FEC)
 
@@ -216,145 +190,6 @@ static void verity_hash_at_level(struct dm_verity *v, sector_t block, int level,
 		*offset = idx << (v->hash_dev_block_bits - v->hash_per_block_bits);
 }
 
-#if defined (CONFIG_HUAWEI_DSM)
-static void verity_dsm(struct dm_verity *v, enum verity_block_type type,
-			     unsigned long long block, int error_no)
-{
-	const char *type_str = "";
-
-	switch (type) {
-	case DM_VERITY_BLOCK_TYPE_DATA:
-		type_str = "data";
-		break;
-	case DM_VERITY_BLOCK_TYPE_METADATA:
-		type_str = "metadata";
-		break;
-	default:
-		BUG();
-	}
-
-	if (time_after(jiffies, timeout)) {
-		if (!dsm_client_ocuppy(dm_dsm_dclient)) {
-			dsm_client_record(dm_dsm_dclient, "%s: %s block %d is corrupted, dmd error num %d\n",
-				v->data_dev->name, type_str, block, error_no);
-			dsm_client_notify(dm_dsm_dclient, error_no);
-		}
-
-		timeout = jiffies + DSM_REPORT_INTERVAL*HZ;
-	}
-}
-
-static void print_block_data(unsigned long long blocknr, unsigned char *data_to_dump
-			, int start, int len)
-{
-	int i, j;
-	int bh_offset = (start / 16) * 16;
-	char row_data[17] = { 0, };
-	char row_hex[50] = { 0, };
-	char ch;
-
-	if (err_count >= DM_VERITY_MAX_PRINT_ERRS)
-		return;
-
-	err_count++;
-
-	printk(KERN_ERR " block error# : %llu, start offset(byte) : %d\n"
-				, blocknr, start);
-	printk(KERN_ERR "printing Hash dump %dbyte\n", len);
-	printk(KERN_ERR "-------------------------------------------------\n");
-
-	for (i = 0; i < (len + 15) / 16; i++) {
-		for (j = 0; j < 16; j++) {
-			ch = *(data_to_dump + bh_offset + j);
-			if (start <= bh_offset + j
-				&& start + len > bh_offset + j) {
-
-				if (isascii(ch) && isprint(ch))
-					sprintf(row_data + j, "%c", ch);
-				else
-					sprintf(row_data + j, ".");
-
-				sprintf(row_hex + (j * 3), "%2.2x ", ch);
-			} else {
-				sprintf(row_data + j, " ");
-				sprintf(row_hex + (j * 3), "-- ");
-			}
-		}
-
-		printk(KERN_ERR "0x%4.4x : %s | %s\n"
-				, bh_offset, row_hex, row_data);
-		bh_offset += 16;
-	}
-	printk(KERN_ERR "---------------------------------------------------\n");
-}
-#endif
-
-#ifdef CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG
-#ifndef CONFIG_FINAL_RELEASE
-#define ROW_LENGTH 32
-#define ROW_HEX_MAX_SIZE 100
-#define INTERLEAVE_STEP 3
-static void print_data_from_ddr(u8 *data, size_t len, enum verity_block_type type)
-{
-	size_t i, j;
-	size_t bh_offset = 0;
-	char row_hex[ROW_HEX_MAX_SIZE] = { 0, };
-	char ch = '\0';
-	char *type_str = "";
-
-	switch (type) {
-	case DM_VERITY_BLOCK_TYPE_DATA:
-		type_str = "data";
-		break;
-	case DM_VERITY_BLOCK_TYPE_METADATA:
-		type_str = "metadata";
-		break;
-	default:
-		BUG();
-	}
-
-	if(data == NULL) {
-		printk(KERN_ERR"[hash dm verity %s] data addr is NULL!\n", type_str);
-		return;
-	}
-
-	printk(KERN_ERR "[hash dm verity %s] printing block data, len = %u\n", type_str, (unsigned int)len);
-	printk(KERN_ERR "-------------------------------------------------\n");
-	for (i = 0; i < (len + (ROW_LENGTH - 1)) / ROW_LENGTH; i++) {
-		for (j = 0; j < ROW_LENGTH; j++) {
-			ch = *((char *)data + bh_offset + j);
-			if (len > bh_offset + j) {
-				sprintf(row_hex + (j * INTERLEAVE_STEP), "%2.2x ", ch);
-			} else {
-				sprintf(row_hex + (j * INTERLEAVE_STEP), "-- ");
-			}
-		}
-		printk(KERN_ERR "0x%4.4x : %s\n", bh_offset, row_hex);
-		bh_offset += ROW_LENGTH;
-	}
-	printk(KERN_ERR "---------------------------------------------------\n");
-}
-/*
-    Print error block data from ddr
-*/
-static int print_block_data_from_ddr(struct dm_verity *v, struct dm_verity_io *io,
-			  u8 *data, size_t len)
-{
-	print_data_from_ddr(data, len, DM_VERITY_BLOCK_TYPE_DATA);
-	return 0;
-}
-#endif
-#endif
-/*
-    Print error block data's ddr address
-*/
-static int print_block_data_addr(struct dm_verity *v, struct dm_verity_io *io,
-			  u8 *data, size_t len)
-{
-	printk(KERN_ERR "[hash dm verity data] block_address = 0x%p in DDR.\n", data);
-	return 0;
-}
-
 /*
  * Handle verification errors.
  */
@@ -400,18 +235,9 @@ out:
 	if (v->mode == DM_VERITY_MODE_LOGGING)
 		return 0;
 
-	if (v->mode == DM_VERITY_MODE_RESTART) {
-#ifdef CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG
-#ifndef CONFIG_FINAL_RELEASE
-		DMERR("%s: %s FEC fail, start BUG_ON()!!", v->data_dev->name, type_str);
-		BUG_ON("dm-verity device corrupted");
-#else
+	if (v->mode == DM_VERITY_MODE_RESTART)
 		kernel_restart("dm-verity device corrupted");
-#endif
-#else
-		kernel_restart("dm-verity device corrupted");
-#endif
-	}
+
 	return 1;
 }
 
@@ -458,55 +284,18 @@ static int verity_verify_level(struct dm_verity *v, struct dm_verity_io *io,
 			goto release_ret_r;
 
 		if (likely(memcmp(verity_io_real_digest(v, io), want_digest,
-				  v->digest_size) == 0)){
+				  v->digest_size) == 0))
 			aux->hash_verified = 1;
-		}
-#if (defined CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG)&&(!defined CONFIG_FINAL_RELEASE)
-		else {
-			pr_err("[hash dm verity] metadata block = %llu, address = 0x%p in DDR.\n", (unsigned long long)hash_block, data);
-			pr_err("[hash dm verity]soft hash fail, start BUG_ON()!!");
-			BUG_ON("dm-verity device corrupted");
-		}
-#else
 		else if (verity_fec_decode(v, io,
 					   DM_VERITY_BLOCK_TYPE_METADATA,
-					   hash_block, data, NULL) == 0){
-#if defined (CONFIG_HUAWEI_DSM)
-			verity_dsm(v, DM_VERITY_BLOCK_TYPE_METADATA,
-					hash_block, DSM_DM_VERITY_FEC_INFO_NO);
-#endif
+					   hash_block, data, NULL) == 0)
 			aux->hash_verified = 1;
-			pr_err("[hash dm verity] metadata block = %llu, address = 0x%p in DDR.\n", (unsigned long long)hash_block, data);
-			pr_err("[hash dm verity] soft hash fail ,fec correct success.\n");
+		else if (verity_handle_err(v,
+					   DM_VERITY_BLOCK_TYPE_METADATA,
+					   hash_block)) {
+			r = -EIO;
+			goto release_ret_r;
 		}
-		else {
-			/*fec fail*/
-#if defined (CONFIG_HUAWEI_DSM)
-			print_block_data((unsigned long long)hash_block,
-							(unsigned char *)verity_io_real_digest(v, io),
-							0, v->digest_size);
-			print_block_data((unsigned long long)hash_block,
-							(unsigned char *)want_digest,
-							0, v->digest_size);
-			verity_dsm(v, DM_VERITY_BLOCK_TYPE_METADATA, hash_block, DSM_DM_VERITY_ERROR_NO);
-#endif
-			pr_err("[hash dm verity] metadata block = %llu, address = 0x%p in DDR.\n", (unsigned long long)hash_block, data);
-#ifdef CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG
-#ifndef CONFIG_FINAL_RELEASE
-			print_data_from_ddr(data, (size_t)(1 << v->hash_dev_block_bits), DM_VERITY_BLOCK_TYPE_METADATA);
-#endif
-#endif
-			pr_err("[hash dm verity] soft hash fail ,fec fail.\n");
-			if (verity_handle_err(v,
-						DM_VERITY_BLOCK_TYPE_METADATA,
-						hash_block)) {
-				r = -EIO;
-				goto release_ret_r;
-			}else{
-				pr_err("[hash dm verity] verity_handle_err success\n");
-			}
-		}
-#endif
 	}
 
 	data += offset;
@@ -608,6 +397,18 @@ static int verity_bv_zero(struct dm_verity *v, struct dm_verity_io *io,
 }
 
 /*
+ * Moves the bio iter one data block forward.
+ */
+static inline void verity_bv_skip_block(struct dm_verity *v,
+					struct dm_verity_io *io,
+					struct bvec_iter *iter)
+{
+	struct bio *bio = dm_bio_from_per_bio_data(io, v->ti->per_bio_data_size);
+
+	bio_advance_iter(bio, iter, 1 << v->data_dev_block_bits);
+}
+
+/*
  * Verify one "dm_verity_io" structure.
  */
 static int verity_verify_io(struct dm_verity_io *io)
@@ -616,20 +417,19 @@ static int verity_verify_io(struct dm_verity_io *io)
 	struct dm_verity *v = io->v;
 	struct bvec_iter start;
 	unsigned b;
-	/*for log print*/
-	struct bvec_iter start2;
-
-#ifdef CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG
-#ifndef CONFIG_FINAL_RELEASE
-	struct bvec_iter start3;
-#endif
-#endif
 
 	for (b = 0; b < io->n_blocks; b++) {
 		int r;
+		sector_t cur_block = io->block + b;
 		struct shash_desc *desc = verity_io_hash_desc(v, io);
 
-		r = verity_hash_for_block(v, io, io->block + b,
+		if (v->validated_blocks &&
+		    likely(test_bit(cur_block, v->validated_blocks))) {
+			verity_bv_skip_block(v, io, &io->iter);
+			continue;
+		}
+
+		r = verity_hash_for_block(v, io, cur_block,
 					  verity_io_want_digest(v, io),
 					  &is_zero);
 		if (unlikely(r < 0))
@@ -653,13 +453,6 @@ static int verity_verify_io(struct dm_verity_io *io)
 			return r;
 
 		start = io->iter;
-		start2 = start;
-#ifdef CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG
-#ifndef CONFIG_FINAL_RELEASE
-		start3 = start;
-#endif
-#endif
-
 		r = verity_for_bv_block(v, io, &io->iter, verity_bv_hash_update);
 		if (unlikely(r < 0))
 			return r;
@@ -669,53 +462,17 @@ static int verity_verify_io(struct dm_verity_io *io)
 			return r;
 
 		if (likely(memcmp(verity_io_real_digest(v, io),
-				  verity_io_want_digest(v, io), v->digest_size) == 0)){
+				  verity_io_want_digest(v, io), v->digest_size) == 0)) {
+			if (v->validated_blocks)
+				set_bit(cur_block, v->validated_blocks);
 			continue;
 		}
-#if (defined CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG)&&(!defined CONFIG_FINAL_RELEASE)
-		else {
-			pr_err("[hash dm verity data]data block = %llu.\n", (unsigned long long)(io->block+b));
-			verity_for_bv_block(v, io, &start2, print_block_data_addr);
-			pr_err("[hash dm verity data]soft hash fail, start BUG_ON()!!");
-			BUG_ON("dm-verity device corrupted");
-		}
-#else
 		else if (verity_fec_decode(v, io, DM_VERITY_BLOCK_TYPE_DATA,
-					io->block + b, NULL, &start) == 0){
-#if defined (CONFIG_HUAWEI_DSM)
-			verity_dsm(v, DM_VERITY_BLOCK_TYPE_DATA,
-					io->block + b, DSM_DM_VERITY_FEC_INFO_NO);
-#endif
-			verity_for_bv_block(v, io, &start2, print_block_data_addr);
-			pr_err("[hash dm verity data] soft hash fail ,fec correct success. data block = %llu.\n", (unsigned long long)(io->block+b));
+					   cur_block, NULL, &start) == 0)
 			continue;
-		}
-		else {
-			/*soft hash fail && fec fail*/
-#if defined (CONFIG_HUAWEI_DSM)
-			print_block_data((unsigned long long)(io->block+b),
-					(unsigned char *)verity_io_real_digest(v, io),
-					0, v->digest_size);
-			print_block_data((unsigned long long)(io->block+b),
-					(unsigned char *)verity_io_want_digest(v, io),
-					0, v->digest_size);
-			verity_dsm(v, DM_VERITY_BLOCK_TYPE_DATA, io->block + b, DSM_DM_VERITY_ERROR_NO);
-#endif
-			verity_for_bv_block(v, io, &start2, print_block_data_addr);
-#ifdef CONFIG_HUAWEI_MSM8937_DM_VERITY_DEBUG
-#ifndef CONFIG_FINAL_RELEASE
-			verity_for_bv_block(v, io, &start3, print_block_data_from_ddr);
-#endif
-#endif
-			pr_err("[hash dm verity data] soft hash fail ,fec fail. data block = %llu.\n", (unsigned long long)(io->block+b));
-			if (verity_handle_err(v, DM_VERITY_BLOCK_TYPE_DATA,
-						io->block + b)){
-				return -EIO;
-			}else{
-				pr_err("[hash dm verity data] verity_handle_err success\n");
-			}
-		}
-#endif
+		else if (verity_handle_err(v, DM_VERITY_BLOCK_TYPE_DATA,
+					   cur_block))
+			return -EIO;
 	}
 
 	return 0;
@@ -909,6 +666,8 @@ void verity_status(struct dm_target *ti, status_type_t type,
 			args += DM_VERITY_OPTS_FEC;
 		if (v->zero_digest)
 			args++;
+		if (v->validated_blocks)
+			args++;
 		if (!args)
 			return;
 		DMEMIT(" %u", args);
@@ -927,6 +686,8 @@ void verity_status(struct dm_target *ti, status_type_t type,
 		}
 		if (v->zero_digest)
 			DMEMIT(" " DM_VERITY_OPT_IGN_ZEROES);
+		if (v->validated_blocks)
+			DMEMIT(" " DM_VERITY_OPT_AT_MOST_ONCE);
 		sz = verity_fec_status_table(v, sz, result, maxlen);
 		break;
 	}
@@ -997,6 +758,7 @@ void verity_dtr(struct dm_target *ti)
 	if (v->bufio)
 		dm_bufio_client_destroy(v->bufio);
 
+	vfree(v->validated_blocks);
 	kfree(v->salt);
 	kfree(v->root_digest);
 	kfree(v->zero_digest);
@@ -1017,6 +779,26 @@ void verity_dtr(struct dm_target *ti)
 	kfree(v);
 }
 EXPORT_SYMBOL_GPL(verity_dtr);
+
+static int verity_alloc_most_once(struct dm_verity *v)
+{
+	struct dm_target *ti = v->ti;
+
+	/* the bitset can only handle INT_MAX blocks */
+	if (v->data_blocks > INT_MAX) {
+		ti->error = "device too large to use check_at_most_once";
+		return -E2BIG;
+	}
+
+	v->validated_blocks = vzalloc(BITS_TO_LONGS(v->data_blocks) *
+				       sizeof(unsigned long));
+	if (!v->validated_blocks) {
+		ti->error = "failed to allocate bitset for check_at_most_once";
+		return -ENOMEM;
+	}
+
+	return 0;
+}
 
 static int verity_alloc_zero_digest(struct dm_verity *v)
 {
@@ -1085,6 +867,12 @@ static int verity_parse_opt_args(struct dm_arg_set *as, struct dm_verity *v)
 				ti->error = "Cannot allocate zero digest";
 				return r;
 			}
+			continue;
+
+		} else if (!strcasecmp(arg_name, DM_VERITY_OPT_AT_MOST_ONCE)) {
+			r = verity_alloc_most_once(v);
+			if (r)
+				return r;
 			continue;
 
 		} else if (verity_is_fec_opt_arg(arg_name)) {
@@ -1357,7 +1145,7 @@ EXPORT_SYMBOL_GPL(verity_ctr);
 
 static struct target_type verity_target = {
 	.name		= "verity",
-	.version	= {1, 3, 0},
+	.version	= {1, 4, 0},
 	.module		= THIS_MODULE,
 	.ctr		= verity_ctr,
 	.dtr		= verity_dtr,
@@ -1376,17 +1164,6 @@ static int __init dm_verity_init(void)
 	r = dm_register_target(&verity_target);
 	if (r < 0)
 		DMERR("register failed %d", r);
-
-#if defined (CONFIG_HUAWEI_DSM)
-    if (!dm_dsm_dclient) {
-        dm_dsm_dclient = dsm_register_client(&dm_dsm_dev);
-		if (NULL == dm_dsm_dclient) {
-			DMERR("[%s]dsm_register_client register fail.\n", __func__);
-		}
-    }
-
-	timeout = jiffies;
-#endif
 
 	return r;
 }
