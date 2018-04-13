@@ -1860,10 +1860,7 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
 	}
 
 	ret = -ENOMEM;
-	cc->io_queue = alloc_workqueue("kcryptd_io",
-				       WQ_HIGHPRI |
-				       WQ_MEM_RECLAIM,
-				       1);
+	cc->io_queue = alloc_workqueue("kcryptd_io", WQ_HIGHPRI | WQ_MEM_RECLAIM, 1);
 	if (!cc->io_queue) {
 		ti->error = "Couldn't create kcryptd io queue";
 		goto bad;
