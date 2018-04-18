@@ -134,9 +134,17 @@ static void f2fs_read_end_io(struct bio *bio, int err)
 	}
 #endif
 
-	if (f2fs_bio_post_read_required(bio, err)) {
-		struct bio_post_read_ctx *ctx = bio->bi_private;
+	if (f2fs_bio_encrypted(bio)) {
+		if (err) {
+			fscrypt_release_ctx(bio->bi_private);
+		} else {
+			fscrypt_enqueue_decrypt_bio(bio->bi_private, bio);
+			return;
+		}
+	}
 
+	bio_for_each_segment_all(bvec, bio, i) {
+		struct page *page = bvec->bv_page;
 		ctx->cur_step = STEP_INITIAL;
 		bio_post_read_processing(ctx);
 		return;
