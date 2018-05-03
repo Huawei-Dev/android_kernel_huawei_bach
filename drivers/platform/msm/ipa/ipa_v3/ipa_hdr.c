@@ -1149,10 +1149,22 @@ int ipa3_reset_hdr(bool user_only)
 			}
 		}
 	}
-	ipa3_ctx->hdr_proc_ctx_tbl.end = 0;
-	ipa3_ctx->hdr_proc_ctx_tbl.proc_ctx_cnt = 0;
-	mutex_unlock(&ipa3_ctx->lock);
 
+	IPADBG("hdr_proc_tbl.end = %d\n", end);
+	if (user_rule) {
+		ipa3_ctx->hdr_proc_ctx_tbl.end = end;
+		IPADBG("hdr_proc_tbl.end = %d\n", end);
+	}
+
+	/* commit the change to IPA-HW */
+	if (ipa3_ctx->ctrl->ipa3_commit_hdr()) {
+		IPAERR("fail to commit hdr\n");
+		WARN_ON_RATELIMIT_IPA(1);
+		mutex_unlock(&ipa3_ctx->lock);
+		return -EFAULT;
+	}
+
+	mutex_unlock(&ipa3_ctx->lock);
 	return 0;
 }
 
