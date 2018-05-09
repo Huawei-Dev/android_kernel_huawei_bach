@@ -706,3 +706,11 @@ config DEBUG_VMALLOC
 	  are the PID and the name of the task requesting vmalloc.
 
 	  Disabling these can result in savings in code size.
+
+config VM_MAX_READAHEAD
+	int "default max readahead window size"
+	default 128
+	help
+	  This sets the VM_MAX_READAHEAD value to allow the readahead window
+	  to grow to a maximum size of configured. This will benefit sequential
+	  read throughput and thus early boot performance.
