@@ -982,11 +982,12 @@ int hall_pf_probe(struct platform_device *pdev)
 
 	camera_hall_support_is_true = check_support_camera_hall_status(&hw_hall_dev);
 
-	err = sensors_classdev_register(&hw_hall_dev.hw_input_hall->dev, &hw_hall_dev.cdev);
+/*	err = sensors_classdev_register(&hw_hall_dev.hw_input_hall->dev, &hw_hall_dev.cdev);
 	if (err) {
 		AK8789_ERRMSG("sensors_classdev_register failed: %d", err);
 		goto err_free_sensor_class;
 	}
+*/
 
 	err = app_info_set("Hall", "AKM8789");
 	if (err)
@@ -999,7 +1000,9 @@ int hall_pf_probe(struct platform_device *pdev)
 /*del Invalid global branch*/
 err_free_sensor_class:
 input_register_fail:
+/*
 	input_free_device(hw_hall_dev.hw_input_hall);
+*/
 input_err:
 sysfs_create_fail:
 	sensors_classdev_unregister(&hw_hall_dev.cdev);
