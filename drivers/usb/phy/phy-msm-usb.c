@@ -1564,6 +1564,8 @@ static int msm_otg_resume(struct msm_otg *motg)
 
     if (motg->host_bus_suspend || motg->device_bus_suspend)
 	disable_irq(motg->irq);
+	if (motg->phy_irq)
+		disable_irq(motg->phy_irq);
 	wake_lock(&motg->wlock);
 
 	/*
@@ -1691,6 +1693,8 @@ skip_phy_resume:
 		enable_irq(motg->async_int);
 		motg->async_int = 0;
 	}
+	if (motg->phy_irq)
+		enable_irq(motg->phy_irq);
 	enable_irq(motg->irq);
 
 	/* Enable ASYNC_IRQ only during LPM */
