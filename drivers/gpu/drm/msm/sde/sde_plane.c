@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015-2017, 2018 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1507,6 +1507,19 @@ enum sde_sspp sde_plane_pipe(struct drm_plane *plane, uint32_t index)
 	}
 
 	return default_sspp;
+}
+
+u32 sde_plane_num_of_phy_pipe(struct drm_plane *plane)
+{
+	struct sde_plane *sde_plane = to_sde_plane(plane);
+
+	if (!plane || !sde_plane) {
+		SDE_ERROR("plane=%pK or sde_plane=%pK is NULL\n",
+			plane, sde_plane);
+		return 0;
+	}
+
+	return sde_plane->num_of_phy_planes;
 }
 
 static void _sde_plane_init_debugfs(struct sde_plane *psde, struct sde_kms *kms)
