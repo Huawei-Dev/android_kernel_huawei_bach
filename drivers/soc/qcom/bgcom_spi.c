@@ -1059,6 +1059,7 @@ static int bgcom_pm_suspend(struct device *dev)
 	if (ret == 0) {
 		bg_spi->bg_state = BGCOM_STATE_SUSPEND;
 		atomic_set(&bg_is_spi_active, 0);
+		disable_irq(bg_irq);
 	}
 	pr_info("suspended with : %d\n", ret);
 	return ret;
@@ -1075,7 +1076,8 @@ static int bgcom_pm_resume(struct device *dev)
 	atomic_set(&bg_is_spi_active, 1);
 	ret = bgcom_resume(&clnt_handle);
 	if (ret == 0)
-		pr_info("Bgcom resumed\n");
+		enable_irq(bg_irq);
+	pr_info("Bgcom resumed with : %d\n", ret);
 	return ret;
 }
 
