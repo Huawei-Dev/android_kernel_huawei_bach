@@ -474,9 +474,12 @@ static ssize_t show_all_time_in_state(struct kobject *kobj,
 
 	len += scnprintf(buf + len, PAGE_SIZE - len, "freq\t\t");
 	for_each_possible_cpu(cpu) {
+		policy = cpufreq_cpu_get(cpu);
+		if (!policy)
+			continue;
 		len += scnprintf(buf + len, PAGE_SIZE - len, "cpu%d\t\t", cpu);
-		if (cpu_online(cpu))
-			cpufreq_stats_update(cpu);
+		cpufreq_stats_update(cpu);
+		cpufreq_cpu_put(policy);
 	}
 
 	if (!all_freq_table)
@@ -486,7 +489,7 @@ static ssize_t show_all_time_in_state(struct kobject *kobj,
 		len += scnprintf(buf + len, PAGE_SIZE - len, "\n%u\t\t", freq);
 		for_each_possible_cpu(cpu) {
 			policy = cpufreq_cpu_get(cpu);
-			if (policy == NULL)
+			if (!policy)
 				continue;
 			all_stat = per_cpu(all_cpufreq_stats, policy->cpu);
 			index = get_index_all_cpufreq_stat(all_stat, freq);
