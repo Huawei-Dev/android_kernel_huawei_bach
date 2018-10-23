@@ -2224,7 +2224,6 @@ static void status_change_work(struct work_struct *work)
 	}
 
 	fg_batt_avg_update(chip);
-
 out:
 	fg_dbg(chip, FG_POWER_SUPPLY, "charge_status:%d charge_type:%d charge_done:%d\n",
 		chip->charge_status, chip->charge_type, chip->charge_done);
