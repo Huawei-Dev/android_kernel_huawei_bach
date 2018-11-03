@@ -5876,6 +5876,9 @@ static ssize_t mic_gain_store(struct kobject *kobj,
 		input = 0;
 
 	snd_soc_write(sound_control_codec_ptr, MSM8X16_WCD_A_CDC_TX1_VOL_CTL_GAIN, input);
+	// dirty, but its better so
+	// because of dualmic
+	snd_soc_write(sound_control_codec_ptr, MSM8X16_WCD_A_CDC_TX2_VOL_CTL_GAIN, input);
 
 	return count;
 }
