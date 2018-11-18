@@ -1,0 +1,45 @@
+config CYTTSP5_CS445A
+	tristate "cypress cs445a touch screen driver"
+	default n
+	help
+	  Say Y here if you have cypress touch device us cyttsp5 to connected to your system and want
+	  it to be available to applications.
+	  Say N here if you have no cypress touch device use cyttsp5 in your system.
+	  If unsure, say Y.
+	  To compile this driver as a module, choose M here: the
+	  module will be called input.
+source "drivers/huawei_platform/touchscreen/cyttsp5_cs445a/Kconfig"
+config SYNAPTICS_DSX_S3320
+	tristate "synaptics s3320 touch screen driver"
+	default n
+	help
+	  Say Y here if you have synaptics s3320 device connected to your system and want
+	  it to be available to applications.
+	  Say N here if you have no synaptics s3320 device in your system.
+	  If unsure, say Y.
+	  To compile this driver as a module, choose M here: the
+	  module will be called input.
+source "drivers/huawei_platform/touchscreen/synaptics_dsx_s3320/Kconfig"
+
+config FOCALTECH_8736
+	tristate "focaltech 6x06 touch screen driver"
+	default n
+	help
+	  Say Y here if you have focaltech 6x06 touch device connected to your system and want
+	  it to be available to applications. 
+	  Say N here if you have no focaltech 6x06 touch device in your system.
+	  If unsure, say Y.
+	  To compile this driver as a module, choose M here: the
+	  module will be called input.
+source "drivers/huawei_platform/touchscreen/focaltech_8736/Kconfig"
+config ILITEK_2120
+	tristate "ilitek 2120 touch screen driver"
+	default n
+	help
+	  Say Y here if you have ilitek 2120 device connected to your system and want
+	  it to be available to applications.
+	  Say N here if you have no ilitek 2120 device in your system.
+	  If unsure, say Y.
+	  To compile this driver as a module, choose M here: the
+	  module will be called input.
+source "drivers/huawei_platform/touchscreen/ilitek_2120/Kconfig"

@@ -1,0 +1,10 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "CAN-L01";
+		fac,hardware_ver = "HL1CANL01M";
+		fac,software_ver = "CAN_L01_VC";
+		fac,simcard_adapt = "support";
+		status = "ok";
+	};
+};

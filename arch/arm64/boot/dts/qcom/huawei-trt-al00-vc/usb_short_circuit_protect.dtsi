@@ -1,0 +1,28 @@
+&tlmm {
+	usb_short_curcuit_default: usb_short_curcuit_default {
+			mux {
+				pins = "gpio63";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio63";
+				drive-strength = <2>;
+				bias-disable;
+		};
+	};
+};
+/{
+        usb_short_circuit_protect: usb_short_circuit_protect{
+                compatible = "huawei,usb_short_circuit_protect";
+				pinctrl-names = "default";
+		        pinctrl-0 = <&usb_short_curcuit_default>;
+		        gpio_usb_short_circuit_protect = <&tlmm 63 0x00>;
+
+                       no_need_uscp = <1>;
+                       uscp_threshold_tusb = <40>;
+		       open_mosfet_temp = <15>;
+		       close_mosfet_temp = <10>;
+		       interval_switch_temp = <7>;
+                status = "ok";
+        };
+};

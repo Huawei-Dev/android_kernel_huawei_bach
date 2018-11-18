@@ -1,0 +1,23 @@
+&soc {
+	huawei,huawei-gpio-info {
+		compatible = "huawei-gpio-info";
+		huawei,voltage-active-high;
+	};
+};
+
+&soc {
+	tlmm: pinctrl@1000000 {
+	sdc2_cd_on: cd_on {
+			mux {
+				pins = "gpio133";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio133";
+				drive-strength = <2>;
+				bias-disable;
+			};
+		};
+	};
+};

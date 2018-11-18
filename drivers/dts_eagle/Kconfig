@@ -1,0 +1,6 @@
+config DTS_EAGLE
+	tristate "DTS Eagle driver"
+	depends on ARM
+	default y if ARM
+	help
+	  DTS Eagle module.

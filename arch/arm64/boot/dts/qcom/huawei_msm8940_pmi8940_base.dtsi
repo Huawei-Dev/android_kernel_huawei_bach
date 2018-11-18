@@ -1,0 +1,115 @@
+/*=============================================================================
+                           Huawei Base Dtsi File
+  GENERAL DESCRIPTION
+    This file is for include the Communal node
+
+  Copyright 2010-2014 by HUAWEI Technologies, Inc.  All Rights Reserved.
+=============================================================================*/
+#include "msm8940.dtsi"
+#include "msm8940-pmi8940-mtp.dtsi"
+
+&spmi_bus {
+
+	qcom,pm8937@0 {
+		qcom,power-on@800 {
+			interrupts = <0x0 0x8 0x0>,
+				<0x0 0x8 0x1>,
+				<0x0 0x8 0x3>;
+			interrupt-names = "kpdpwr", "resin","kpdpwr-bark";
+			qcom,s3-debounce = <16>;
+
+			qcom,pon_1 {
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <4480>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <7>;
+				qcom,use-bark;
+			};
+		};
+		pm8937_rtc: qcom,pm8937_rtc {
+			qcom,qpnp-rtc-alarm-pwrup = <1>;
+		};
+	};
+
+	qcom,pmi8940@2 {
+		pmi8940_vadc: vadc@3100 {
+			chan@10 {
+				label = "mpp1_adc";
+				reg = <0x10>; // channel for MPP1
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <0>; //Use 1:1 scaling to keep input voltage with in Max voltage: 1.8V
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <1>;
+				qcom,fast-avg-setup = <2>;
+			};
+		};
+
+		pmi8940_mpps: mpps {
+			mpp@a000 {
+				reg = <0xa000 0x100>;
+				qcom,pin-num = <1>;
+				status = "ok";
+				qcom,mode = <4>; // A-input
+				qcom,src-sel = <0>; //MPP Constant
+				qcom,ain-route = <0>; // QPNP_PIN_AIN_AMUX_CH5 = 0 for MPP1
+				qcom,master-en = <1>; //Enable MPP
+			};
+		};
+		pmi8940_charger: qcom,qpnp-smbcharger {
+			qcom,vchg_sns-vadc = <&pmi8940_vadc>;
+			qcom,vchg-adc-channel-id = <3>;
+			qcom,fastchg-current-ma = <2200>;
+			qcom,float-voltage-mv = <4400>;
+			qcom,override-usb-current;
+			qcom,device-not-support-hvdcp;
+			qcom,ignore-usb-ibus-setting;
+		};
+
+		pmi8940_fg: qcom,fg {
+			qcom,vbat-estimate-diff-mv = <100>;
+                        qcom,capacity-learning-feedback;
+		};
+	};
+};
+
+/{
+	huawei_fuelguage: qcom,huawei_fuelguage{
+		compatible = "huawei,fuelguage";
+		fuelguage_type = "bms";
+		status = "okay";
+	};
+};
+
+&soc {
+	usb_otg: usb@78db000 {
+		qcom,usbin-vadc = <&pmi8940_vadc>;
+		qcom,floated-charger-enable = <1>;
+	};
+};
+&soc {
+	tlmm: pinctrl@1000000 {
+	  sdhc2_cd_pin {
+             sdc2_cd_on: cd_on {
+			mux {
+				pins = "gpio67";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio67";
+				drive-strength = <2>;
+				bias-disable;
+			};
+                   };
+	      };
+	};
+};
+
+&rpm_bus {
+	rpm-regulator-ldoa6 {
+		pm8937_l6: regulator-l6 {
+			regulator-always-on;
+		};
+	};
+};

@@ -1,0 +1,65 @@
+/*remove pmi leds*/
+&spmi_bus {
+	qcom,pmi8937@2 {
+		/delete-node/ qcom,leds@a100;
+	};
+};
+
+&tlmm {
+	gpio_led_pins {
+		gpio_led_pinctrl: gpio_led_pinctrl {
+			mux {
+				pins = "gpio23", "gpio25";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio23", "gpio25";
+				drive-strength = <2>;
+				bias-disable;
+				output-low;
+			};
+		};
+	};
+
+	chg_red_ctrl_pin {
+		chg_red_ctrl_pinctrl: chg_red_ctrl_pinctrl {
+			mux {
+				pins = "gpio43";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio43";
+				drive-strength = <2>;
+				bias-pull-up;
+				output-high;
+			};
+		};
+	};
+};
+
+&soc {
+	gpio-leds {
+		compatible = "gpio-leds";
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_led_pinctrl &chg_red_ctrl_pinctrl>;
+
+		red {
+			gpios = <&tlmm 25 0>;
+			label = "red";
+			linux,default-trigger = "none";
+			default-state = "off";
+			retain-state-suspended;
+		};
+
+		green {
+			gpios = <&tlmm 23 0>;
+			label = "green";
+			linux,default-trigger = "none";
+			default-state = "off";
+			retain-state-suspended;
+		};
+	};
+};

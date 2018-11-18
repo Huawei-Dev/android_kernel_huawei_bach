@@ -1,0 +1,37 @@
+&pmx_mdss {
+	mdss_dsi_active: mdss_dsi_active {
+		mux {
+			pins = "gpio98", "gpio99";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio98", "gpio99";
+			drive-strength = <8>; /* 8 mA */
+			bias-disable = <0>; /* no pull */
+			output-high;
+		};
+	};
+	mdss_dsi_suspend: mdss_dsi_suspend {
+		mux {
+			pins = "gpio98", "gpio99";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio98", "gpio99";
+			drive-strength = <2>; /* 2 mA */
+			bias-pull-down; /* pull down */
+			input-enable;
+		};
+	};
+};
+
+&mdss_dsi0 {
+	/delete-property/ qcom,platform-reset-gpio;
+};
+
+&mdss_dsi0_pll {
+	/delete-property/ qcom,dsi-pll-ssc-en;
+	/delete-property/ qcom,dsi-pll-ssc-mode;
+};

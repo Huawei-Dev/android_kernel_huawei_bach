@@ -1,0 +1,38 @@
+/{
+	huawei_audio_info {
+		compatible = "hw,hw_audio_info";
+		product-identifier = "agassi";
+		builtin-master-mic-exist;
+		hand_held_master_mic_strategy;
+		loud_speaker_master_mic_strategy;
+		mic1-differential-mode-enabled;		/* set mic1 in differential mode */
+		audio-ce-param-inside;
+		voice-lvm-mode = "1";			/*disable lvm: set voice-lvm-mode 1*/
+		status = "ok";
+	};
+};
+
+/* delete node for wsa spk config of qcom */
+&i2c_2 {
+	/delete-node/ wsa881x-i2c-codec@e;
+	/delete-node/ wsa881x-i2c-codec@44;
+	/delete-node/ wsa881x-i2c-codec@f;
+	/delete-node/ wsa881x-i2c-codec@45;
+};
+
+&int_codec {
+	/* There is no ext capacity for mic_bias1 or mic_bias2 on DEMO board, and no switch for US-EURO headsets. */
+	/delete-property/ qcom,msm-micbias1-ext-cap;
+	/delete-property/ qcom,cdc-us-euro-gpios;
+
+	qcom,msm-hs-micbias-type = "external";
+	qcom,msm-mbhc-insert-debounce = <11>;	/*set insert debounce time to 512ms*/
+	qcom,audio-routing =
+		"RX_BIAS", "MCLK",
+		"SPK_RX_BIAS", "MCLK",
+		"INT_LDO_H", "MCLK",
+		"MIC BIAS Internal1", "Handset Mic",
+		"MIC BIAS External2", "Headset Mic",
+		"AMIC1", "MIC BIAS Internal1",
+		"AMIC2", "MIC BIAS External2";
+};

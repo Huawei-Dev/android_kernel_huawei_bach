@@ -1,0 +1,10 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "Kobe-L09AHN";
+		fac,hardware_ver = "SH1KOBL09AHNM";
+		fac,software_ver = "Kobe_L09AHN_VA";
+		fac,simcard_adapt = "support";
+		status = "ok";
+	};
+};

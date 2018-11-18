@@ -1,0 +1,182 @@
+&tlmm {
+      smb_int_default: smb_int_default {
+                mux {
+                        pins = "gpio61";
+                        function = "gpio";
+                };
+                config {
+                        pins = "gpio61";
+                        num-grp-pins = <1>;
+                        drive-strength = <2>;   /* 2 MA */
+                        bias-pull-up;           /* PULL UP*/
+                };
+        };
+};
+
+
+&pm8937_mpps{
+	mpp@a100 {
+                                /* MPP2 - batteryid config */
+                                reg = <0xa100 0x100>;
+                                qcom,pin-num = <2>;
+                                qcom,mode = <4>; /* AIN input */
+                                qcom,invert = <1>; /* Enable MPP */
+                                qcom,ain-route = <1>; /* AMUX 6 */
+                                qcom,master-en = <1>;
+                                qcom,src-sel = <0>; /* Function constant */
+	};
+};
+
+
+&pm8937_vadc{
+	cpu_mpp_number = <19>;
+	pa_mpp_number = <54>;
+	chan@11 {
+                                label = "batt_id_uv";
+                                reg = <0x11>;
+                                qcom,decimation = <0>;
+                                qcom,pre-div-channel-scaling = <0>;
+                                qcom,calibration-type = "ratiometric";
+                                qcom,scale-function = <0>;
+                                qcom,hw-settle-time = <2>;//200us delay
+                                qcom,fast-avg-setup = <2>;
+                                /delete-property/qcom,vadc-thermal-node;
+      };
+	chan@36 {
+                                label = "pa_therm0";
+                                reg = <0x36>;
+                                qcom,decimation = <0>;
+                                qcom,pre-div-channel-scaling = <0>;
+                                qcom,calibration-type = "ratiometric";
+                                qcom,scale-function = <2>;
+                                qcom,hw-settle-time = <2>;
+                                qcom,fast-avg-setup = <0>;
+				     qcom,vadc-thermal-node;
+	};
+};
+
+
+&rpm_bus{
+	rpm-regulator-ldoa16 {
+                status = "okay";
+                pm8917_l16: regulator-l16 {
+                        regulator-name = "pm8917_l16";
+                        regulator-min-microvolt = <1800000>;
+                        regulator-max-microvolt = <1800000>;
+                        qcom,init-voltage = <1800000>;
+			    regulator-always-on;
+                        status = "okay";
+                };
+        };
+};
+
+&led_flash0{
+		/delete-property/qcom,flash-source;
+		/delete-property/qcom,torch-source ;
+		/delete-property/qcom,switch-source;
+};
+
+
+&spmi_bus {
+	     /delete-node/qcom,pmi8937@2;
+	     /delete-node/qcom,pmi8937@3;
+};
+
+
+&i2c_2 {
+smb1360_otg_supply: smb1360-chg-fg@14 {
+            compatible = "qcom,smb1360-chg-fg";
+            reg = <0x14>;
+            interrupt-parent = <&tlmm>;
+            interrupts = <61 2>;
+            pinctrl-names = "default";
+            pinctrl-0 = <&smb_int_default>;
+	     qcom,stat-pulsed-irq;
+            //qcom,charging-disabled;
+            qcom,chg-inhibit-disabled;
+            qcom,iterm-ma = <150>;
+            /*battery capacity*/
+            qcom,float-voltage-mv = <4350>;
+            qcom,fg-cc-to-cv-mv = <4340>;
+            qcom,fg-cutoff-voltage-mv = <3400>;
+            qcom,fg-voltage-min-mv = <3400>;
+            qcom,fg-voltage-empty-mv = <3400>;
+            //qcom,fg-suspend-voltage-empty-mv = <3400>;
+            qcom,fg-ibatt-standby-ma = <200>;
+            qcom,fg-soc-max = <90>;
+            qcom,fg-soc-min = <15>;
+            qcom,fg-batt-capacity-mah = <4650>;
+            qcom,fg-cc-soc-coeff = <0x7B0C>;
+            qcom,fg-batt-capacity-4650mah = <4650>;
+            qcom,fg-cc-soc-coeff-4650 = <0x7B0C>;
+            qcom,fg-batt-capacity-4800mah = <4800>;
+            qcom,fg-cc-soc-coeff-4800 = <0x7AD4>;
+            qcom,charger-batt-capacity-mah = <4800000>;
+            qcom,thermistor-c1-coeff = <0x86C2>;
+            qcom,charging-timeout = <768>;
+            qcom,otg-batt-curr-limit = <1500>;
+            qcom,recharge-thresh-mv = <100>;
+            qcom,fg-auto-recharge-soc = <99>;
+            qcom,thermal-mitigation = <1000 500 500 0>;
+            qcom,fg-delta-soc = <1>;
+            qcom,empty-soc-disabled;
+            regulator-name = "smb1360_otg_vreg";
+	     qcom,smb1360-vadc = <&pm8937_vadc>;
+	     qcom,batt-profile-select;
+            qcom,rsense-10mhom;
+            qcom,fg-reset-at-pon;
+	    qcom,fg-reset-thresold-mv = <200>;
+            //qcom,config-hard-thresholds;
+            qcom,hot-bat-decidegc = <520>;
+            qcom,cold-bat-decidegc = <0>;
+            qcom,soft-jeita-supported;
+            qcom,warm-bat-decidegc = <450>;
+            qcom,cool-bat-decidegc = <100>;
+            qcom,otp-hard-jeita-config;
+            qcom,otp-hot-bat-decidegc = <520>;
+            qcom,otp-cold-bat-decidegc = <0>;
+            qcom,otp-hard-jeita-hysteresis = <0 50>;
+            qcom,warm-bat-mv = <4100>;
+            qcom,cool-bat-mv = <4350>;
+            qcom,warm-bat-ma = <900>;
+            qcom,cool-bat-ma = <600>;
+	    qcom,shdn-after-pwroff;
+	    qcom,batt-id-disabled;
+	    qcom,batt-fast-current-com;
+	    qcom,smb1360-hw-ac-input-current = <1200>;
+	    qcom,smb1360-hw-ac-fastcurrent = <450>;
+	    qcom,soc-at-term = <95>;
+	    qcom,hw-report-decidegc-config;
+	    qcom,hw-hot-report-decidegc = <600>;
+	    qcom,hw-clod-report-decidegc = <(-200)>;
+        };
+};
+
+/{
+	huawei_charger: qcom,huawei_charger{
+		compatible = "huawei,charger";
+		status = "okay";
+	};
+};
+
+/{
+	huawei_charger{
+		powerdown_anim_horizontal = "1";
+	};
+};
+
+/{
+	huawei_fuelguage: qcom,huawei_fuelguage{
+		compatible = "huawei,fuelguage";
+		fuelguage_type = "bms";
+		status = "okay";
+	};
+};
+
+/{
+	huawei_dsm_charger: huawei_dsm_charger{
+		compatible = "huawei,dsm_charger";
+		status = "ok";
+	};
+};
+

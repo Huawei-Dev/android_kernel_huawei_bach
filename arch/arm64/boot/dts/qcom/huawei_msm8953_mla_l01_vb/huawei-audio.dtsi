@@ -1,0 +1,114 @@
+/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/ {
+	huawei_audio_info {
+		compatible = "hw,hw_audio_info";
+		product-identifier = "mlal010203";
+		speaker-pa = "max98925";
+		builtin-master-mic-exist;
+		builtin-second-mic-exist;
+		hand_held_dual_mic_strategy;
+		loud_speaker_second_mic_strategy;
+		speaker-box = "none", "AAC", "GOER", "LC";
+		spk-box-id = <&tlmm 89 0>;
+		spk-box-read-direct;
+		pinctrl-names ="box_default","box_sleep";
+		pinctrl-0 = <&box_id_default>;
+		pinctrl-1 = <&box_id_sleep>;
+		status = "ok";
+	};
+};
+
+/* add spk-box pinctrl */
+&tlmm {
+	audio_box_id_pin {
+		box_id_default: box_default {
+			mux {
+				pins = "gpio89";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio89";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
+		};
+
+		box_id_sleep: box_sleep {
+			mux {
+				pins = "gpio89";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio89";
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+	};
+};
+
+/* delete node for wsa spk config of qcom */
+&i2c_2 {
+	/delete-node/ wsa881x-i2c-codec@e;
+	/delete-node/ wsa881x-i2c-codec@44;
+	/delete-node/ wsa881x-i2c-codec@f;
+	/delete-node/ wsa881x-i2c-codec@45;
+};
+
+&int_codec {
+	/delete-property/ asoc-wsa-codec-names;
+	/delete-property/ asoc-wsa-codec-prefixes;
+	/delete-property/ msm-vdd-wsa-switch-supply;
+	/delete-property/ qcom,msm-vdd-wsa-switch-voltage;
+	/delete-property/ qcom,msm-vdd-wsa-switch-current;
+	/delete-property/ qcom,hdmi-dba-codec-rx;
+	/delete-property/ qcom,cdc-us-euro-gpios;
+
+	qcom,msm-ext-pa = "quinary";
+	qcom,msm-hs-micbias-type = "external";
+	qcom,msm-mbhc-hphl-swh = <1>;
+	speaker-pa = "max98925";
+	qcom,msm-gpios =
+		"pri_i2s",
+		"quin_i2s";
+	qcom,pinctrl-names =
+		"all_off",
+		"pri_i2s_act",
+		"quin_i2s_act",
+		"pri_i2s_quin_i2s_act";
+	pinctrl-names =
+		"all_off",
+		"pri_i2s_act",
+		"quin_i2s_act",
+		"pri_i2s_quin_i2s_act";
+	pinctrl-0 = <&cdc_pdm_lines_sus &cdc_pdm_lines_2_sus
+			&quin_mi2s_sus &quin_mi2s_ws_sus >;
+	pinctrl-1 = <&cdc_pdm_lines_act &cdc_pdm_lines_2_act
+			&quin_mi2s_sus &quin_mi2s_ws_sus >;
+	pinctrl-2 = <&cdc_pdm_lines_sus &cdc_pdm_lines_2_sus
+			&quin_mi2s_act &quin_mi2s_ws_act >;
+	pinctrl-3 = <&cdc_pdm_lines_act &cdc_pdm_lines_2_act
+			&quin_mi2s_act &quin_mi2s_ws_act >;
+};
+
+&i2c_8 {
+	max98925@31 {
+		compatible = "maxim,max98925";
+		reg = <0x31>;
+		i2c-pull-up;
+		vdd-supply = <&pm8953_l5>;
+		vcc_i2c-supply = <&pm8953_l5>;
+	};
+};
+

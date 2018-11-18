@@ -1,0 +1,48 @@
+qcom,qrd-4v4-3270mAh-swd-lg-data {
+	/* #2509825_Huawei_MilanAL10_XWD_LG_3270mAh_Master_Jun30th2016*/
+	qcom,max-voltage-uv = <4400000>;
+	qcom,nom-batt-capacity-mah = <3270>;
+	qcom,batt-id-kohm = <68>;
+	qcom,battery-beta = <3800>;
+	qcom,battery-type = "HB386483ECW_LG_SWD";
+	qcom,chg-rslow-comp-c1 = <3577344>;
+	qcom,chg-rslow-comp-c2 = <5649587>;
+	qcom,chg-rs-to-rslow = <1702238>;
+	qcom,chg-rslow-comp-thr = <0xB1>;
+	qcom,checksum = <0x242F>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 A1 83 5E 75
+		 0E 7B 56 74
+		 4B 83 D6 68
+		 DC 72 33 7E
+		 1A 82 F8 99
+		 D4 BC 66 C9
+		 71 0E 26 83
+		 92 6B 85 5A
+		 9D 63 34 83
+		 52 79 58 86
+		 1B 82 6A 82
+		 14 98 B1 B5
+		 54 C1 77 16
+		 43 0D 60 53
+		 14 70 71 FD
+		 26 3D F4 44
+		 E6 41 00 00
+		 B2 47 41 41
+		 6D 37 00 00
+		 00 00 00 00
+		 00 00 00 00
+		 72 72 6D 71
+		 1F 6A 24 83
+		 43 6F 30 50
+		 B9 61 3D 79
+		 C0 6D CD 4C
+		 C0 60 3C AA
+		 1E 59 69 2B
+		 6C A0 71 0C
+		 28 00 FF 36
+		 F0 11 30 03
+		 00 00 00 0C
+	];
+};

@@ -1,0 +1,9 @@
+ / {
+        huawei_wifi_info {
+                  compatible = "huawei,hw_wifi_info";
+                  status = "ok";
+                  wifi,chiptype = "WIFI_QUALCOMM_WCN3615";
+                  wifi,pubfile_id = "trt_tl10";
+                  wifi,fw_ver = "QCOM_WCN3615_2.0.2";
+        };
+};

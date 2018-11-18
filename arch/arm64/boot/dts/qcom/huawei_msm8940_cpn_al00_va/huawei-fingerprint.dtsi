@@ -1,0 +1,53 @@
+&tlmm {
+	fingerprint_moduleid_pin {
+		qcom,num-grp-pins = <1>;
+		label = "moduleid_pin";
+		fingerprint_moduleid_default: fingerprint_moduleid_default {
+			mux {
+				pins = "gpio129";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio129";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
+		};
+		fingerprint_moduleid_idle: fingerprint_moduleid_idle {
+			mux {
+				pins = "gpio129";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio129";
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+	};
+};
+
+&spi_6 {
+	status = "ok";
+	fingerprint@0 {
+		compatible = "fpc,fingerprint";
+		reg = <0>;
+		interrupt-parent = <&tlmm>;
+		spi-max-frequency = <5000000>;
+		interrupts = <46 0x0>;
+		fingerprint,irq_gpio = <&tlmm 46 0>;
+		fingerprint,reset_gpio = <&tlmm 66 0>;
+		fingerprint,power_gpio = <&tlmm 41 0>;
+		fingerprint,enable_gpio = <&tlmm 47 0>;
+		fingerprint,moduleid_gpio = <&tlmm 129 0>;
+		fingerprint,moduleid_low = "SL";
+		fingerprint,navigation_adjust1 = <0>;
+		fingerprint,navigation_adjust2 = <180>;
+		vdd-supply = <&pm8937_l6>;
+		fingerprint,vdd = "vdd";
+		pinctrl-names = "default", "idle";
+		pinctrl-0 = <&fingerprint_moduleid_default>;
+		pinctrl-1 = <&fingerprint_moduleid_idle>;
+		status = "ok";
+	};
+};

@@ -1,0 +1,10 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "TRT-L53";
+		fac,hardware_ver = "HL1TRTM-L53";
+		fac,software_ver = "TRT_L53_VD";
+		fac,simcard_adapt = "support";
+		status = "ok";
+	};
+};

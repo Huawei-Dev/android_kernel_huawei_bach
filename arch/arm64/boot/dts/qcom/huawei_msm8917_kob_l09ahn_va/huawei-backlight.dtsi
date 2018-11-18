@@ -1,0 +1,22 @@
+
+&i2c_5 {
+	lm36923_backlight@36{ /*For lm36923 backlight I2C address 0x36*/
+                                compatible = "ti,lm36923";
+                                reg = <0x36>;
+                                support = <1>;
+                                enable-reg = <0xF>;
+                                protect-disable = <1>;
+                                lm36923-ctrl-mode = <0>;
+
+                                mapping-mode = <0>;
+                                brightness-mode = <2>;
+                                ramp-enable = <1>;
+                                ramp-rate = <1>;
+                                adj-default = <0>;
+
+                                pwm-rate = <2>;
+                                pwm-input-polarity = <1>;
+                                pwm-hysteresis = <0>;
+                                pwm-filter = <2>;
+                        };
+};

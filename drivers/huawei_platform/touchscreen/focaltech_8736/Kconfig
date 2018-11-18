@@ -1,0 +1,10 @@
+
+#/*Add Enable Focaltech for Ft6x06-Tp Driver*/
+config TOUCHSCREEN_FTS
+	tristate "Enable Focaltech for Ft6x06-Tp Driver"
+	depends on FOCALTECH_8736
+	default y
+	help
+	  enable the f6x06_tp of focaltech.
+
+

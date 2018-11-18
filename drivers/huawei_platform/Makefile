@@ -1,0 +1,11 @@
+obj-$(CONFIG_HUAWEI_SENSORS)				+= sensor/
+obj-$(CONFIG_HUAWEI_TOUCH_SCREEN)			+= touchscreen/
+obj-y			+= power/
+obj-y   += antenna_board_match/
+obj-$(CONFIG_RFFE_ANTENNA) += antenna_cable/
+obj-y			+= log/
+obj-$(CONFIG_HUAWEI_UID_IO_STATS) += uid_iostats/
+obj-$(CONFIG_HUAWEI_IO_TRACING) += iotrace/
+obj-$(CONFIG_RFFE_ANTENNA) += antenna_board_gpio_match/
+obj-y			+= net/
+obj-$(CONFIG_CHR_NETLINK_MODULE)   += chr/

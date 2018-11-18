@@ -1,0 +1,60 @@
+/* Copyright (c) 2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+qcom,HB26A5I0EBC_SONY_SCUD-4v4-6500mah{
+	/* #2669394_Longcheer_HB26A510EBCscud_6500mAh_averaged_MasterSlave_Nov7th2016*/
+	qcom,max-voltage-uv = <4350000>;
+	qcom,nom-batt-capacity-mah = <6500>;
+	qcom,batt-id-kohm = <110>;
+	qcom,battery-beta = <3435>;
+	qcom,battery-type = "HB26A5I0EBC_SONY_SCUD-4v4-6500mah";
+	qcom,chg-rslow-comp-c1 = <2123564>;
+	qcom,chg-rslow-comp-c2 = <2036987>;
+	qcom,chg-rs-to-rslow = <552772>;
+	qcom,chg-rslow-comp-thr = <0x99>;
+	qcom,checksum = <0xA301>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 D7 83 36 7C 
+		 60 80 E3 75 
+		 3F 83 B8 69 
+		 B2 78 C1 84 
+		 FA 81 74 99 
+		 6A B7 E7 C2 
+		 58 11 D6 83 
+		 7B 77 F4 7B 
+		 14 75 48 83 
+		 4E 68 24 81 
+		 C8 8D 11 82 
+		 28 9A 61 BD 
+		 D9 CA 55 0E 
+		 31 1A 52 58 
+		 CE 6E 02 FB 
+		 D3 0E 61 3F 
+		 5F 38 00 00 
+		 85 3F D3 3B 
+		 8D 3E 00 00 
+		 00 00 00 00 
+		 00 00 00 00 
+		 AB 69 B3 68 
+		 89 75 E3 80 
+		 1E 7C B7 6B 
+		 81 75 AF 7B 
+		 0A 7C 86 6B 
+		 EC 7B 1D C0 
+		 0E 6C 59 4E 
+		 4F A0 71 0C 
+		 28 00 FF 36 
+		 F0 11 30 03 
+		 00 00 00 0C 
+	];
+};

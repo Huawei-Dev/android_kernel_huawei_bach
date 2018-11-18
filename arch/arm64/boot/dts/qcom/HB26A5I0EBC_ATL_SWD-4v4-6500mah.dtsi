@@ -1,0 +1,49 @@
+
+qcom,HB26A5I0EBC_ATL_SWD-4v4-6500mah {
+	/* #2692161_P2600_6500mAh_averaged_MasterSlave_Nov22nd2016*/
+	qcom,max-voltage-uv = <4350000>;
+	qcom,nom-batt-capacity-mah = <6500>;
+	qcom,batt-id-kohm = <466>;
+	qcom,battery-beta = <3435>;
+	qcom,battery-type = "HB26A5I0EBC_ATL_SWD-4v4-6500mah";
+	qcom,chg-rslow-comp-c1 = <2663506>;
+	qcom,chg-rslow-comp-c2 = <3298688>;
+	qcom,chg-rs-to-rslow = <627344>;
+	qcom,chg-rslow-comp-thr = <0x99>;
+	qcom,checksum = <0xC6A9>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 AE 82 6B 79 
+		 74 7C F2 71 
+		 26 83 08 79 
+		 B9 85 6A 81 
+		 50 82 E7 93 
+		 2C B5 91 C0 
+		 7D 11 E5 83 
+		 16 7C F1 7B 
+		 A2 74 46 83 
+		 CB 71 58 67 
+		 15 7D 46 82 
+		 8D 99 AB BC 
+		 4E C9 59 0D 
+		 82 1A B4 58 
+		 CE 6E 02 FB 
+		 8B 2D 67 3E 
+		 5F 38 00 00 
+		 D9 4C 07 39 
+		 AF 31 00 00 
+		 00 00 00 00 
+		 00 00 00 00 
+		 23 6A FC 68 
+		 15 74 2D 88 
+		 4D 7C 74 70 
+		 15 3D 66 82 
+		 3C 77 D4 6A 
+		 75 6D 22 B8 
+		 23 4C 62 BC 
+		 5F A0 71 0C 
+		 28 00 FF 36 
+		 F0 11 30 03 
+		 00 00 00 0C 
+	];
+};

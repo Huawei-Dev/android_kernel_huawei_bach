@@ -1,0 +1,24 @@
+#
+# For a description of the syntax of this configuration file,
+# see Documentation/kbuild/kconfig-language.txt.
+#
+mainmenu "Linux/$ARCH $KERNELVERSION Kernel Configuration"
+
+config SRCARCH
+	string
+	option env="SRCARCH"
+
+config WIFI_WAKE_SRC
+	bool "enable print wifi wakeup src in sleep mode"
+	depends on HUAWEI_KERNEL
+	default n
+	help
+	  Enable print wifi wakeup src in sleep mode.
+
+config HUAWEI_OBA
+	bool "Use Huawei kernel oba code"
+	default n
+	help
+	use huawei oba code.
+ 
+source "arch/$SRCARCH/Kconfig"

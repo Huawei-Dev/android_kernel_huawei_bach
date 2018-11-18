@@ -1,0 +1,48 @@
+qcom,qrd-4v4-3270mAh-scud-data {
+	/* #2491868_Huawei_Milan_ATL_3270mAh_Master_Jun7th2016 */
+	qcom,max-voltage-uv = <4400000>;
+	qcom,nom-batt-capacity-mah = <3270>;
+	qcom,batt-id-kohm = <200>;
+	qcom,battery-beta = <3435>;
+	qcom,battery-type = "HB386483ECW_ATL_SCUD";
+	qcom,chg-rslow-comp-c1 = <2848916>;
+	qcom,chg-rslow-comp-c2 = <3296789>;
+	qcom,chg-rs-to-rslow = <1423958>;
+	qcom,chg-rslow-comp-thr = <0x99>;
+	qcom,checksum = <0xD9A0>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 DE 82 EB 71
+		 EC 51 B6 60
+		 47 83 05 70
+		 ED 67 14 62
+		 00 82 F3 9A
+		 0D BE 39 CB
+		 89 0E F9 83
+		 43 7D 58 81
+		 A6 77 73 83
+		 68 76 70 8B
+		 70 96 49 82
+		 AF 99 D1 BC
+		 73 C9 52 10
+		 2D 0D 73 59
+		 14 70 71 FD
+		 3E 3F EA 3D
+		 C6 42 00 00
+		 8A 4C 07 38
+		 07 39 00 00
+		 00 00 00 00
+		 00 00 00 00
+		 9E 71 5C 70
+		 7C 68 2C 82
+		 4A 74 DC 60
+		 F1 66 3F 78
+		 93 6E 97 58
+		 21 7C D3 A2
+		 18 DB 61 60
+		 64 A0 71 0C
+		 28 00 FF 36
+		 F0 11 30 03
+		 00 00 00 0C
+	];
+};

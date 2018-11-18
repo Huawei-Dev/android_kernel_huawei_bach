@@ -1,0 +1,9 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "CAN-TL00";
+		fac,hardware_ver = "HL1CANL01M";
+		fac,software_ver = "CAN_TL00_VA";
+		status = "ok";
+	};
+};

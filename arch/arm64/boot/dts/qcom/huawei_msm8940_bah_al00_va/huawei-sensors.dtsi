@@ -1,0 +1,47 @@
+/*use fromdos convert file format to linux*/
+/* Copyright (c) 2013 The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+ &tlmm {
+	ak8789_default: ak8789_default {
+			mux {
+				pins = "gpio130", "gpio127";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio130", "gpio127";
+				num-grp-pins = <2>;
+				drive-strength = <2>;
+				bias-pull-up;
+		};
+	};
+};
+ 
+/{
+	huawei_hall_sensor{
+		compatible = "huawei,hall-ak8789";
+		reg = <0x0 0x8789>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ak8789_default>;
+		huawei,hall_gpio_config_rn = <&tlmm 130 0x2008>;
+		huawei,hall_gpio_config_rs = <&tlmm 127 0x2008>;
+		hall_poles = <1>;
+		status = "ok";
+	};
+};
+
+ / {
+	huawei_sensor_info {
+		compatible = "huawei,hw_sensor_info";
+		product_name = "bach";
+	};
+};

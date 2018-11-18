@@ -1,0 +1,50 @@
+
+qcom,qrd-4v4-3900mAh-SONY-Scud-data {
+	/* #2732917_Huawei_Toronto_3900mAh_averaged_MasterSlave_Dec8th2016*/
+	qcom,max-voltage-uv = <4400000>;
+	qcom,nom-batt-capacity-mah = <3900>;
+	qcom,batt-id-kohm = <99>;
+	qcom,battery-beta = <3435>;
+	qcom,battery-type = "HB406689ECW_SONY_Scud";
+	qcom,fg-cc-cv-threshold-mv = <4380>;
+	qcom,chg-rslow-comp-c1 = <2376401>;
+	qcom,chg-rslow-comp-c2 = <2895027>;
+	qcom,chg-rs-to-rslow = <986035>;
+	qcom,chg-rslow-comp-thr = <0x99>;
+	qcom,checksum = <0x4F76>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 E7 83 FF 7C 
+		 11 81 E4 76 
+		 26 83 15 78 
+		 73 7E FE 78 
+		 FE 81 D1 99 
+		 7E BC D7 C8 
+		 51 0F 63 88 
+		 27 85 D1 83 
+		 4D 7D 12 83 
+		 96 7B DF 8C 
+		 CF 88 3D 82 
+		 CA 98 E8 B6 
+		 B4 C2 9B 19 
+		 06 10 5E 59 
+		 14 70 71 FD 
+		 EF 39 3A 47 
+		 FD 2E 00 00 
+		 B6 44 45 32 
+		 FD 2E 00 00 
+		 00 00 00 00 
+		 00 00 00 00 
+		 B2 70 34 70 
+		 4B 76 9D 73 
+		 70 75 C0 69 
+		 09 6E 5B 79 
+		 54 75 DA 69 
+		 5F 60 56 AB 
+		 1A 63 61 CE 
+		 5D A0 71 0C 
+		 28 00 FF 36 
+		 F0 11 30 03 
+		 00 00 00 0C 
+	];
+};

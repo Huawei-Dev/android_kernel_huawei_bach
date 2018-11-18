@@ -1,0 +1,9 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "MLA-AL00";
+		fac,hardware_ver = "HL1MLAM";
+		fac,software_ver = "MLA_AL00_VC";
+		status = "ok";
+	};
+};

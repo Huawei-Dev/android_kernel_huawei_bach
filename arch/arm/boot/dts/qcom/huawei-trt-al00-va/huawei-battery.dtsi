@@ -1,0 +1,91 @@
+&mtp_batterydata {
+	qcom,batt-id-range-pct = <15>;
+
+	qcom,itech-3000mah {
+		qcom,batt-id-kohm = <2000>;
+		qcom,max-voltage-uv = <4400000>;
+		qcom,fg-cc-cv-threshold-mv = <4380>;
+	};
+	#include "../HB406689ECW_ATL_Desay_4v4_4000mah.dtsi"
+	#include "../HB406689ECW_Sony_Scud_4v4_3900mah.dtsi"
+	qcom,qrd-4v4-3900mAh-SONY-Scud-data {
+		qcom,batt-id-kohm = <110>;
+	};
+	#include "../Huawei_default_battery.dtsi"
+	#include "../HB406689ECW_GY_XWD_4v4_3900mah.dtsi"
+};
+
+&pmi8950_charger {
+	/* jeita parameters */
+	qcom,jeita-temp-hard-limit = <1>;
+	qcom,fastchg-current-batt-warm = <1400>;
+	qcom,fastchg-current-batt-cool = <1200>;
+	qcom,fastchg-current-customize-cool = <400>;
+	qcom,customize-cool-lower-limit = <0>;
+	qcom,customize-cool-upper-limit = <50>;
+	qcom,vfloat-batt-warm = <4100>;
+	qcom,float-voltage-comp = <16>;
+	qcom,charger-batt-capacity-mah = <4000000>;
+};
+
+&pmi8950_fg {
+	/* Using external sense */
+	qcom,ext-sense-type;
+	/* set Beta value */
+	qcom,thermal-coefficients = [c2 86 bb 50 cf 37];
+	/* set temp range thershold */
+	qcom,warm-bat-decidegc = <450>;
+	qcom,cool-bat-decidegc = <100>;
+	qcom,hot-bat-decidegc = <550>;
+	qcom,cold-bat-decidegc = <0>;
+	qcom,resume-soc = <99>;
+	qcom,resume-soc-raw = <253>;
+	qcom,fg-cutoff-voltage-mv = <3250>;
+	qcom,fg-iterm-ma = <200>;
+	qcom,fg-chg-iterm-ma = <120>;
+	qcom,fg-memif@4400 {
+		qcom,cold-hot-jeita-hysteresis = <20 20>;
+	};
+};
+
+/{
+	huawei_charger: qcom,huawei_charger{
+		compatible = "huawei,charger";
+		status = "okay";
+	};
+};
+
+/{
+	huawei_dsm_charger: huawei_dsm_charger{
+		compatible = "huawei,dsm_charger";
+		status = "ok";
+		qcom,dsm_cold_bat_degree = <0>;
+		qcom,dsm_cool_bat_degree = <100>;
+		qcom,dsm_imaxma_cool_bat = <1200000>;
+		qcom,dsm_vmaxmv_cool_bat = <4400>;
+		qcom,dsm_customize_cool_bat_degree = <50>;
+		qcom,dsm_imaxma_customize_cool_bat = <450000>;
+		qcom,dsm_warm_bat_degree = <450>;
+		qcom,dsm_imaxma_warm_bat = <1400000>;
+		qcom,dsm_vmaxmv_warm_bat = <4100>;
+		qcom,dsm_hot_bat_degree = <550>;
+	};
+};
+
+&pm8937_vadc {
+	chg_mpp_number = <17>;
+	cpu_mpp_number = <19>;
+	pa_mpp_number = <54>;
+
+	chan@11 {
+		label = "chg_therm";
+		qcom,scale-function = <17>;
+	};
+	chan@13 {
+		label = "msm_therm";
+		qcom,scale-function = <17>;
+	};
+	chan@36 {
+		qcom,scale-function = <17>;
+	};
+};

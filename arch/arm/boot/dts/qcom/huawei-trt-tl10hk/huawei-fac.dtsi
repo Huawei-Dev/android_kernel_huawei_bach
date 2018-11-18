@@ -1,0 +1,9 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "TRT-TL10HK";
+		fac,hardware_ver = "HL1TRTM-TL10";
+		fac,software_ver = "TRT_TL10HK_VX";
+		status = "ok";
+	};
+};

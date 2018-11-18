@@ -1,0 +1,51 @@
+/*remove pmi leds*/
+&spmi_bus {
+	qcom,pmi8950@2 {
+		/delete-node/ qcom,leds@a100;
+	};
+};
+
+&tlmm {
+	gpio_led_pins {
+		gpio_led_pinctrl: gpio_led_pinctrl {
+			mux {
+				pins = "gpio125", "gpio128";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio125", "gpio128";
+				drive-strength = <2>;
+				bias-disable;
+				output-low;
+			};
+		};
+	};
+
+};
+
+
+&soc {
+	gpio-leds {
+		compatible = "gpio-leds";
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_led_pinctrl>;
+
+		red {
+			gpios = <&tlmm 128 0>;
+			label = "red";
+			linux,default-trigger = "none";
+			default-state = "off";
+			retain-state-suspended;
+		};
+
+		green {
+			gpios = <&tlmm 125 0>;
+			label = "green";
+			linux,default-trigger = "none";
+			default-state = "off";
+			retain-state-suspended;
+		};
+	};
+};

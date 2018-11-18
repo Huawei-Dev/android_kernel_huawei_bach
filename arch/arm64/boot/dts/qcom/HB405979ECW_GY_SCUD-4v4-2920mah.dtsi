@@ -1,0 +1,48 @@
+qcom,qrd-4v4-2920mah-scud-gy-data {
+	/* #2581958_Huawei_CannesAL10gy_2920mAh_averaged_MasterSlave_Aug16th2016*/
+	qcom,max-voltage-uv = <4400000>;
+	qcom,nom-batt-capacity-mah = <2920>;
+	qcom,batt-id-kohm = <68>;
+	qcom,battery-beta = <3800>;
+	qcom,battery-type = "HB405979ECW_GY_SCUD";
+	qcom,chg-rslow-comp-c1 = <3333765>;
+	qcom,chg-rslow-comp-c2 = <4632900>;
+	qcom,chg-rs-to-rslow = <1094227>;
+	qcom,chg-rslow-comp-thr = <0xA3>;
+	qcom,checksum = <0x5B82>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 E1 83 D9 7C
+		 18 81 38 77
+		 6A 83 41 75
+		 D3 89 BE 94
+		 46 82 C5 98
+		 DA B6 86 C2
+		 57 14 01 88
+		 74 7D 55 81
+		 69 77 4C 83
+		 14 71 A5 5D
+		 70 7C 7D 82
+		 17 98 D1 B5
+		 34 C1 5E 0D
+		 F3 0B B7 5A
+		 14 70 71 FD
+		 E8 35 08 47
+		 AF 39 00 00
+		 B7 4C DF 22
+		 7B 48 00 00
+		 00 00 00 00
+		 00 00 00 00
+		 D3 70 08 6B
+		 5B 44 A4 8A
+		 CC 7C 20 72
+		 86 59 9E 80
+		 BF 75 A4 68
+		 D8 6C DD A3
+		 24 FC 48 15
+		 3C A0 71 0C
+		 28 00 FF 36
+		 F0 11 30 03
+		 00 00 00 0C
+	];
+};

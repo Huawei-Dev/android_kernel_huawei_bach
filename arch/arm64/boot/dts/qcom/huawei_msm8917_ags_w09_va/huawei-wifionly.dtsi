@@ -1,0 +1,6 @@
+/{
+		singleap_wifionly {
+		compatible = "singleap,wifionly";
+		is_wifionly = "1";
+	};
+};
