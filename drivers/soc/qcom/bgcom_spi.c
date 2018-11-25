@@ -688,9 +688,13 @@ EXPORT_SYMBOL(bgcom_close);
 static irqreturn_t bg_irq_tasklet_hndlr(int irq, void *device)
 {
 	struct bg_spi_priv *bg_spi = device;
+
 	/* check if call-back exists */
-	if (list_empty(&cb_head)) {
-		pr_debug("No callback registered\n");
+	if (!atomic_read(&bg_is_spi_active)) {
+		printk_ratelimited("Interrupt received in suspend state\n");
+		return IRQ_HANDLED;
+	} else if (list_empty(&cb_head)) {
+		pr_err("No callback registered\n");
 		return IRQ_HANDLED;
 	} else if (spi_state == BGCOM_SPI_BUSY) {
 		return IRQ_HANDLED;

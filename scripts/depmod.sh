@@ -15,9 +15,9 @@ if ! test -r System.map ; then
 fi
 
 if [ -z $(command -v $DEPMOD) ]; then
-	echo "Warning: 'make modules_install' requires $DEPMOD. Please install it." >&2
+	echo "'make modules_install' requires $DEPMOD. Please install it." >&2
 	echo "This is probably in the kmod package." >&2
-	exit 0
+	exit 1
 fi
 
 # older versions of depmod don't support -P <symbol-prefix>
