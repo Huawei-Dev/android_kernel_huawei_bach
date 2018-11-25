@@ -173,6 +173,9 @@ static long bgpil_tzapp_comm(struct pil_bg_data *pbd,
 	struct tzapp_bg_req *bg_tz_req;
 	struct tzapp_bg_rsp *bg_tz_rsp;
 	int rc, req_len, rsp_len;
+	unsigned char *ascii;
+	char fiwmare_version[100] = {'\0'};
+	char ascii_string[5];
 
 	/* Fill command structure */
 	req_len = sizeof(struct tzapp_bg_req);
