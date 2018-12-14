@@ -182,8 +182,6 @@ obj-$(CONFIG_HUAWEI_DRIVERS)	+=huawei_platform/
 
 obj-$(CONFIG_HW_GADGET)     += hwusb/
 
-obj-$(CONFIG_HUAWEI_BFM)     += hwbfm/
-
 obj-$(CONFIG_HUAWEI_FACTORY_INFO)	+= hw_fac_info/
 
 obj-$(CONFIG_SRECORDER)     += srecorder/

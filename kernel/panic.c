@@ -24,7 +24,6 @@
 #include <linux/init.h>
 #include <linux/nmi.h>
 #include <linux/console.h>
-#include <chipset_common/bfmr/bfm/chipsets/qcom/bfm_qcom.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/exception.h>
@@ -82,8 +81,6 @@ void panic(const char *fmt, ...)
 	va_list args;
 	long i, i_next = 0;
 	int state = 0;
-
-	qcom_set_boot_fail_flag(KERNEL_AP_PANIC);
 
 	trace_kernel_panic(0);
 	/*

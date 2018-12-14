@@ -44,9 +44,6 @@
 #include <linux/kallsyms.h>
 #include <linux/syscalls.h>
 #include <linux/rtc.h>
-#include <chipset_common/bfmr/bfm/core/bfm_core.h>
-#include <chipset_common/bfmr/bfm/chipsets/bfm_chipsets.h>
-#include <chipset_common/bfmr/bfm/chipsets/qcom/bfm_qcom.h>
 
 #define CREATE_MASK(NUM_BITS, POS) \
 	((unsigned char) (((1 << (NUM_BITS)) - 1) << (POS)))
@@ -1129,43 +1126,6 @@ static void bark_work_func(struct work_struct *work)
 
 err_return:
 	return;
-}
-#define USER_WAIT_SECS_ON_LOGO (50)
-extern void msm_trigger_wdog_bark(void);
-static void long_press_bark_work_func(struct work_struct *work) {
-
-    int fd;
-    struct timespec curBootUpTime;
-
-    if (STAGE_BOOT_SUCCESS == qcom_get_boot_stage())
-    {
-        pr_err("%s:boot success,skip!\n",__func__);
-        return;
-    }
-
-    if (!bfmr_has_been_enabled())
-    {
-        pr_err("%s:bfmr disabled,skip!\n",__func__);
-        return;
-    }
-
-    fd = sys_access("/dev/block/bootdevice/by-name/pad0", 0);
-    if (0 != fd)
-    {
-        pr_err("%s:pad0 is not ready !\n",__func__);
-        get_monotonic_boottime(&curBootUpTime);
-        pr_err("%s: curBootUpTime is %ld \n",__func__,curBootUpTime.tv_sec);
-        if (curBootUpTime.tv_sec > USER_WAIT_SECS_ON_LOGO)
-        {
-            qcom_set_boot_fail_flag(KERNEL_PRESS10S);
-            msm_trigger_wdog_bark();
-        }
-    }
-    else
-    {
-        boot_fail_err(KERNEL_PRESS10S, DO_NOTHING, NULL);
-    }
-    return;
 }
 
 static irqreturn_t qpnp_resin_bark_irq(int irq, void *_pon)
@@ -2726,8 +2686,6 @@ static int qpnp_pon_probe(struct spmi_device *spmi)
 	dev_set_drvdata(&spmi->dev, pon);
 
 	INIT_DELAYED_WORK(&pon->bark_work, bark_work_func);
-
-	INIT_DELAYED_WORK(&pon->long_press_bark_work, long_press_bark_work_func);
 
 #ifdef CONFIG_HUAWEI_DSM
 	init_timer(&lcd_pwr_status.lcd_dsm_t);

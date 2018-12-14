@@ -35,7 +35,6 @@
 #ifdef CONFIG_HUAWEI_RESET_DETECT
 #include <linux/huawei_reset_detect.h>
 #endif
-#include <chipset_common/bfmr/bfm/chipsets/qcom/bfm_qcom.h>
 
 #include <linux/fcntl.h>
 #include <linux/syscalls.h>
@@ -367,11 +366,6 @@ static void msm_restart_prepare(const char *cmd)
 		clear_reset_magic();
 	}
 #endif
-
-    /* only panic & watchdog, we record as a bootfail */
-	if(!in_panic) {
-		hwboot_clear_magic();
-	}
 
 	if (qpnp_pon_check_hard_reset_stored()) {
 		/* Set warm reset as true when device is in dload mode */

@@ -208,8 +208,6 @@ source "drivers/huawei_platform/Kconfig"
 
 source "drivers/hwusb/Kconfig"
 
-source "drivers/hwbfm/Kconfig"
-
 source "drivers/hw_fac_info/Kconfig"
 
 source "drivers/devdetect/Kconfig"

@@ -110,8 +110,6 @@
 #define TTY_PARANOIA_CHECK 1
 #define CHECK_TTY_COUNT 1
 
-#include <chipset_common/bfmr/bfm/chipsets/bfm_chipsets.h>
-
 struct ktermios tty_std_termios = {	/* for the benefit of tty drivers  */
 	.c_iflag = ICRNL | IXON,
 	.c_oflag = OPOST | ONLCR,
@@ -3534,9 +3532,6 @@ void tty_default_fops(struct file_operations *fops)
 void __init console_init(void)
 {
 	initcall_t *call;
-
-	bfm_set_boot_stage(KERNEL_CONSOLE_INITCALL);
-	printk(KERN_INFO "Boot_monitor set stage:KERNEL_CONSOLE_INITCALL\n");
 
 	/* Setup the default TTY line discipline. */
 	tty_ldisc_begin();

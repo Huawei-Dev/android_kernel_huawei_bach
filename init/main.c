@@ -78,9 +78,6 @@
 #include <linux/context_tracking.h>
 #include <linux/random.h>
 #include <linux/list.h>
-#include <chipset_common/bfmr/bfm/chipsets/bfm_chipsets.h>
-#include <chipset_common/bfmr/bfm/chipsets/qcom/bfm_qcom.h>
-
 
 #include <asm/io.h>
 #include <asm/bugs.h>
@@ -564,8 +561,6 @@ asmlinkage __visible void __init start_kernel(void)
 	trap_init();
 	mm_init();
 
-	hwboot_fail_init_struct();
-
 	/*
 	 * Set up the scheduler prior starting any interrupts (such as the
 	 * timer interrupt). Full topology setup happens at smp_init()
@@ -854,85 +849,6 @@ extern void log_boot(char *str);
 static void __init do_initcall_level(int level)
 {
 	initcall_t *fn;
-
-	switch(level)
-	{
-		case 0:
-			bfm_set_boot_stage(KERNEL_EARLY_INITCALL);
-			pr_info("Boot_monitor set stage:KERNEL_EARLY_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_EARLY_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 1:
-			bfm_set_boot_stage(KERNEL_CORE_INITCALL_SYNC);
-			pr_info("Boot_monitor set stage:KERNEL_CORE_INITCALL_SYNC\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_CORE_INITCALL_SYNC");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 2:
-			bfm_set_boot_stage(KERNEL_POSTCORE_INITCALL);
-			pr_info("Boot_monitor set stage:KERNEL_POSTCORE_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_POSTCORE_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 3:
-			bfm_set_boot_stage(KERNEL_ARCH_INITCALL);;
-			pr_info("Boot_monitor set stage:KERNEL_ARCH_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_ARCH_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 4:
-			bfm_set_boot_stage(KERNEL_SUBSYS_INITCALL);
-			pr_info("Boot_monitor set stage:KERNEL_SUBSYS_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_SUBSYS_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 5:
-			bfm_set_boot_stage(KERNEL_FS_INITCALL);
-			pr_info("Boot_monitor set stage:KERNEL_FS_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_FS_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 6:
-			bfm_set_boot_stage(KERNEL_DEVICE_INITCALL);
-			pr_info("Boot_monitor set stage:KERNEL_DEVICE_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_DEVICE_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		case 7:
-			bfm_set_boot_stage(KERNEL_LATE_INITCALL);
-			pr_info("Boot_monitor set stage:KERNEL_LATE_INITCALL\n");
-			/*AR0005AFIC yuanshuai 20160919 begin */
-			#ifdef CONFIG_HUAWEI_BOOT_TIME
-			log_boot("KERNEL_LATE_INITCALL");
-			#endif
-			/*AR0005AFIC yuanshuai 20160919 end */
-			break;
-		default:
-			pr_info("level is out of range ,no need set boot stage.\n");
-			break;
-	}
 
 	strcpy(initcall_command_line, saved_command_line);
 	parse_args(initcall_level_names[level],

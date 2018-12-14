@@ -61,7 +61,6 @@
 extern u64 device_index;
 #include <linux/mmc/dsm_emmc.h>
 #endif
-#include <chipset_common/bfmr/bfm/chipsets/qcom/bfm_qcom.h>
 
 /* If the device is not responding */
 #define MMC_CORE_TIMEOUT_MS	(10 * 60 * 1000) /* 10 minute timeout */
@@ -3932,13 +3931,9 @@ static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
 		return 0;
 	if (!mmc_attach_sd(host))
 		return 0;
-	if (!mmc_attach_mmc(host) && !check_bootfail_inject(KERNEL_EMMC_INIT_FAIL))
+	if (!mmc_attach_mmc(host))
 		return 0;
-	else if (host->caps & MMC_CAP_NONREMOVABLE)
-	{
-		qcom_set_boot_fail_flag(KERNEL_EMMC_INIT_FAIL);
-		panic("Boot_monitor detect error:KERNEL_EMMC_INIT_FAI\n");
-	}
+
 	mmc_power_off(host);
 	return -EIO;
 }
