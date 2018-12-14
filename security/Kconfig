@@ -139,8 +139,6 @@ source security/yama/Kconfig
 
 source security/integrity/Kconfig
 
-source security/hwselinux/Kconfig
-
 choice
 	prompt "Default security module"
 	default DEFAULT_SECURITY_SELINUX if SECURITY_SELINUX
@@ -182,8 +180,6 @@ config DEFAULT_SECURITY
 	default "apparmor" if DEFAULT_SECURITY_APPARMOR
 	default "yama" if DEFAULT_SECURITY_YAMA
 	default "" if DEFAULT_SECURITY_DAC
-
-source security/hw_root_scan/Kconfig
 
 endmenu
 
