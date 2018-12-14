@@ -135,7 +135,6 @@
 &sdhc_1 {
 	/* device core power supply */
 	vdd-supply = <&pm8953_l8>;
-	qcom,vdd-always-on;
 	qcom,vdd-voltage-level = <2900000 2900000>;
 	qcom,vdd-current-level = <200 570000>;
 

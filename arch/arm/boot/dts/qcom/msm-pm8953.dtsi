@@ -29,8 +29,9 @@
 			reg = <0x800 0x100>;
 			interrupts = <0x0 0x8 0x0>,
 				<0x0 0x8 0x1>,
-				<0x0 0x8 0x3>;
-			interrupt-names = "kpdpwr", "resin", "kpdpwr-bark",
+				<0x0 0x8 0x4>,
+				<0x0 0x8 0x5>;
+			interrupt-names = "kpdpwr", "resin",
 				"resin-bark", "kpdpwr-resin-bark";
 			qcom,pon-dbc-delay = <15625>;
 			qcom,system-reset;
@@ -39,7 +40,6 @@
 				qcom,pon-type = <0>;
 				qcom,pull-up = <1>;
 				linux,code = <116>;
-				qcom,use-bark;
 			};
 
 			qcom,pon_2 {

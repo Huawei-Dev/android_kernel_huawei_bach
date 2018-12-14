@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -92,7 +92,6 @@
 		cont_splash_mem: splash_region@83000000 {
 			reg = <0x0 0x90000000 0x0 0x1400000>;
 		};
-
 		sahara_mem: sahara_region@0x92000000 {
 			compatible = "sahara_mem";
 			no-map;
@@ -2099,13 +2098,11 @@
 	status = "okay";
 };
 
-/*AR0005AFIC yuanshuai 20160919 begin */
 /{
          huawei_boot_time {
                  compatible = "huawei,hw_boot_time_info";
          };
 };
-/*AR0005AFIC yuanshuai 20160919 end */
 
 /* GPU overrides */
 &msm_gpu {

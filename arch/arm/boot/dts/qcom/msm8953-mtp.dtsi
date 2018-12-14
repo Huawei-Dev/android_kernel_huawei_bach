@@ -70,7 +70,7 @@
 		pinctrl-names = "tlmm_gpio_key_active","tlmm_gpio_key_suspend";
 		pinctrl-0 = <&gpio_key_active>;
 		pinctrl-1 = <&gpio_key_suspend>;
-/*
+
 		camera_focus {
 			label = "camera_focus";
 			gpios = <&tlmm 87 0x1>;
@@ -86,7 +86,7 @@
 			linux,code = <0x2fe>;
 			debounce-interval = <15>;
 		};
-*/
+
 		vol_up {
 			label = "volume_up";
 			gpios = <&tlmm 85 0x1>;
@@ -126,7 +126,6 @@
 	reg = <0xd300 0x100>;
 	qcom,follow-otst2-rb-disabled;
 };
-
 
 #include "msm8953-mdss-panels.dtsi"
 
@@ -259,8 +258,7 @@
 	mtp_batterydata: qcom,battery-data {
 		qcom,batt-id-range-pct = <15>;
 		#include "batterydata-itech-3000mah.dtsi"
-		/* comment the ascent battery data to avoid mismatch */
-		//#include "batterydata-ascent-3450mAh.dtsi"
+		#include "batterydata-ascent-3450mAh.dtsi"
 	};
 };
 

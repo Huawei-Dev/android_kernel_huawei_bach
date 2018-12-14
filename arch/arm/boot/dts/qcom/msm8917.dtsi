@@ -991,7 +991,6 @@
 			compatible = "qcom,msm-imem-pil";
 			reg = <0x94c 200>;
 		};
-
 		srecorder_header@ae0 {
 			compatible = "qcom,msm-imem-srecorder_header";
 			reg = <0xae0 24>;

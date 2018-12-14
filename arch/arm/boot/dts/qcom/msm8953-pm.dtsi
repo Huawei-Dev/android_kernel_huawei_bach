@@ -297,7 +297,7 @@
 		qcom,num-mpm-irqs = <96>;
 		qcom,gic-map = <2 216>, /* tsens_upper_lower_int */
 			<58 168>,   /* qusb2phy_dmse_hv -> hs_phy_irq*/
-			<49 168>,   /* qusb2phy_dpse_hv -> usb30_pwr_evnt_irq */
+			<49 168>,   /* qusb2phy_dpse_hv -> hs_phy_irq*/
 			<37 252>,   /* qmp_usb3_lfps_rxterm_irq -> ss_phy_irq */
 			<53 104>, /* mdss_irq */
 			<88 222>, /* ee0_krait_hlos_spmi_periph_irq */
@@ -475,8 +475,7 @@
 			<72  139>,
 			<73  140>,
 			<74  141>,
-			<0xff 88>,
-                        <0xff 126>;
+			<0xff 88>;
 	};
 
 	qcom,cpu-sleep-status{

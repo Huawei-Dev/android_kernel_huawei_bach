@@ -1,5 +1,0 @@
-&soc {
-	qcom,msm-cpufreq {
-		hw_cpu_distri = "B0123,L4567";
-	};
-};

@@ -1,4 +1,0 @@
-/*remove qcom bcl*/
-&soc {
-    /delete-node/ qcom,bcl;
-};

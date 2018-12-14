@@ -186,18 +186,7 @@ dtb-$(CONFIG_ARCH_MSM8917) += msm8917-rumi.dtb \
 	msm8917-pmi8937-rcm.dtb \
 	msm8917-pmi8950-rcm.dtb \
 	msm8917-qgp-tmo.dtb \
-	msm8917-pmi8937-qrd-sku5.dtb \
-	huawei_msm8917_kob_l09_va.dtb \
-	huawei_msm8917_kob_l09ahn_va.dtb \
-	huawei_msm8917_kob_w09c_va.dtb \
-	huawei_msm8917_kob_w09chn_va.dtb \
-	huawei_msm8917_ags_l09_va.dtb \
-	huawei_msm8917_ags_l03_va.dtb \
-	huawei_msm8917_ags_w09_va.dtb \
-	huawei_msm8917_ags_l09hn_va.dtb \
-	huawei_msm8917_ags_w09hn_va.dtb \
-	huawei_msm8917_ags_vdf_va.dtb
-	
+	msm8917-pmi8937-qrd-sku5.dtb
 
 dtb-$(CONFIG_ARCH_MSM8920) += msm8920-pmi8937-cdp.dtb \
 	msm8920-pmi8937-mtp.dtb \
@@ -206,34 +195,6 @@ dtb-$(CONFIG_ARCH_MSM8920) += msm8920-pmi8937-cdp.dtb \
 	msm8920-pmi8937-rcm.dtb \
 	msm8920-pmi8950-rcm.dtb \
 	msm8920-pmi8940-qrd-sku7.dtb
-	
-dtb-$(CONFIG_ARCH_MSM8953) += msm8953-mtp.dtb \
-	huawei-mla-al00-va.dtb \
-	huawei-mla-al00-vb.dtb \
-	huawei-mla-al00-vc.dtb \
-	huawei-mla-al00-vd.dtb \
-	huawei-mla-al00-ve.dtb \
-	huawei-mla-tl00-va.dtb \
-	huawei-mla-l01-va.dtb \
-	huawei-mla-l01-vb.dtb \
-	huawei-mla-l02-va.dtb \
-	huawei-mla-l03-va.dtb \
-	huawei-can-al00-va.dtb \
-	huawei-can-al00-vb.dtb \
-	huawei-can-al00-vc.dtb \
-	huawei-can-al00-vd.dtb \
-	huawei-can-cl00-va.dtb \
-	huawei-can-tl00-va.dtb \
-	huawei-can-l01-va.dtb \
-	huawei-can-l01-vb.dtb \
-	huawei-can-l01-vc.dtb \
-	huawei-can-l01-vd.dtb \
-	huawei-can-l02-va.dtb \
-	huawei-can-l02-vb.dtb \
-	huawei-can-l02-vc.dtb \
-	huawei-can-l03-va.dtb \
-	huawei-can-l03-vb.dtb \
-	huawei-can-l03-vc.dtb
 
 dtb-$(CONFIG_ARCH_MSM8940) += msm8940-pmi8937-cdp.dtb \
 	msm8940-pmi8937-mtp.dtb \
@@ -249,31 +210,25 @@ dtb-$(CONFIG_ARCH_MSM8940) += msm8940-pmi8937-cdp.dtb \
 	msm8940-pmi8940-rcm.dtb \
 	msm8940-pmi8940-qrd-sku7.dtb
 
-dtb-$(CONFIG_MSM8940_SUPPORTED_PRODUCT) += huawei-trt-al00-va.dtb \
-    huawei-trt-tl10-va.dtb \
-    huawei-trt-l21-va.dtb \
-    huawei-trt-l22-va.dtb \
-    huawei-trt-l23-va.dtb \
-    huawei-trt-l53-va.dtb \
-    huawei-trt-al00-vb.dtb \
-    huawei_msm8940_bah_al00_va.dtb \
+dtb-$(CONFIG_MSM8940_SUPPORTED_PRODUCT) += huawei_msm8940_bah_al00_va.dtb \
     huawei_msm8940_bah_l09_va.dtb \
     huawei_msm8940_bah_l01_va.dtb \
-    huawei_msm8940_bah_w09_va.dtb \
-    huawei_msm8940_cpn_al00_va.dtb \
-    huawei_msm8940_cpn_l09_va.dtb \
-    huawei_msm8940_cpn_w09_va.dtb \
-    huawei-trt-a1.dtb \
-    huawei-trt-al00-vc.dtb \
-    huawei-trt-l21a.dtb \
-    huawei-trt-tl10hk.dtb \
-    huawei-trt-tl10-vd.dtb \
-    huawei-trt-l21-vd.dtb \
-    huawei-trt-l22-vd.dtb \
-    huawei-trt-l23-vd.dtb \
-    huawei-trt-l53-vd.dtb \
-    huawei-trt-al00-vd.dtb \
-    huawei-trt-a1-vd.dtb
+    huawei_msm8940_bah_w09_va.dtb
+
+dtb-$(CONFIG_ARCH_MSM8953) += msm8953-sim.dtb \
+	msm8953-rumi.dtb \
+	msm8953-cdp.dtb \
+	msm8953-mtp.dtb \
+	msm8953-ext-codec-mtp.dtb \
+	msm8953-qrd-sku3.dtb \
+	msm8953-rcm.dtb \
+	msm8953-ext-codec-rcm.dtb \
+	apq8053-cdp.dtb \
+	apq8053-mtp.dtb \
+	apq8053-ext-audio-mtp.dtb \
+	msm8953-cdp-1200p.dtb \
+	msm8953-iot-mtp.dtb \
+	apq8053-iot-mtp.dtb
 
 dtb-$(CONFIG_ARCH_MDM9607) += mdm9607-rumi.dtb \
 	mdm9607-cdp.dtb \

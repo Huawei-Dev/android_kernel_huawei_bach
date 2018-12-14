@@ -34,13 +34,13 @@
 		other_ext_mem: other_ext_region@0 {
 			compatible = "removed-dma-pool";
 			no-map;
-			reg = <0x0 0x83100000 0x0 0x3700000>;
+			reg = <0x0 0x85b00000 0x0 0xd00000>;
 		};
 
 		modem_mem: modem_region@0 {
 			compatible = "removed-dma-pool";
 			no-map-fixup;
-			reg = <0x0 0x86c00000 0x0 0x5600000>;
+			reg = <0x0 0x86c00000 0x0 0x6a00000>;
 		};
 
 		adsp_fw_mem: adsp_fw_region@0 {
@@ -53,12 +53,6 @@
 			compatible = "removed-dma-pool";
 			no-map;
 			reg = <0x0 0x8e700000 0x0 0x700000>;
-		};
-
-		srecorder_mem: srecorder_region@0 {
-			compatible = "removed-dma-pool", "srecorder_mem";
-			no-map;
-			reg = <0x0 0x8f100000 0x0 0x400000>;
 		};
 
 		venus_mem: venus_region@0 {
@@ -99,36 +93,12 @@
 			label = "cont_splash_mem";
 		};
 
-		sahara_mem: sahara_region@0x92000000 {
-			compatible = "sahara_mem";
-			no-map;
-			reg = <0x0 0x92000000 0x0 0x0200000>;
-                };
-
 		gpu_mem: gpu_region@0 {
 			compatible = "shared-dma-pool";
 			reusable;
 			alloc-ranges = <0x0 0x80000000 0x0 0x10000000>;
 			alignment = <0 0x400000>;
 			size = <0 0x800000>;
-		};
-
-		hwlog_tz_mem: hwlog_tz_region@0 {
-			linux,reserve-contiguous-region;
-			linux,reserve-region;
-			linux,remove-completely;
-			no-map;
-			reg = <0x0 0x92200000 0x0 0x0100000>;
-			label = "hwlog_tz_mem";
-		};
-
-		hwboot_fail_mem: hwboot_fail_region@0 {
-			linux,reserve-contiguous-region;
-			linux,reserve-region;
-			linux,remove-completely;
-			no-map;
-			reg = <0x0 0x86800000 0x0 0x0100000>;
-			label = "hwboot_fail_mem";
 		};
 	};
 
@@ -150,9 +120,7 @@
 		i2c2 = &i2c_2;
 		i2c3 = &i2c_3;
 		i2c5 = &i2c_5;
-		i2c8 = &i2c_8;
 		spi3 = &spi_3;
-		spi7 = &spi_7;
 	};
 
 	soc: soc { };
@@ -457,10 +425,6 @@
 			qcom,sensor-type =  "adc";
 			qcom,sensor-name = "case_therm";
 		};
-		sensor_information22: qcom,sensor-information-22 {
-			qcom,sensor-type =  "adc";
-			qcom,sensor-name = "msm_therm";
-		};
 	};
 
 	mitigation_profile0: qcom,limit_info-0 {
@@ -576,14 +540,14 @@
 		qcom,bcl-freq-control-list = <&CPU0 &CPU1 &CPU2 &CPU3
 						&CPU4 &CPU5 &CPU6 &CPU7>;
 		qcom,bcl-hotplug-list = <&CPU6 &CPU7>;
-		qcom,bcl-soc-hotplug-list = <&CPU6 &CPU7>;
+		qcom,bcl-soc-hotplug-list = <&CPU4 &CPU5 &CPU6 &CPU7>;
 		qcom,ibat-monitor {
 			qcom,low-threshold-uamp = <3400000>;
 			qcom,high-threshold-uamp = <4200000>;
 			qcom,mitigation-freq-khz = <1689600>;
 			qcom,vph-high-threshold-uv = <3500000>;
 			qcom,vph-low-threshold-uv = <3200000>;
-			qcom,soc-low-threshold = <5>;
+			qcom,soc-low-threshold = <10>;
 			qcom,thermal-handle = <&msm_thermal_freq>;
 		};
 	};
@@ -714,29 +678,6 @@
 		qcom,master-id = <86>;
 	};
 
-	spi_7: spi@7AF7000 { /* BLSP2 QUP2 */
-        compatible = "qcom,spi-qup-v2";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg-names = "spi_physical", "spi_bam_physical";
-		reg = <0x7AF7000 0x600>,
-			<0x7AC4000 0x1F000>;
-		interrupt-names = "spi_irq", "spi_bam_irq";
-		interrupts = <0 301 0>, <0 239 0>;
-		spi-max-frequency = <19200000>;
-		clocks = <&clock_gcc clk_gcc_blsp2_ahb_clk>,
-			<&clock_gcc clk_gcc_blsp2_qup3_spi_apps_clk>;
-		clock-names = "iface_clk", "core_clk";
-		qcom,infinite-mode = <0>;
-		qcom,use-bam;
-		qcom,use-pinctrl;
-		qcom,ver-reg-exists;
-		qcom,bam-consumer-pipe-index = <8>;
-		qcom,bam-producer-pipe-index = <9>;
-		qcom,master-id = <84>;
-		status = "disabled";
-	};
-
 	i2c_2: i2c@78b6000 { /* BLSP1 QUP2 */
 		compatible = "qcom,i2c-msm-v2";
 		#address-cells = <1>;
@@ -798,11 +739,9 @@
 		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
 			<&clock_gcc clk_gcc_blsp1_qup3_i2c_apps_clk>;
 
-		pinctrl-names = "i2c_active", "i2c_sleep", "i2c_default";
+		pinctrl-names = "i2c_active", "i2c_sleep";
 		pinctrl-0 = <&i2c_3_active>;
 		pinctrl-1 = <&i2c_3_sleep>;
-		pinctrl-2 = <&i2c_3_default>;
-		gpios = <&tlmm 10 0>, <&tlmm 11 0>;
 		qcom,noise-rjct-scl = <0>;
 		qcom,noise-rjct-sda = <0>;
 		qcom,master-id = <86>;
@@ -826,41 +765,14 @@
 		clocks = <&clock_gcc clk_gcc_blsp2_ahb_clk>,
 			<&clock_gcc clk_gcc_blsp2_qup1_i2c_apps_clk>;
 
-		pinctrl-names = "i2c_active", "i2c_sleep", "i2c_default";
+		pinctrl-names = "i2c_active", "i2c_sleep";
 		pinctrl-0 = <&i2c_5_active>;
 		pinctrl-1 = <&i2c_5_sleep>;
-		pinctrl-2 = <&i2c_5_default>;
-		gpios = <&tlmm 18 0>, <&tlmm 19 0>;
-		qcom,noise-rjct-scl = <2>;
-		qcom,noise-rjct-sda = <2>;
-		qcom,master-id = <84>;
-		dmas = <&dma_blsp2 4 64 0x20000020 0x20>,
-			<&dma_blsp2 5 32 0x20000020 0x20>;
-		dma-names = "tx", "rx";
-	};
-
-	i2c_8: i2c@7af8000 { /* BLSP2 QUP4 */
-		compatible = "qcom,i2c-msm-v2";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg-names = "qup_phys_addr";
-		reg = <0x7af8000 0x600>;
-		interrupt-names = "qup_irq";
-		interrupts = <0 302 0>;
-		qcom,clk-freq-out = <400000>;
-		qcom,clk-freq-in  = <19200000>;
-		clock-names = "iface_clk", "core_clk";
-		clocks = <&clock_gcc clk_gcc_blsp2_ahb_clk>,
-			 <&clock_gcc clk_gcc_blsp2_qup4_i2c_apps_clk>;
-
-		pinctrl-names = "i2c_active", "i2c_sleep";
-		pinctrl-0 = <&i2c_8_active>;
-		pinctrl-1 = <&i2c_8_sleep>;
 		qcom,noise-rjct-scl = <0>;
 		qcom,noise-rjct-sda = <0>;
 		qcom,master-id = <84>;
-		dmas = <&dma_blsp2 10 64 0x20000020 0x20>,
-			<&dma_blsp2 11 32 0x20000020 0x20>;
+		dmas = <&dma_blsp2 4 64 0x20000020 0x20>,
+			<&dma_blsp2 5 32 0x20000020 0x20>;
 		dma-names = "tx", "rx";
 	};
 
@@ -1251,25 +1163,6 @@
 			compatible = "qcom,msm-imem-pil";
 			reg = <0x94c 200>;
 
-		};
-		hw_reset_magic_addr@fe4 {
-			compatible = "qcom,msm-imem-reset_magic_addr";
-			reg = <0xfe4 4>;
-		};
-
-		srecorder_header@ae0 {
-			compatible = "qcom,msm-imem-srecorder_header";
-			reg = <0xae0 24>;
-		};
-
-		hwboot_header@b1c {
-			compatible = "qcom,msm-imem-hwboot_header";
-			reg = <0xb1c 256>;
-		};
-
-		hw_tz_reset_reason_addr@7a4 {
-			compatible = "qcom,msm-imem-tz-reset-reason-addr";
-			reg = <0x7a4 4>;
 		};
 	};
 
@@ -1697,9 +1590,9 @@
 		qcom,ce-opp-freq = <100000000>;
 	};
 
-	qcom_seecom: qseecom@83100000 {
+	qcom_seecom: qseecom@85b00000 {
 		compatible = "qcom,qseecom";
-		reg = <0x83100000 0x3200000>;
+		reg = <0x85b00000 0x800000>;
 		reg-names = "secapp-region";
 		qcom,hlos-num-ce-hw-instances = <1>;
 		qcom,hlos-ce-hw-instance = <0>;
@@ -2460,15 +2353,6 @@
 	clocks = <&clock_gcc_gfx clk_gcc_oxili_gfx3d_clk>;
 	status = "okay";
 };
-
-/*AR0005AFIC yuanshuai 20160919 begin */
-/{
-         huawei_boot_time {
-                 compatible = "huawei,hw_boot_time_info";
-         };
-};
-/*AR0005AFIC yuanshuai 20160919 end */
-
 
 &gdsc_usb30 {
 	status = "okay";

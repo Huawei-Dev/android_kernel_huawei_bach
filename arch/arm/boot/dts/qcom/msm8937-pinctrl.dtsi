@@ -187,7 +187,6 @@
 			};
 		};
 
-
 		tlmm_pmi_flash_led {
 			rear_flash_led_enable: rear_flash_led_enable {
 				mux {

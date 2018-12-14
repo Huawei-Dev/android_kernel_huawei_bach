@@ -429,7 +429,7 @@
 			config {
 				pins = "sdc1_clk";
 				bias-disable;		/* NO pull */
-				drive-strength = <8>;	/* 8 MA */
+				drive-strength = <16>;	/* 16 MA */
 			};
 		};
 
@@ -545,7 +545,7 @@
 			config {
 				pins = "gpio133";
 				drive-strength = <2>;
-				bias-disable;
+				bias-pull-up;
 			};
 		};
 
@@ -620,19 +620,6 @@
 					bias-disable;
 				};
 			};
-			i2c_3_default: i2c_3_default {
-				/* default state*/
-				mux {
-					pins = "gpio10", "gpio11";
-					function = "gpio";
-				};
-
-				config {
-					pins = "gpio10", "gpio11";
-					drive-strength = <8>;
-					bias-pull-up;
-				};
-			};
 		};
 
 		i2c_5 {
@@ -660,51 +647,6 @@
 				config {
 					pins = "gpio18", "gpio19";
 					drive-strength = <2>;
-					bias-disable;
-				};
-			};
-			i2c_5_default: i2c_5_default {
-				/* default state*/
-				mux {
-					pins = "gpio18", "gpio19";
-					function = "gpio";
-				};
-
-				config {
-					pins = "gpio18", "gpio19";
-					drive-strength = <8>;
-					bias-pull-up;
-				};
-			};
-		};
-
-		i2c_8 {
-			/* active state */
-			i2c_8_active: i2c_8_active{
-				mux {
-					/* CLK, DATA */
-					pins = "gpio98", "gpio99";
-					function = "blsp_i2c8";
-				};
-
-				config {
-					pins = "gpio98", "gpio99";
-					drive-strength = <2>; /* 2 MA */
-					bias-disable; /* No PULL */
-				};
-			};
-
-			/* suspended state */
-			i2c_8_sleep: i2c_8_sleep {
-				mux {
-					/* CLK, DATA */
-					pins = "gpio98", "gpio99";
-					function = "blsp_i2c8";
-				};
-
-				config {
-					pins = "gpio98", "gpio99";
-					drive-strength = <2>; /* 2 MA */
 					bias-disable;
 				};
 			};
@@ -941,59 +883,6 @@
 					pins = "gpio69", "gpio73", "gpio74";
 					drive-strength = <2>;
 					bias-disable;
-				};
-			};
-		};
-
-		quin-mi2s-lines {
-			quin_mi2s_act: quin_mi2s_act {
-				mux {
-					pins = "gpio88", "gpio91", "gpio93";
-					function = "pri_mi2s";
-				};
-
-				config {
-					pins = "gpio88", "gpio91", "gpio93";
-					drive-strength = <8>;
-				};
-			};
-
-			quin_mi2s_sus: qui_mi2s_sus {
-				mux {
-					pins = "gpio88", "gpio91", "gpio93";
-					function = "pri_mi2s";
-				};
-
-				config {
-					pins = "gpio88", "gpio91", "gpio93";
-					drive-strength = <2>;
-					bias-pull-down;
-				};
-			};
-		};
-
-		quin-mi2s-ws-lines {
-			quin_mi2s_ws_act: quin_mi2s_ws_act {
-				mux {
-					pins = "gpio92";
-					function = "pri_mi2s_ws";
-				};
-
-				config {
-					pins = "gpio92";
-					drive-strength = <8>;
-				};
-			};
-			quin_mi2s_ws_sus: quin_mi2s_ws_sus {
-				mux {
-					pins = "gpio92";
-					function = "pri_mi2s_ws";
-				};
-
-				config {
-					pins = "gpio92";
-					drive-strength = <2>;
-					bias-pull-down;
 				};
 			};
 		};
