@@ -222,32 +222,21 @@ static void show_data(unsigned long addr, int nbytes, const char *name)
 
 static void show_extra_register_data(struct pt_regs *regs, int nbytes)
 {
-    mm_segment_t fs;
-    /*AR0005AFIC yuanshuai 20160919 begin */
-    unsigned int i;
-    /*AR0005AFIC yuanshuai 20160919 end */
-    fs = get_fs();
-    set_fs(KERNEL_DS);
-    show_data(regs->pc - nbytes, nbytes * 2, "PC");
-    show_data(regs->regs[30] - nbytes, nbytes * 2, "LR");
-    show_data(regs->sp - nbytes, nbytes * 2, "SP");
-    /*AR0005AFIC yuanshuai 20160919 begin */
-    for (i = 0; i < 30; i++) {
-        char name[4];
-        snprintf(name, sizeof(name), "X%u", i);
-        show_data(regs->regs[i] - nbytes, nbytes * 2, name);
-    }
-    /*AR0005AFIC yuanshuai 20160919 end */
-    set_fs(fs);
+	mm_segment_t fs;
+
+	fs = get_fs();
+	set_fs(KERNEL_DS);
+	show_data(regs->pc - nbytes, nbytes * 2, "PC");
+	show_data(regs->regs[30] - nbytes, nbytes * 2, "LR");
+	show_data(regs->sp - nbytes, nbytes * 2, "SP");
+	set_fs(fs);
 }
 
 void __show_regs(struct pt_regs *regs)
 {
 	int i, top_reg;
 	u64 lr, sp;
-	/*AR0005AFIC yuanshuai 20160919 begin */
-	mm_segment_t fs;
-	/*AR0005AFIC yuanshuai 20160919 end */
+
 	if (compat_user_mode(regs)) {
 		lr = regs->compat_lr;
 		sp = regs->compat_sp;
@@ -269,15 +258,8 @@ void __show_regs(struct pt_regs *regs)
 		if (i % 2 == 0)
 			printk("\n");
 	}
-	/*AR0005AFIC yuanshuai 20160919 begin */
-	fs = get_fs();
-	set_fs(KERNEL_DS);
-	/*AR0005AFIC yuanshuai 20160919 end */
 	if (!user_mode(regs))
-		show_extra_register_data(regs, 128);
-	/*AR0005AFIC yuanshuai 20160919 begin */
-	set_fs(fs);
-	/*AR0005AFIC yuanshuai 20160919 end */
+		show_extra_register_data(regs, 256);
 	printk("\n");
 }
 

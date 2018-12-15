@@ -103,7 +103,6 @@ static void __kprobes patch_unmap(int fixmap)
 {
 	clear_fixmap(fixmap);
 }
-
 /*
  * In ARMv8-A, A64 instructions have a fixed length of 32 bits and are always
  * little-endian.
@@ -140,12 +139,7 @@ static int __kprobes __aarch64_insn_write(void *addr, u32 insn)
 int __kprobes aarch64_insn_write(void *addr, u32 insn)
 {
 	insn = cpu_to_le32(insn);
-#ifdef CONFIG_STRICT_MEMORY_RWX
-	mem_text_write_kernel_word(addr, insn);
-	return 0;
-#else
 	return __aarch64_insn_write(addr, insn);
-#endif
 }
 
 static bool __kprobes __aarch64_insn_hotpatch_safe(u32 insn)

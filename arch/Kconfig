@@ -37,8 +37,7 @@ config OPROFILE_NMI_TIMER
 config KPROBES
 	bool "Kprobes"
 	depends on MODULES
-	depends on HAVE_KPROBES && HUAWEI_KERNEL_DEBUG
-	default y if HUAWEI_KERNEL_DEBUG
+	depends on HAVE_KPROBES
 	select KALLSYMS
 	help
 	  Kprobes allows you to trap at almost any kernel address and
@@ -156,8 +155,7 @@ config ARCH_USE_BUILTIN_BSWAP
 
 config KRETPROBES
 	def_bool y
-	depends on KPROBES && HAVE_KRETPROBES && HUAWEI_KERNEL_DEBUG
-	default y if HUAWEI_KERNEL_DEBUG
+	depends on KPROBES && HAVE_KRETPROBES
 
 config USER_RETURN_NOTIFIER
 	bool
@@ -171,13 +169,9 @@ config HAVE_IOREMAP_PROT
 
 config HAVE_KPROBES
 	bool
-	depends on HUAWEI_KERNEL_DEBUG
-	default y if HUAWEI_KERNEL_DEBUG
 
 config HAVE_KRETPROBES
 	bool
-	depends on HUAWEI_KERNEL_DEBUG
-	default y if HUAWEI_KERNEL_DEBUG
 
 config HAVE_OPTPROBES
 	bool
@@ -242,8 +236,7 @@ config HAVE_CLK
 	  thus are a key power management tool on many systems.
 
 config HAVE_DMA_API_DEBUG
-	bool "DMA API debug function"
-	default y
+	bool
 
 config HAVE_HW_BREAKPOINT
 	bool
@@ -490,13 +483,6 @@ config HAVE_IRQ_EXIT_ON_IRQ_STACK
 	  in the end of an hardirq.
 	  This spares a stack switch and improves cache usage on softirq
 	  processing.
-
-config ARCH_HAS_ELF_RANDOMIZE
-	bool
-	help
-	 An architecture supports choosing randomized locations for
-	 stack, mmap, brk, and ET_DYN. Defined functions:
-	 - arch_mmap_rnd()
 
 config HAVE_ARCH_MMAP_RND_BITS
 	bool

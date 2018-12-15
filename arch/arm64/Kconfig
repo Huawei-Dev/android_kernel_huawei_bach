@@ -52,6 +52,9 @@ config ARM64
 	select HAVE_C_RECORDMCOUNT
 	select HAVE_CC_STACKPROTECTOR
 	select HAVE_CMPXCHG_DOUBLE
+	select HAVE_DEBUG_BUGVERBOSE
+	select HAVE_DEBUG_KMEMLEAK
+	select HAVE_DMA_API_DEBUG
 	select HAVE_DMA_ATTRS
 	select HAVE_DMA_CONTIGUOUS
 	select HAVE_DYNAMIC_FTRACE
@@ -66,8 +69,6 @@ config ARM64
 	select HAVE_PERF_EVENTS
 	select HAVE_PERF_REGS
 	select HAVE_PERF_USER_STACK_DUMP
-	select HAVE_KPROBES
-	select HAVE_KRETPROBES if HAVE_KPROBES
 	select HAVE_RCU_TABLE_FREE
 	select HAVE_SYSCALL_TRACEPOINTS
 	select IRQ_DOMAIN
@@ -568,15 +569,6 @@ config ARCH_MSM8953_SOC_SETTINGS
 
 	  If you are not sure what to do, select 'N' here.
 
-config MSM8953_SETTINGS
-	bool "Enable MSM8953 SOC settings"
-	depends on ARCH_MSM8953
-	help
-	Enable generic MSM8953 related settings which are required for some of
-	CPUSS sub-system functionality.
-
-	If you are not sure what to do, select 'N' here.
-
 config MSM_APP_SETTINGS
 	bool "Support to enable / disable app settings for MSM8996"
 	depends on ARCH_MSM8996
@@ -1066,7 +1058,6 @@ config HUAWEI_KERNEL
 	default n
 	help
 	  use huawei code
-
 config MSM8940_SUPPORTED_PRODUCT
 	bool "8940 supported huawei product"
 	default n
@@ -1079,6 +1070,7 @@ config HUAWEI_KERNEL_DEBUG
 	default n
 	help
 	  Enable sysrq, dump mode and some debug masks by default.
+
 source "lib/Kconfig"
 
 source "arch/arm64/mm/Kconfig"

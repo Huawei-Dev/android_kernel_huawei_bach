@@ -234,6 +234,8 @@
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <3300000>;
 			qcom,init-voltage = <1800000>;
+			qcom,pull-down-enable = <1>;
+			qcom,consumer-supplies = "custom_l16", "";
 			status = "okay";
 		};
 	};
@@ -244,8 +246,6 @@
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 			qcom,init-voltage = <1800000>;
-			qcom,pull-down-enable = <1>;
-			qcom,consumer-supplies = "custom_l16", "";
 			status = "okay";
 		};
 	};

@@ -38,10 +38,6 @@ static void __iomem *__ioremap_caller(phys_addr_t phys_addr, size_t size,
 	unsigned long addr;
 	struct vm_struct *area;
 
-#ifdef CONFIG_MSM8953_SETTINGS
-	unsigned long msm8953_tlmm_start = 0x01000000;
-	unsigned long msm8953_tlmm_end = 0x01300000 - 1;
-#endif
 	/*
 	 * Page align the mapping address and size, taking account of any
 	 * offset.
@@ -71,10 +67,6 @@ static void __iomem *__ioremap_caller(phys_addr_t phys_addr, size_t size,
 	if (phys_addr >= MSM8953_TLMM_START_ADDR &&
 	    phys_addr <= MSM8953_TLMM_END_ADDR)
 		prot = __pgprot(PROT_DEVICE_nGnRnE);
-#endif
-#ifdef CONFIG_MSM8953_SETTINGS
-	if (phys_addr >= msm8953_tlmm_start && phys_addr <= msm8953_tlmm_end)
-	prot = __pgprot(PROT_DEVICE_nGnRnE);
 #endif
 	err = ioremap_page_range(addr, addr + size, phys_addr, prot);
 	if (err) {

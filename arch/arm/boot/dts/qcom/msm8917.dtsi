@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -76,6 +76,7 @@
 			reg = <0x0 0x8c900000 0x0 0x700000>;
 		};
 
+
 		srecorder_mem: srecorder_region@0 {
 			compatible = "removed-dma-pool", "srecorder_mem";
 			no-map;
@@ -120,6 +121,7 @@
 			no-map;
 			reg = <0x0 0x92000000 0x0 0x0200000>;
 		};
+
 		hwlog_tz_mem: hwlog_tz_region@0 {
 			linux,reserve-contiguous-region;
 			linux,reserve-region;
@@ -128,11 +130,13 @@
 			reg = <0x0 0x92200000 0x0 0x0100000>;
 			label = "hwlog_tz_mem";
 		};
+
 		irqtrace_mem: irqtrace_region@0x93C00000 {
 			compatible = "irqtrace_mem";
 			no-map;
 			reg = <0x0 0x93C00000 0x0 0x0080000>;
 		};
+
 		tasktrace_mem: tasktrace_region@0x93C80000 {
 			compatible = "tasktrace_mem";
 			no-map;
@@ -873,7 +877,8 @@
 			<  2929 /*  384   MHz */ >,
 			<  4248 /*  556.8 MHz */ >,	/*SVS+*/
 			<  4541 /*  595.2 MHz */ >,	/*NOM*/
-			<  5126 /*  672   MHz */ >;	/*TURBO*/
+			<  5126 /*  672   MHz */ >,	/*NOM+*/
+			<  5645 /*  740   MHz */ >;	/*TURBO*/
 	};
 
 	mincpubw: qcom,mincpubw {
@@ -888,7 +893,8 @@
 			<  2929 /*  384   MHz */ >,
 			<  4248 /*  556.8 MHz */ >,
 			<  4541 /*  595.2 MHz */ >,
-			<  5126 /*  672   MHz */ >;
+			<  5126 /*  672   MHz */ >,
+			<  5645 /*  740   MHz */ >;
 	};
 
 	qcom,cpu-bwmon {
@@ -906,7 +912,7 @@
 		cpu-to-dev-map =
 			<  998400  4248 >,
 			< 1094400  4541 >,
-			< 1497600  5126 >;
+			< 1497600  5645 >;
 		};
 
 		mincpubw-cpufreq {
@@ -947,7 +953,7 @@
 			label = "modem";
 		};
 
-		qcom,client_3 {
+		mem_client_3_size: qcom,client_3 {
 			compatible = "qcom,memshare-peripheral";
 			qcom,peripheral-size = <0x0>;
 			qcom,client-id = <1>;
@@ -991,6 +997,7 @@
 			compatible = "qcom,msm-imem-pil";
 			reg = <0x94c 200>;
 		};
+
 		srecorder_header@ae0 {
 			compatible = "qcom,msm-imem-srecorder_header";
 			reg = <0xae0 24>;
@@ -1442,12 +1449,12 @@
 		qcom,devfreq,freq-table = <50000000 200000000>;
 
 		qcom,pm-qos-irq-type = "affine_irq";
-		qcom,pm-qos-irq-latency = <13 281>;
+		qcom,pm-qos-irq-latency = <13 651>;
 
 		qcom,pm-qos-cpu-groups = <0x0f>;
-		qcom,pm-qos-cmdq-latency-us = <13 281>;
+		qcom,pm-qos-cmdq-latency-us = <13 651>;
 
-		qcom,pm-qos-legacy-latency-us = <13 281>;
+		qcom,pm-qos-legacy-latency-us = <13 651>;
 
 		qcom,msm-bus,name = "sdhc1";
 		qcom,msm-bus,num-cases = <9>;
@@ -1486,10 +1493,10 @@
 		qcom,large-address-bus;
 
 		qcom,pm-qos-irq-type = "affine_irq";
-		qcom,pm-qos-irq-latency = <13 281>;
+		qcom,pm-qos-irq-latency = <13 651>;
 
 		qcom,pm-qos-cpu-groups = <0x0f>;
-		qcom,pm-qos-legacy-latency-us = <13 281>;
+		qcom,pm-qos-legacy-latency-us = <13 651>;
 
 		qcom,msm-bus,name = "sdhc2";
 		qcom,msm-bus,num-cases = <8>;

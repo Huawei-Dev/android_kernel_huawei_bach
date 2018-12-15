@@ -68,10 +68,6 @@
  */
 #define AARCH64_BREAK_FAULT	(AARCH64_BREAK_MON | (FAULT_BRK_IMM << 5))
 
-/* kprobes BRK opcodes with ESR encoding  */
-#define BRK64_ESR_MASK		0xFFFF
-#define BRK64_ESR_KPROBES	0x0004
-#define BRK64_OPCODE_KPROBES	(AARCH64_BREAK_MON | (BRK64_ESR_KPROBES << 5))
 /*
  * Extract byte from BRK instruction
  */

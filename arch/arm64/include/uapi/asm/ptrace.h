@@ -62,42 +62,6 @@
 
 #ifndef __ASSEMBLY__
 
-#define ARM_cpsr	pstate
-#define ARM_pc		pc
-#define ARM_sp		sp
-#define ARM_lr		regs[30]
-#define ARM_fp		regs[29]
-#define ARM_x28		regs[28]
-#define ARM_x27		regs[27]
-#define ARM_x26		regs[26]
-#define ARM_x25		regs[25]
-#define ARM_x24		regs[24]
-#define ARM_x23		regs[23]
-#define ARM_x22		regs[22]
-#define ARM_x21		regs[21]
-#define ARM_x20		regs[20]
-#define ARM_x19		regs[19]
-#define ARM_x18		regs[18]
-#define ARM_ip1		regs[17]
-#define ARM_ip0		regs[16]
-#define ARM_x15		regs[15]
-#define ARM_x14		regs[14]
-#define ARM_x13		regs[13]
-#define ARM_x12		regs[12]
-#define ARM_x11		regs[11]
-#define ARM_x10		regs[10]
-#define ARM_x9		regs[9]
-#define ARM_x8		regs[8]
-#define ARM_x7		regs[7]
-#define ARM_x6		regs[6]
-#define ARM_x5		regs[5]
-#define ARM_x4		regs[4]
-#define ARM_x3		regs[3]
-#define ARM_x2		regs[2]
-#define ARM_x1		regs[1]
-#define ARM_x0		regs[0]
-#define ARM_ORIG_x0	orig_x0
-
 /*
  * User structures for general purpose, floating point and debug registers.
  */

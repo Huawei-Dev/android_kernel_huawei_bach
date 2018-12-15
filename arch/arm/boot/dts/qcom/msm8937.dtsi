@@ -92,6 +92,7 @@
 		cont_splash_mem: splash_region@83000000 {
 			reg = <0x0 0x90000000 0x0 0x1400000>;
 		};
+
 		sahara_mem: sahara_region@0x92000000 {
 			compatible = "sahara_mem";
 			no-map;
@@ -127,7 +128,6 @@
 			no-map;
 			reg = <0x0 0x93C80000 0x0 0x0080000>;
 		};
-
 	};
 
 	aliases {
@@ -441,16 +441,17 @@
 		compatible = "qcom,msm-thermal";
 		qcom,sensor-id = <5>;
 		qcom,poll-ms = <250>;
-		qcom,limit-temp = <60>;
+		qcom,limit-temp = <85>;
 		qcom,temp-hysteresis = <10>;
 		qcom,freq-step = <2>;
-		qcom,core-limit-temp = <80>;
+		qcom,core-limit-temp = <95>;
 		qcom,core-temp-hysteresis = <10>;
-		qcom,hotplug-temp = <105>;
-		qcom,hotplug-temp-hysteresis = <15>;
-		qcom,freq-mitigation-temp = <105>;
-		qcom,freq-mitigation-temp-hysteresis = <15>;
+		qcom,hotplug-temp = <110>;
+		qcom,hotplug-temp-hysteresis = <8>;
+		qcom,freq-mitigation-temp = <110>;
+		qcom,freq-mitigation-temp-hysteresis = <8>;
 		qcom,freq-mitigation-value = <400000>;
+		qcom,therm-reset-temp = <115>;
 		qcom,online-hotplug-core;
 		qcom,synchronous-cluster-id = <0 1>;
 		qcom,synchronous-cluster-map = <1 4 &CPU0 &CPU1 &CPU2 &CPU3>,
@@ -1131,13 +1132,9 @@
 		clocks = <&clock_gcc clk_xo_wlan_clk>,
 			 <&clock_gcc clk_rf_clk2>,
 			 <&clock_debug clk_gcc_debug_mux_8937>,
-			 <&clock_gcc clk_wcnss_m_clk>,
-			 <&clock_gcc clk_snoc_wcnss_a_clk>;
+			 <&clock_gcc clk_wcnss_m_clk>;
 
-		clock-names = "xo", "rf_clk", "measure", "wcnss_debug",
-				"snoc_wcnss";
-
-		qcom,snoc-wcnss-clock-freq = <200000000>;
+		clock-names = "xo", "rf_clk", "measure", "wcnss_debug";
 
 		qcom,has-autodetect-xo;
 		qcom,is-pronto-v3;

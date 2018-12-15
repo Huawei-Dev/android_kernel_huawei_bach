@@ -282,6 +282,7 @@ SECTIONS
                 *(__hwlog_tag)
         }
         __stop_hwlog_tag = .;
+
 #ifdef CONFIG_HAVE_TCM
         /*
 	 * We align everything to a page boundary so we can

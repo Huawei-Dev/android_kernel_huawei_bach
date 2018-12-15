@@ -72,15 +72,6 @@
 #define COMPAT_PT_TEXT_ADDR		0x10000
 #define COMPAT_PT_DATA_ADDR		0x10004
 #define COMPAT_PT_TEXT_END_ADDR		0x10008
-
-/*
- * used to skip a system call when tracer changes its number to -1
- * with ptrace(PTRACE_SET_SYSCALL)
- */
-#define RET_SKIP_SYSCALL	-1
-#define RET_SKIP_SYSCALL_TRACE	-2
-#define IS_SKIP_SYSCALL(no)	((int)(no & 0xffffffff) == -1)
-
 #ifndef __ASSEMBLY__
 
 /* sizeof(struct user) for AArch32 */
@@ -155,38 +146,11 @@ struct pt_regs {
 #define user_stack_pointer(regs) \
 	(!compat_user_mode(regs) ? (regs)->sp : (regs)->compat_sp)
 
-#define MAX_REG_OFFSET (sizeof(struct user_pt_regs) - sizeof(u64))
-/**
- * regs_get_register() - get register value from its offset
- * @regs:	   pt_regs from which register value is gotten
- * @offset:    offset number of the register.
- *
- * regs_get_register returns the value of a register whose offset from @regs.
- * The @offset is the offset of the register in struct pt_regs.
- * If @offset is bigger than MAX_REG_OFFSET, this returns 0.
- */
-static inline u64 regs_get_register(struct pt_regs *regs,
-					      unsigned int offset)
-{
-	if (unlikely(offset > MAX_REG_OFFSET))
-		return 0;
-	return *(u64 *)((u64)regs + offset);
-}
-
-/* Valid only for Kernel mode traps. */
-static inline unsigned long kernel_stack_pointer(struct pt_regs *regs)
-{
-	return regs->ARM_sp;
-}
-
 static inline unsigned long regs_return_value(struct pt_regs *regs)
 {
 	return regs->regs[0];
 }
 
-extern int regs_query_register_offset(const char *name);
-extern unsigned long regs_get_kernel_stack_nth(struct pt_regs *regs,
-					       unsigned int n);
 /*
  * Are the current registers suitable for user mode? (used to maintain
  * security in signal handlers)
@@ -217,22 +181,13 @@ static inline int valid_user_regs(struct user_pt_regs *regs)
 	return 0;
 }
 
-#define instruction_pointer(regs)	((regs)->pc)
-#define stack_pointer(regs)		((regs)->sp)
+#define instruction_pointer(regs)	((unsigned long)(regs)->pc)
 
 #ifdef CONFIG_SMP
 extern unsigned long profile_pc(struct pt_regs *regs);
 #else
 #define profile_pc(regs) instruction_pointer(regs)
 #endif
-
-/*
- * True if instr is a 32-bit thumb instruction. This works if instr
- * is the first or only half-word of a thumb instruction. It also works
- * when instr holds all 32-bits of a wide thumb instruction if stored
- * in the form (first_half<<16)|(second_half)
- */
-#define is_wide_instruction(instr)	((unsigned)(instr) >= 0xe800)
 
 #endif /* __ASSEMBLY__ */
 #endif
