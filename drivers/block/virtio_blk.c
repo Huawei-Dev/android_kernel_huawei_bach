@@ -486,7 +486,11 @@ static void virtblk_update_cache_mode(struct virtio_device *vdev)
 	u8 writeback = virtblk_get_cache_mode(vdev);
 	struct virtio_blk *vblk = vdev->priv;
 
-	blk_queue_write_cache(vblk->disk->queue, writeback, false);
+	if (writeback)
+		blk_queue_flush(vblk->disk->queue, REQ_FLUSH);
+	else
+		blk_queue_flush(vblk->disk->queue, 0);
+
 	revalidate_disk(vblk->disk);
 }
 

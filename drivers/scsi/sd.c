@@ -136,15 +136,15 @@ static const char *sd_cache_types[] = {
 
 static void sd_set_flush_flag(struct scsi_disk *sdkp)
 {
-	bool wc = false, fua = false;
+	unsigned flush = 0;
 
 	if (sdkp->WCE) {
-		wc = true;
+		flush |= REQ_FLUSH;
 		if (sdkp->DPOFUA)
-			fua = true;
+			flush |= REQ_FUA;
 	}
 
-	blk_queue_write_cache(sdkp->disk->queue, wc, fua);
+	blk_queue_flush(sdkp->disk->queue, flush);
 }
 
 static ssize_t

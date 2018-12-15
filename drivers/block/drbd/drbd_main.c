@@ -2774,7 +2774,7 @@ enum drbd_ret_code drbd_create_device(struct drbd_config_context *adm_ctx, unsig
 	q->backing_dev_info.congested_data = device;
 
 	blk_queue_make_request(q, drbd_make_request);
-	blk_queue_write_cache(q, true, true);
+	blk_queue_flush(q, REQ_FLUSH | REQ_FUA);
 	/* Setting the max_hw_sectors to an odd value of 8kibyte here
 	   This triggers a max_bio_size message upon first attach or connect */
 	blk_queue_max_hw_sectors(q, DRBD_MAX_BIO_SIZE_SAFE >> 8);

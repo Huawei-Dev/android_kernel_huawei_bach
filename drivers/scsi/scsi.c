@@ -818,10 +818,6 @@ void scsi_adjust_queue_depth(struct scsi_device *sdev, int tagged, int tags)
 	}
 
 	sdev->queue_depth = tags;
-	if (sdev->request_queue)
-		/*lint -save -e732*/
-		blk_set_queue_depth(sdev->request_queue, tags);
-		/*lint -restore*/
 	switch (tagged) {
 		case 0:
 			sdev->ordered_tags = 0;

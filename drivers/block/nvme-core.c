@@ -1933,7 +1933,7 @@ static struct nvme_ns *nvme_alloc_ns(struct nvme_dev *dev, unsigned nsid,
 	if (dev->max_hw_sectors)
 		blk_queue_max_hw_sectors(ns->queue, dev->max_hw_sectors);
 	if (dev->vwc & NVME_CTRL_VWC_PRESENT)
-		blk_queue_write_cache(ns->queue, true, true);
+		blk_queue_flush(ns->queue, REQ_FLUSH | REQ_FUA);
 
 	disk->major = nvme_major;
 	disk->first_minor = 0;

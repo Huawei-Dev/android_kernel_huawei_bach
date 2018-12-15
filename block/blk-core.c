@@ -33,7 +33,6 @@
 #include <linux/ratelimit.h>
 #include <linux/pm_runtime.h>
 #include <check_root.h>
-#include <linux/wbt.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/block.h>
 
@@ -746,8 +745,6 @@ blk_init_allocated_queue(struct request_queue *q, request_fn_proc *rfn,
 
 fail:
 	blk_free_flush_queue(q->fq);
-	wbt_exit(q->rq_wb);
-	q->rq_wb = NULL;
 	return NULL;
 }
 EXPORT_SYMBOL(blk_init_allocated_queue);
@@ -1275,7 +1272,6 @@ void blk_requeue_request(struct request_queue *q, struct request *rq)
 		blk_queue_end_tag(q, rq);
 
 	BUG_ON(blk_queued_rq(rq));
-	wbt_requeue(q->rq_wb, &rq->wb_stat);
 	elv_requeue_request(q, rq);
 }
 EXPORT_SYMBOL(blk_requeue_request);
@@ -1361,8 +1357,6 @@ void __blk_put_request(struct request_queue *q, struct request *req)
 
 	/* this is a bio leak if the bio is not tagged with BIO_DONTFREE */
 	WARN_ON(req->bio && !bio_flagged(req->bio, BIO_DONTFREE));
-
-	wbt_done(q->rq_wb, &req->wb_stat, (bool)(req->cmd_flags & REQ_FG));
 
 	/*
 	 * Request may not have originated from ll_rw_blk. if not,
@@ -1607,10 +1601,6 @@ void blk_queue_bio(struct request_queue *q, struct bio *bio)
 	}
 
 get_rq:
-	/*lint -save -e712 -e747*/
-	wb_acct = wbt_wait(q->rq_wb, bio->bi_rw, q->queue_lock);
-	/*lint -restore*/
-
 	/*
 	 * This sync check and mask will be re-done in init_request_from_bio(),
 	 * but we need to set it earlier to expose the sync flag to the
@@ -1626,14 +1616,9 @@ get_rq:
 	 */
 	req = get_request(q, rw_flags, bio, GFP_NOIO);
 	if (IS_ERR(req)) {
-		if (wb_acct)
-			__wbt_done(q->rq_wb);
 		bio_endio(bio, PTR_ERR(req));	/* @q is dead */
 		goto out_unlock;
 	}
-
-	if (wb_acct)
-		wbt_mark_tracked(&req->wb_stat);
 
 	/*
 	 * After dropping the lock and possibly sleeping here, our request
@@ -1885,8 +1870,7 @@ generic_make_request_checks(struct bio *bio)
 	 * drivers without flush support don't have to worry
 	 * about them.
 	 */
-	if ((bio->bi_rw & (REQ_FLUSH | REQ_FUA)) &&
-	    !test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
+	if ((bio->bi_rw & (REQ_FLUSH | REQ_FUA)) && !q->flush_flags) {
 		bio->bi_rw &= ~(REQ_FLUSH | REQ_FUA);
 		if (!nr_sectors) {
 			err = 0;
@@ -2154,13 +2138,6 @@ int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
 	 * because it will be linked to another request_queue
 	 */
 	BUG_ON(blk_queued_rq(rq));
-
-	if (rq->bio)
-	{
-		wb_acct = wbt_wait(q->rq_wb, rq->bio->bi_rw, q->queue_lock);
-		if (wb_acct)
-			wbt_mark_tracked(&rq->wb_stat);
-	}
 
 	if (rq->cmd_flags & (REQ_FLUSH|REQ_FUA))
 		where = ELEVATOR_INSERT_FLUSH;
@@ -2459,8 +2436,6 @@ void blk_start_request(struct request *req)
 {
 	blk_dequeue_request(req);
 
-	wbt_issue(req->q->rq_wb, &req->wb_stat, (bool)(req->cmd_flags & REQ_FG));
-
 	/*
 	 * We are now handing the request to the hardware, initialize
 	 * resid_len to full count and add the timeout handler.
@@ -2527,13 +2502,6 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
 	int total_bytes;
 
 	trace_block_rq_complete(req->q, req, nr_bytes);
-#ifdef CONFIG_WBT
-	/*lint -save -e514*/
-	blk_stat_add(&req->q->rq_stats[rq_data_dir(req)], req);
-	if (req->cmd_flags & REQ_FG)
-		blk_stat_add(&req->q->rq_stats[2 + rq_data_dir(req)], req);
-	/*lint -restore*/
-#endif
 
 	if (!req->bio)
 		return false;
@@ -2712,7 +2680,6 @@ void blk_finish_request(struct request *req, int error)
 	blk_account_io_done(req);
 
 	if (req->end_io) {
-		wbt_done(req->q->rq_wb, &req->wb_stat, (bool)(req->cmd_flags & REQ_FG));
 		req->end_io(req, error);
 	} else {
 		if (blk_bidi_rq(req))
