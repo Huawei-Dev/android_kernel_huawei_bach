@@ -32,7 +32,6 @@
 #include <linux/delay.h>
 #include <linux/ratelimit.h>
 #include <linux/pm_runtime.h>
-#include <check_root.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/block.h>
 
