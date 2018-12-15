@@ -88,12 +88,6 @@ config MMC_BLOCK_TEST
 	  Currently used to test eMMC 4.5 features (packed commands, sanitize,
 	  BKOPs).
 
-config HW_SD_HEALTH_DETECT
-	bool "SD HEALTH DIAG SUPPORT"
-	default y
-	help
-	  This is an option to diag sd health status.
-
 config HW_MMC_TEST
 	bool "MMC host test driver by Huawei"
 	depends on  HUAWEI_KERNEL

@@ -31,10 +31,6 @@
 #include "lock.h"
 #endif
 
-#ifdef CONFIG_HW_SD_HEALTH_DETECT
-static unsigned int g_sd_speed_class = 0;
-#endif
-
 #ifdef CONFIG_HUAWEI_SDCARD_DSM
 #include <linux/mmc/dsm_sdcard.h>
 u32 sd_manfid;
@@ -294,9 +290,6 @@ static int mmc_read_ssr(struct mmc_card *card)
 	for (i = 0; i < 16; i++)
 		ssr[i] = be32_to_cpu(ssr[i]);
 
-#ifdef CONFIG_HW_SD_HEALTH_DETECT
-    g_sd_speed_class = UNSTUFF_BITS(ssr, 440 - 384, 8);
-#endif
 	card->ssr.speed_class = UNSTUFF_BITS(ssr, 440 - 384, 8);
 
 	/*
@@ -1905,34 +1898,6 @@ err:
 
 	return err;
 }
-
-#ifdef CONFIG_HW_SD_HEALTH_DETECT
-unsigned int mmc_get_sd_speed(void)
-{
-    unsigned int speed = 0;
-    switch(g_sd_speed_class)
-	{
-        case 0x00:
-            speed = 0;
-            break;
-        case 0x01:
-            speed = 2;
-            break;
-        case 0x02:
-            speed = 4;
-            break;
-        case 0x03:
-            speed = 6;
-            break;
-        case 0x04:
-            speed = 10;
-            break;
-        default:
-            speed = 2;
-    }
-    return speed;
-}
-#endif
 
 #ifdef CONFIG_HUAWEI_SDCARD_DSM
 /*
