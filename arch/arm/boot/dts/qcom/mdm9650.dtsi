@@ -1307,6 +1307,8 @@
 		qcom,pm-qos-irq-cpu = <0>;
 		qcom,pm-qos-irq-latency = <70>;
 
+		qcom,sdr104-wa;
+
 		status = "disabled";
 	};
 
