@@ -249,8 +249,8 @@ static void lcdkit_dump_dss_vreg(struct dss_vreg *vreg)
     LCDKIT_DEBUG("name               = %s\n",   vreg->vreg_name);
     LCDKIT_DEBUG("min_voltage        = 0x%d\n", vreg->min_voltage);
     LCDKIT_DEBUG("max_voltage        = 0x%d\n", vreg->max_voltage);
-    LCDKIT_DEBUG("enable_load        = 0x%d\n", vreg->enable_load);
-    LCDKIT_DEBUG("disable_load       = 0x%d\n", vreg->disable_load);
+    LCDKIT_DEBUG("enable_load        = 0x%d\n", vreg->load[DSS_REG_MODE_ENABLE]);
+    LCDKIT_DEBUG("disable_load       = 0x%d\n", vreg->load[DSS_REG_MODE_DISABLE]);
     LCDKIT_DEBUG("pre_on_sleep       = 0x%d\n", vreg->pre_on_sleep);
     LCDKIT_DEBUG("post_on_sleep      = 0x%d\n", vreg->post_on_sleep);
     LCDKIT_DEBUG("pre_off_sleep      = 0x%d\n", vreg->pre_off_sleep);
