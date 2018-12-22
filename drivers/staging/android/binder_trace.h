@@ -320,57 +320,6 @@ TRACE_EVENT(binder_return,
 			  "unknown")
 );
 
-TRACE_EVENT(binder_mainlock_timeout,
-
-	TP_PROTO(const char *tag, const char *owner, u64 start, u64 end),
-	TP_ARGS(tag, owner, start, end),
-	TP_STRUCT__entry(
-		__field(const char *, tag)
-		__field(const char *, owner)
-		__field(uint64_t, start)
-		__field(uint64_t, end)
-	),
-	TP_fast_assign(
-		__entry->tag = tag;
-		__entry->owner = owner;
-		__entry->start = start;
-		__entry->end = end;
-	),
-
-	TP_printk("tag=%s, owner=%s, start=%llu, end=%llu",
-		  __entry->tag,
-		  __entry->owner,
-		  __entry->start,
-		  __entry->end)
-);
-
-TRACE_EVENT(binder_transact_timeout,
-	TP_PROTO(const char *src, const char *dest, const char *service, u32 code,  u64 begin, u64 end),
-	TP_ARGS(src, dest, service, code, begin, end),
-	TP_STRUCT__entry(
-		__array(char, src_comm, TASK_COMM_LEN)
-		__array(char, dest_comm, TASK_COMM_LEN)
-		__array(char, service, SERVICE_NAME_LEN)
-		__field(u32, code)
-		__field(u64, begin)
-		__field(u64, end)
-	),
-	TP_fast_assign(
-		memcpy(__entry->src_comm, src, TASK_COMM_LEN);
-		memcpy(__entry->dest_comm, dest, TASK_COMM_LEN);
-		memcpy(__entry->service, service, SERVICE_NAME_LEN);
-		__entry->code = code;
-		__entry->begin = begin;
-		__entry->end = end;
-	),
-	TP_printk("from=%s, to=%s, service=%s, code=%x, begin=%llu end=%llu",
-			  __entry->src_comm,
-			  __entry->dest_comm,
-			  __entry->service,
-			  __entry->code,
-			  __entry->begin,
-			  __entry->end)
-);
 #endif /* _BINDER_TRACE_H */
 
 #undef TRACE_INCLUDE_PATH
