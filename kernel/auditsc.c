@@ -75,7 +75,6 @@
 #include <linux/string.h>
 #include <linux/uaccess.h>
 #include <uapi/linux/limits.h>
-#include <linux/uaccess.h>
 
 #include "audit.h"
 
