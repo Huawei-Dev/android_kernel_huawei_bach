@@ -5917,9 +5917,9 @@ static int msm_pcie_probe(struct platform_device *pdev)
 			msm_pcie_dev[rc_idx].rc_idx,
 			msm_pcie_dev[rc_idx].smmu_sid_base);
 
-	msm_pcie_dev[rc_idx].ep_wakeirq =
-		of_property_read_bool((&pdev->dev)->of_node,
-				"qcom,ep-wakeirq");
+	msm_pcie_dev[rc_idx].boot_option = 0;
+	ret = of_property_read_u32((&pdev->dev)->of_node, "qcom,boot-option",
+				&msm_pcie_dev[rc_idx].boot_option);
 	PCIE_DBG(&msm_pcie_dev[rc_idx],
 		"PCIe: RC%d boot option is 0x%x.\n",
 		rc_idx, msm_pcie_dev[rc_idx].boot_option);
