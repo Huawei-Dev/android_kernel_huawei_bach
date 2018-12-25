@@ -1259,7 +1259,7 @@ static int acc_bind_config(struct usb_configuration *c)
 	dev->function.hs_descriptors = hs_acc_descs;
 	if (gadget_is_superspeed(c->cdev->gadget))
 		dev->function.ss_descriptors = ss_acc_descs;
-	dev->function.bind = acc_function_bind;
+	dev->function.bind = acc_function_bind_configfs;
 	dev->function.unbind = acc_function_unbind;
 	dev->function.set_alt = acc_function_set_alt;
 	dev->function.disable = acc_function_disable;
