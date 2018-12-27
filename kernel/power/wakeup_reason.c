@@ -47,6 +47,7 @@ struct completion wakeups_completion;
 static ktime_t last_monotime; /* monotonic time before last suspend */
 static ktime_t curr_monotime; /* monotonic time after last suspend */
 static ktime_t last_stime; /* monotonic boottime offset before last suspend */
+static ktime_t curr_stime; /* monotonic boottime offset after last suspend */
 
 static void init_wakeup_irq_node(struct wakeup_irq_node *p, int irq)
 {
