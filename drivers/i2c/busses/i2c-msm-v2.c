@@ -54,8 +54,8 @@ static int  i2c_msm_pm_resume(struct device *dev);
 static void i2c_msm_pm_suspend(struct device *dev);
 static void i2c_msm_clk_path_init(struct i2c_msm_ctrl *ctrl);
 static int i2c_msm_recover_bus_busy(struct i2c_msm_ctrl *ctrl);
-static void i2c_msm_pm_pinctrl_state(struct i2c_msm_ctrl *ctrl,
-						bool runtime_active);
+static int i2c_msm_pm_pinctrl_state(struct i2c_msm_ctrl *ctrl,
+						enum i2c_msm_pinctl_state pinctl_state);
 
 /* string table for enum i2c_msm_xfer_mode_id */
 const char * const i2c_msm_mode_str_tbl[] = {
@@ -2239,7 +2239,7 @@ static int i2c_msm_pm_xfer_start(struct i2c_msm_ctrl *ctrl)
 	int ret;
 	mutex_lock(&ctrl->xfer.mtx);
 
-	i2c_msm_pm_pinctrl_state(ctrl, true);
+	ret = i2c_msm_pm_pinctrl_state(ctrl, I2C_MSM_DFS_ACTIVE);
 	pm_runtime_get_sync(ctrl->dev);
 	/*
 	 * if runtime PM callback was not invoked (when both runtime-pm
@@ -2266,7 +2266,7 @@ static int i2c_msm_pm_xfer_start(struct i2c_msm_ctrl *ctrl)
 
 static void i2c_msm_pm_xfer_end(struct i2c_msm_ctrl *ctrl)
 {
-
+	int ret;
 	atomic_set(&ctrl->xfer.is_active, 0);
 
 	/*
@@ -2284,7 +2284,7 @@ static void i2c_msm_pm_xfer_end(struct i2c_msm_ctrl *ctrl)
 
 	pm_runtime_mark_last_busy(ctrl->dev);
 	pm_runtime_put_autosuspend(ctrl->dev);
-	i2c_msm_pm_pinctrl_state(ctrl, false);
+	ret = i2c_msm_pm_pinctrl_state(ctrl, I2C_MSM_DFS_SUSPEND);
 	mutex_unlock(&ctrl->xfer.mtx);
 }
 
