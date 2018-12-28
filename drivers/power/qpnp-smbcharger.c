@@ -383,66 +383,6 @@ static struct smbchg_chip *global_chip;
 #define HOT_DESIGN_MAX_CURRENT 2000
 int hot_design_current = HOT_DESIGN_MAX_CURRENT;
 
-enum fcc_voters {
-	ESR_PULSE_FCC_VOTER,
-	BATT_TYPE_FCC_VOTER,
-	RESTRICTED_CHG_FCC_VOTER,
-	NUM_FCC_VOTER,
-};
-
-enum icl_voters {
-	PSY_ICL_VOTER,
-	THERMAL_ICL_VOTER,
-	HVDCP_ICL_VOTER,
-	USER_ICL_VOTER,
-	WEAK_CHARGER_ICL_VOTER,
-	SW_AICL_ICL_VOTER,
-	CHG_SUSPEND_WORKAROUND_ICL_VOTER,
-	SHUTDOWN_WORKAROUND_ICL_VOTER,
-	IN_THERMAL_ICL_VOTER,
-	PARALLEL_ICL_VOTER,
-	NUM_ICL_VOTER,
-};
-
-enum enable_voters {
-	/* userspace has suspended charging altogether */
-	USER_EN_VOTER,
-	/*
-	 * this specific path has been suspended through the power supply
-	 * framework
-	 */
-	POWER_SUPPLY_EN_VOTER,
-	/*
-	 * the usb driver has suspended this path by setting a current limit
-	 * of < 2MA
-	 */
-	USB_EN_VOTER,
-	/*
-	 * when a wireless charger comes online,
-	 * the dc path is suspended for a second
-	 */
-	WIRELESS_EN_VOTER,
-	/*
-	 * the thermal daemon can suspend a charge path when the system
-	 * temperature levels rise
-	 */
-	THERMAL_EN_VOTER,
-	/*
-	 * an external OTG supply is being used, suspend charge path so the
-	 * charger does not accidentally try to charge from the external supply.
-	 */
-	OTG_EN_VOTER,
-	/*
-	 * the charger is very weak, do not draw any current from it
-	 */
-	WEAK_CHARGER_EN_VOTER,
-	/*
-	 * fake battery voter, if battery id-resistance around 7.5 Kohm
-	 */
-	FAKE_BATTERY_EN_VOTER,
-	NUM_EN_VOTERS,
-};
-
 /* fcc_voters */
 #define ESR_PULSE_FCC_VOTER	"ESR_PULSE_FCC_VOTER"
 #define BATT_TYPE_FCC_VOTER	"BATT_TYPE_FCC_VOTER"
@@ -457,6 +397,7 @@ enum enable_voters {
 #define SW_AICL_ICL_VOTER	"SW_AICL_ICL_VOTER"
 #define CHG_SUSPEND_WORKAROUND_ICL_VOTER "CHG_SUSPEND_WORKAROUND_ICL_VOTER"
 #define	SHUTDOWN_WORKAROUND_ICL_VOTER "SHUTDOWN_WORKAROUND_ICL_VOTER"
+#define IN_THERMAL_ICL_VOTER	"IN_THERMAL_ICL_VOTER"
 #define	PARALLEL_ICL_VOTER	"PARALLEL_ICL_VOTER"
 
 /* USB SUSPEND VOTERS */
@@ -523,26 +464,9 @@ enum enable_voters {
 #define	HVDCP_PMIC_VOTER		"HVDCP_PMIC_VOTER"
 #define	HVDCP_OTG_VOTER			"HVDCP_OTG_VOTER"
 #define	HVDCP_PULSING_VOTER		"HVDCP_PULSING_VOTER"
+#define HVDCP_HW_VOTER			"HVDCP_HW_VOTER"
 
-enum aicl_short_deglitch_voters {
-	/* Varb workaround voter */
-	VARB_WORKAROUND_SHORT_DEGLITCH_VOTER,
-	/* QC 2.0 */
-	HVDCP_SHORT_DEGLITCH_VOTER,
-	NUM_HW_SHORT_DEGLITCH_VOTERS,
-};
-/* open some important debug print for charge issue debug */
-enum hvdcp_voters {
-	HVDCP_PMIC_VOTER,
-	HVDCP_OTG_VOTER,
-	HVDCP_PULSING_VOTER,
-    HVDCP_HW_VOTER,
-	NUM_HVDCP_VOTERS,
-};
 static int smbchg_debug_mask = PR_INTERRUPT | PR_STATUS | PR_MISC | PR_TYPEC;
-
-static int smbchg_debug_mask;
-
 module_param_named(
 	debug_mask, smbchg_debug_mask, int, S_IRUSR | S_IWUSR
 );
