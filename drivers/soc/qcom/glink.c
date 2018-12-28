@@ -2596,7 +2596,6 @@ void *glink_open(const struct glink_open_config *cfg)
 
 	GLINK_INFO_CH(ctx, "%s: Created channel, sent OPEN command. ctx %p\n",
 			__func__, ctx);
-	ctx->magic_number = GLINK_CTX_CANARY;
 	return ctx;
 }
 EXPORT_SYMBOL(glink_open);
