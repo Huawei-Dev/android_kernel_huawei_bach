@@ -39,7 +39,6 @@
 #include <linux/ratelimit.h>
 #include <linux/list_lru.h>
 #include <linux/kasan.h>
-#include <linux/fscrypto.h>
 
 #include "internal.h"
 #include "mount.h"
