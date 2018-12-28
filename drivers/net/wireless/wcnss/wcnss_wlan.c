@@ -700,7 +700,6 @@ void wcnss_pronto_is_a2xb_bus_stall(void *tst_addr, u32 fifo_mask, char *type)
 }
 
 /* Log pronto debug registers before sending reset interrupt */
-=======
 int wcnss_get_dual_band_capability_info(struct platform_device *pdev)
 {
 	u32 reg = 0;
