@@ -2854,12 +2854,15 @@ static int mmc_shutdown(struct mmc_host *host)
 	 * Exit clock scaling so that it doesn't kick in after
 	 * power off notification is sent
 	 */
-	if ((host->caps2 & MMC_CAP2_CLK_SCALE) || card->ext_csd.bkops_en) {
+	if (card->ext_csd.bkops_en) {
 		mmc_claim_host(card->host);
 		mmc_stop_bkops(card);
 		mmc_release_host(card->host);
-		mmc_exit_clk_scaling(card->host);
 	}
+
+	if (host->caps2 & MMC_CAP2_CLK_SCALE)
+		mmc_exit_clk_scaling(card->host);
+
 	/* send power off notification */
 	if (mmc_card_mmc(card)) {
 		if((card->pon_type) && mmc_can_poweroff_notify(card)) {
