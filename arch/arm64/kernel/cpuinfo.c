@@ -68,11 +68,6 @@ static void cpuinfo_detect_icache_policy(struct cpuinfo_arm64 *info)
 		set_bit(ICACHEF_AIVIVT, &__icache_flags);
 
 	pr_debug("Detected %s I-cache on CPU%d\n", icache_policy_str[l1ip], cpu);
-
-	if (!arch_read_hardware_id)
-		seq_printf(m, "Hardware\t: %s\n", machine_name);
-	else
-		seq_printf(m, "Hardware\t: %s\n", arch_read_hardware_id());
 }
 
 bool cpu_supports_mixed_endian_el0(void)
