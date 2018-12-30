@@ -160,7 +160,7 @@ int dm_linear_iterate_devices(struct dm_target *ti,
 }
 EXPORT_SYMBOL_GPL(dm_linear_iterate_devices);
 
-static struct target_type linear_target = {
+struct target_type linear_target = {
 	.name   = "linear",
 	.version = {1, 2, 1},
 	.module = THIS_MODULE,
