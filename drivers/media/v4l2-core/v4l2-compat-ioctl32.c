@@ -518,7 +518,7 @@ static int get_v4l2_buffer32(struct v4l2_buffer __user *kp,
 	}
 
 	if (V4L2_TYPE_IS_MULTIPLANAR(kp->type)) {
-		num_planes = kp->length;
+		u32 num_planes = kp->length;
 		if (num_planes == 0) {
 			/*
 			 * num_planes == 0 is legal, e.g. when userspace doesn't
@@ -1028,7 +1028,6 @@ static long do_video_ioctl(struct file *file, unsigned int cmd, unsigned long ar
 	int compatible_arg = 1;
 	long err = 0;
 
-	memset(&karg, 0, sizeof(karg));
 	/* First, convert the command. */
 	switch (cmd) {
 	case VIDIOC_G_FMT32: cmd = VIDIOC_G_FMT; break;
