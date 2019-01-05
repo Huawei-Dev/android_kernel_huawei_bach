@@ -465,7 +465,7 @@ void __init create_pgd_mapping(struct mm_struct *mm, phys_addr_t phys,
 			       pgprot_t prot)
 {
 	__create_mapping(mm, pgd_offset(mm, virt), phys, virt, size, prot,
-				late_alloc);
+				late_alloc, false);
 }
 
 static void create_mapping_late(phys_addr_t phys, unsigned long virt,
@@ -702,6 +702,8 @@ void __init paging_init(void)
 	 * point to zero page to avoid speculatively fetching new entries.
 	 */
 	cpu_set_reserved_ttbr0();
+	local_flush_tlb_all();
+	set_kernel_text_ro();
 	local_flush_tlb_all();
 	cpu_set_default_tcr_t0sz();
 }
