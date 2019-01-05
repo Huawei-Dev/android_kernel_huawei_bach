@@ -117,6 +117,7 @@ static inline void flush_tlb_mm(struct mm_struct *mm)
 	__tlbi(aside1is, asid);
 	__tlbi_user(aside1is, asid);
 	dsb(ish);
+#endif
 }
 
 static inline void flush_tlb_page(struct vm_area_struct *vma,
@@ -135,6 +136,7 @@ static inline void flush_tlb_page(struct vm_area_struct *vma,
 	__tlbi(vale1is, addr);
 	__tlbi_user(vale1is, addr);
 	dsb(ish);
+#endif
 }
 
 /*
