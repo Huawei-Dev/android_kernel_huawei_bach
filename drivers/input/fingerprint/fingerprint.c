@@ -21,7 +21,7 @@
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #endif
-//extern void adreno_force_waking_gpu(void);
+extern void adreno_force_waking_gpu(void);
 unsigned int snr_flag = 0;
 
 #if defined (CONFIG_HUAWEI_DSM)
@@ -70,10 +70,10 @@ static ssize_t irq_get(struct device* device,
     struct fp_data* fingerprint = dev_get_drvdata(device);
     int irq = gpio_get_value(fingerprint->irq_gpio);
 
-    /*if ((1 == irq) && (fp_LCD_POWEROFF == atomic_read(&fingerprint->state)))
+    if ((1 == irq) && (fp_LCD_POWEROFF == atomic_read(&fingerprint->state)))
     {
        adreno_force_waking_gpu();
-    }*/
+    }
 
     return scnprintf(buffer, PAGE_SIZE, "%i\n", irq);
 }
