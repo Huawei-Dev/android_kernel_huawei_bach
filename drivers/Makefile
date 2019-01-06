@@ -188,6 +188,3 @@ obj-$(CONFIG_SRECORDER)     += srecorder/
 obj-$(CONFIG_KRETPROBES) += rphone/
 obj-$(CONFIG_HUAWEI_TS_KIT) += devkit/tpkit/
 obj-$(CONFIG_CPU_STRESS_TEST) += cpu_stress/
-# DTS_EAGLE START
-obj-$(CONFIG_DTS_EAGLE)     += dts_eagle/
-# DTS_EAGLE END
