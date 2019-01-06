@@ -483,8 +483,8 @@ static int _kgsl_get_context_id(struct kgsl_device *device)
 
 	idr_preload(GFP_KERNEL);
 	write_lock(&device->context_lock);
-    /* Allocate the slot but don't put a pointer in it yet */
-    id = idr_alloc(&device->context_idr, NULL, 1,
+	/* Allocate the slot but don't put a pointer in it yet */
+	id = idr_alloc(&device->context_idr, NULL, 1,
 		KGSL_MEMSTORE_MAX, GFP_NOWAIT);
 	write_unlock(&device->context_lock);
 	idr_preload_end();
@@ -512,7 +512,7 @@ int kgsl_context_init(struct kgsl_device_private *dev_priv,
 	char name[64];
 	int ret = 0, id;
 
-    id = _kgsl_get_context_id(device);
+	id = _kgsl_get_context_id(device);
 	if (id == -ENOSPC) {
 		/*
 		 * Before declaring that there are no contexts left try
@@ -521,7 +521,7 @@ int kgsl_context_init(struct kgsl_device_private *dev_priv,
 		 */
 
 		flush_workqueue(device->events_wq);
-        id = _kgsl_get_context_id(device);
+		id = _kgsl_get_context_id(device);
 	}
 
 	if (id < 0) {
@@ -532,9 +532,9 @@ int kgsl_context_init(struct kgsl_device_private *dev_priv,
 
 		return id;
 	}
-    /*lint -e63*/
-    context->id = id;
-    /*lint +e63*/
+
+	context->id = id;
+
 	kref_init(&context->refcount);
 	/*
 	 * Get a refernce to the process private so its not destroyed, until
