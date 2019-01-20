@@ -99,7 +99,7 @@ int f2fs_read_inline_data(struct inode *inode, struct page *page)
 						path, current->comm);
 	}
 
-	ipage = get_node_page(F2FS_I_SB(inode), inode->i_ino);
+	ipage = f2fs_get_node_page(F2FS_I_SB(inode), inode->i_ino);
 	if (IS_ERR(ipage)) {
 		trace_android_fs_dataread_end(inode, page_offset(page),
 					      PAGE_SIZE);
