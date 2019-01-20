@@ -1350,6 +1350,7 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 	if (F2FS_OPTION(sbi).test_dummy_encryption)
 		seq_puts(seq, ",test_dummy_encryption");
 #endif
+
 	if (F2FS_OPTION(sbi).alloc_mode == ALLOC_MODE_DEFAULT)
 		seq_printf(seq, ",alloc_mode=%s", "default");
 	else if (F2FS_OPTION(sbi).alloc_mode == ALLOC_MODE_REUSE)
@@ -2223,14 +2224,6 @@ static int sanity_check_raw_super(struct f2fs_sb_info *sbi,
 		return 1;
 	}
 
-	/* check log blocks per segment */
-	if (le32_to_cpu(raw_super->log_blocks_per_seg) != 9) {
-		f2fs_msg(sb, KERN_INFO,
-			"Invalid log blocks per segment (%u)\n",
-			le32_to_cpu(raw_super->log_blocks_per_seg));
-		return 1;
-	}
-
 	/* Currently, support 512/1024/2048/4096 bytes sector size */
 	if (le32_to_cpu(raw_super->log_sectorsize) >
 				F2FS_MAX_LOG_SECTOR_SIZE ||
@@ -2342,17 +2335,12 @@ int f2fs_sanity_check_ckpt(struct f2fs_sb_info *sbi)
 	struct f2fs_checkpoint *ckpt = F2FS_CKPT(sbi);
 	unsigned int ovp_segments, reserved_segments;
 	unsigned int main_segs, blocks_per_seg;
-	unsigned int sit_segs, nat_segs;
-	unsigned int sit_bitmap_size, nat_bitmap_size;
-	unsigned int log_blocks_per_seg;
 	int i;
 
 	total = le32_to_cpu(raw_super->segment_count);
 	fsmeta = le32_to_cpu(raw_super->segment_count_ckpt);
-	sit_segs = le32_to_cpu(raw_super->segment_count_sit);
-	fsmeta += sit_segs;
-	nat_segs = le32_to_cpu(raw_super->segment_count_nat);
-	fsmeta += nat_segs;
+	fsmeta += le32_to_cpu(raw_super->segment_count_sit);
+	fsmeta += le32_to_cpu(raw_super->segment_count_nat);
 	fsmeta += le32_to_cpu(ckpt->rsvd_segment_count);
 	fsmeta += le32_to_cpu(raw_super->segment_count_ssa);
 
@@ -2381,18 +2369,6 @@ int f2fs_sanity_check_ckpt(struct f2fs_sb_info *sbi)
 		if (le32_to_cpu(ckpt->cur_data_segno[i]) >= main_segs ||
 			le16_to_cpu(ckpt->cur_data_blkoff[i]) >= blocks_per_seg)
 			return 1;
-	}
-
-	sit_bitmap_size = le32_to_cpu(ckpt->sit_ver_bitmap_bytesize);
-	nat_bitmap_size = le32_to_cpu(ckpt->nat_ver_bitmap_bytesize);
-	log_blocks_per_seg = le32_to_cpu(raw_super->log_blocks_per_seg);
-
-	if (sit_bitmap_size != ((sit_segs / 2) << log_blocks_per_seg) / 8 ||
-		nat_bitmap_size != ((nat_segs / 2) << log_blocks_per_seg) / 8) {
-		f2fs_msg(sbi->sb, KERN_ERR,
-			"Wrong bitmap size: sit: %u, nat:%u",
-			sit_bitmap_size, nat_bitmap_size);
-		return 1;
 	}
 
 	if (unlikely(f2fs_cp_error(sbi))) {
