@@ -733,15 +733,10 @@ static int msm_audio_smmu_init_legacy(struct device *dev)
 				msm_iommu_get_bus(msm_audio_ion_data.cb_dev),
 					   cb->addr_range.start,
 					   cb->addr_range.size);
-	if (mapping == NULL) {
-		ret = -ENOMEM;
-		dev_err(dev, "%s: Failed to create IOMMU mapping, err = %d\n",
-			__func__, ret);
-		goto err_null;
+	if (IS_ERR(mapping)) {
+		ret = PTR_ERR(mapping);
+		goto err_out;
 	}
-
-	if (IS_ERR(mapping))
-		return PTR_ERR(mapping);
 
 	ret = arm_iommu_attach_device(msm_audio_ion_data.cb_dev, mapping);
 	if (ret) {
@@ -758,7 +753,7 @@ static int msm_audio_smmu_init_legacy(struct device *dev)
 
 fail_attach:
 	arm_iommu_release_mapping(mapping);
-err_null:
+err_out:
 	return ret;
 }
 
@@ -772,15 +767,10 @@ static int msm_audio_smmu_init(struct device *dev)
 					msm_iommu_get_bus(dev),
 					   MSM_AUDIO_ION_VA_START,
 					   MSM_AUDIO_ION_VA_LEN);
-	if (mapping == NULL) {
-		ret = -ENOMEM;
-		dev_err(dev, "%s: Failed to create IOMMU mapping, err = %d\n",
-			__func__, ret);
-		goto err_null;
+	if (IS_ERR(mapping)) {
+		ret = PTR_ERR(mapping);
+		goto err_out;
 	}
-
-	if (IS_ERR(mapping))
-		return PTR_ERR(mapping);
 
 	iommu_domain_set_attr(mapping->domain,
 				DOMAIN_ATTR_COHERENT_HTW_DISABLE,
@@ -802,7 +792,7 @@ static int msm_audio_smmu_init(struct device *dev)
 
 fail_attach:
 	arm_iommu_release_mapping(mapping);
-err_null:
+err_out:
 	return ret;
 }
 
