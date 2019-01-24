@@ -173,6 +173,7 @@ obj-$(CONFIG_ESOC)		+= esoc/
 obj-$(CONFIG_BIF)		+= bif/
 
 obj-$(CONFIG_SENSORS_SSC)	+= sensors/
+
 obj-y				+= huawei/
 obj-$(CONFIG_HUAWEI_CC_DRV)		+= huawei_cc/
 
@@ -188,3 +189,7 @@ obj-$(CONFIG_HUAWEI_FACTORY_INFO)	+= hw_fac_info/
 obj-$(CONFIG_HUAWEI_TS_KIT) += devkit/tpkit/
 
 obj-$(CONFIG_AUDIOKIT)	+= devkit/audiokit/
+
+# DTS_EAGLE START
+obj-$(CONFIG_AINUR_DTS_SW) += dts_eagle/
+# DTS_EAGLE END

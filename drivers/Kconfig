@@ -215,4 +215,7 @@ source "drivers/devkit/lcdkit/Kconfig"
 source "drivers/devkit/tpkit/Kconfig"
 
 source "drivers/devkit/audiokit/Kconfig"
+
+source "drivers/dts_eagle/Kconfig"
+
 endmenu
