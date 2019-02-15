@@ -2,8 +2,6 @@
 # Automatically generated file; DO NOT EDIT.
 # Linux/arm64 3.18.124 Kernel Configuration
 #
-CONFIG_WIFI_WAKE_SRC=y
-CONFIG_HUAWEI_OBA=y
 CONFIG_ARM64=y
 CONFIG_64BIT=y
 CONFIG_ARCH_PHYS_ADDR_T_64BIT=y
@@ -3690,18 +3688,6 @@ CONFIG_HW_LOGGER=y
 #
 # Qualcomm Atheros Prima WLAN module
 #
-# CONFIG_PRIMA_WLAN is not set
-CONFIG_PRONTO_WLAN=y
-# CONFIG_PRIMA_WLAN_BTAMP is not set
-# CONFIG_PRIMA_WLAN_LFR is not set
-# CONFIG_PRIMA_WLAN_OKC is not set
-# CONFIG_PRIMA_WLAN_11AC_HIGH_TP is not set
-# CONFIG_WLAN_FEATURE_11W is not set
-# CONFIG_QCOM_VOWIFI_11R is not set
-# CONFIG_ENABLE_LINUX_REG is not set
-# CONFIG_WLAN_OFFLOAD_PACKETS is not set
-CONFIG_HUAWEI_WIFI_BUILTIN=y
-# CONFIG_GOLDFISH is not set
 
 #
 # Qualcomm MSM specific device drivers

@@ -185,9 +185,6 @@ typedef struct
     unsigned int huawei_debug;
 #endif
     unsigned int pwrkpd_reset;
-#ifdef CONFIG_HUAWEI_OBA
-    unsigned int huawei_oba;
-#endif
     unsigned int reserved;                  /* reserved for filling */
 	/*AR0005AFIC yuanshuai 20160919 begin */
 	unsigned int sbl1_boottime;
