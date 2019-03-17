@@ -216,6 +216,4 @@ source "drivers/devkit/lcdkit/Kconfig"
 
 source "drivers/devkit/tpkit/Kconfig"
 
-source "drivers/cpu_stress/Kconfig"
-
 endmenu

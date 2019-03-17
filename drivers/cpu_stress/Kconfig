@@ -1,3 +1,0 @@
-config CPU_STRESS_TEST
-	tristate "CPU stress test support"
-	default n
