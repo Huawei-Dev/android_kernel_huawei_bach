@@ -1162,6 +1162,9 @@ VOS_STATUS vos_nv_open(void)
     v_U32_t dataOffset;
     sHalNv *pnvData = NULL;
     hdd_context_t *pHddCtx = NULL;
+#ifdef CONFIG_HUAWEI_WIFI
+    char nvbin_path_with_pubfd[NVBIN_PATH_LENTH] = {0};
+#endif
 
     /*Get the global context */
     pVosContext = vos_get_global_context(VOS_MODULE_ID_SYS, NULL);
@@ -1171,6 +1174,87 @@ VOS_STATUS vos_nv_open(void)
         return (eHAL_STATUS_FAILURE);
     }
 
+#ifdef CONFIG_HUAWEI_WIFI
+    status = hdd_request_firmware(HWCUST_WLAN_CAL_NV_FILE,
+                                  ((VosContextType*)(pVosContext))->pHDDContext,
+                                  (v_VOID_t**)&pnvtmpBuf, &nvReadBufSize);
+    if ((!VOS_IS_STATUS_SUCCESS( status )) || (!pnvtmpBuf))
+    {
+        status = hdd_request_firmware(WLAN_NV_FILE,
+                                  ((VosContextType*)(pVosContext))->pHDDContext,
+                                  (v_VOID_t**)&pnvtmpBuf, &nvReadBufSize);
+
+        if ((!VOS_IS_STATUS_SUCCESS( status )) || (!pnvtmpBuf))
+        {
+            VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                   "%s: unable to download NV file %s",
+                   __func__, WLAN_NV_FILE);
+            construct_nvbin_with_pubfd(nvbin_path_with_pubfd);
+            VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                   "%s:we will download NV file %s",
+                   __func__, nvbin_path_with_pubfd);
+
+            status = hdd_request_firmware(nvbin_path_with_pubfd,
+                       ((VosContextType*)(pVosContext))->pHDDContext,
+                       (v_VOID_t**)&pnvtmpBuf, &nvReadBufSize);
+            if ((!VOS_IS_STATUS_SUCCESS( status )) || (!pnvtmpBuf))
+            {
+                VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                       "%s:unable to download NV file %s and we will download NV file %s",
+                       __func__, nvbin_path_with_pubfd,HW_WLAN_NV_FILE);
+                status = hdd_request_firmware(HW_WLAN_NV_FILE,
+                           ((VosContextType*)(pVosContext))->pHDDContext,
+                           (v_VOID_t**)&pnvtmpBuf, &nvReadBufSize);
+                if ((!VOS_IS_STATUS_SUCCESS( status )) || (!pnvtmpBuf))
+                {
+                    VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                           "%s: unable to download NV file %s and we will download %s;",
+                           __func__, HW_WLAN_NV_FILE,NVBIN_FILE_QCOM_DEFAULT);
+                    status = hdd_request_firmware(NVBIN_FILE_QCOM_DEFAULT,
+                               ((VosContextType*)(pVosContext))->pHDDContext,
+                               (v_VOID_t**)&pnvtmpBuf, &nvReadBufSize);
+                    if ((!VOS_IS_STATUS_SUCCESS( status )) || (!pnvtmpBuf))
+                    {
+                        VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                               "%s: unable to download NV file %s",
+                               __func__, NVBIN_FILE_QCOM_DEFAULT);
+                        return VOS_STATUS_E_RESOURCES;
+                    }
+                    else
+                    {
+                        VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                               "%s: download NV file %s successfully",
+                               __func__, NVBIN_FILE_QCOM_DEFAULT);
+                    }
+                }
+                else
+                {
+                    VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                           "%s: download NV file %s successfully",
+                           __func__, HW_WLAN_NV_FILE);
+                }
+            }
+            else
+            {
+                VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                       "%s: download NV file %s successfully",
+                       __func__, nvbin_path_with_pubfd);
+            }
+        }
+        else
+        {
+            VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                   "%s: download NV file %s successfully",
+                   __func__, WLAN_NV_FILE);
+        }
+    }
+    else
+    {
+        VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_FATAL,
+                   "%s: download NV file %s successfully",
+                   __func__, HWCUST_WLAN_CAL_NV_FILE);
+    }
+#else
     status = hdd_request_firmware(WLAN_NV_FILE,
                                   ((VosContextType*)(pVosContext))->pHDDContext,
                                   (v_VOID_t**)&pnvtmpBuf, &nvReadBufSize);
@@ -1182,6 +1266,7 @@ VOS_STATUS vos_nv_open(void)
                    __func__, WLAN_NV_FILE);
        return VOS_STATUS_E_RESOURCES;
     }
+#endif
 
     pnvEncodedBuf = (v_U8_t *)vos_mem_vmalloc(nvReadBufSize);
 

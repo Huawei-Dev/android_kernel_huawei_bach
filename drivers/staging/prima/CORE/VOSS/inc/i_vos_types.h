@@ -38,6 +38,10 @@
 #include <linux/version.h>
 #include <asm/div64.h>
 
+#ifdef CONFIG_HUAWEI_WIFI
+#include <linux/wcnss_wlan.h>
+#endif
+
 /**=========================================================================
   
   \file  i_vos_Types.h
