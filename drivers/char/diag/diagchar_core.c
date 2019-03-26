@@ -458,7 +458,6 @@ static void diag_close_logging_process(const int pid)
 		diag_clear_masks(pid);
 
 	mutex_lock(&driver->diagchar_mutex);
-	session_peripheral_mask = session_info->peripheral_mask;
 	for (i = 0; i < NUM_MD_SESSIONS; i++)
 		if (MD_PERIPHERAL_MASK(i) & session_peripheral_mask)
 			diag_mux_close_peripheral(DIAG_LOCAL_PROC, i);
