@@ -655,7 +655,7 @@ void __init fixup_executable(void)
 
 		create_mapping(aligned_start, __phys_to_virt(aligned_start),
 				__pa(_stext) - aligned_start,
-				PAGE_KERNEL);
+				PAGE_KERNEL, false);
 	}
 
 	if (!IS_ALIGNED((unsigned long)__init_end, SECTION_SIZE)) {
@@ -663,7 +663,7 @@ void __init fixup_executable(void)
 							SECTION_SIZE);
 		create_mapping(__pa(__init_end), (unsigned long)__init_end,
 				aligned_end - __pa(__init_end),
-				PAGE_KERNEL);
+				PAGE_KERNEL, false);
 	}
 #endif
 }
