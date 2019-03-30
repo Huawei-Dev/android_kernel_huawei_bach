@@ -868,11 +868,6 @@ extern int bu21150_otp_read(char *otp_data);
 #define LCD_WHITECOLOR_LEN   7
 #define DDIC_OEM_INFO_SIZE_MAX 300
 
-struct ddic_oem_cmd{
-	unsigned char type;
-	void (*func)(unsigned char *oem_data, struct hisi_fb_data_type *hisifd);
-};
-
 struct lcdkit_panel_data* lcdkit_get_panel_info(void);
 void lcdkit_init(struct device_node* np, void* pdata);
 void lcdkit_on_cmd(void* pdata, struct lcdkit_dsi_panel_cmds* cmds);

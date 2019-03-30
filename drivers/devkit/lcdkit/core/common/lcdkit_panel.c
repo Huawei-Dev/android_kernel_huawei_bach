@@ -1324,7 +1324,6 @@ static ssize_t lcdkit_reg_read_show(void* pdata, char *buf)
     char lcd_reg_buf[LCD_REG_LENGTH_MAX] = {0};
     uint32_t read_value[LCD_REG_LENGTH_MAX] = {0};
     unsigned char str_tmp[LCD_REG_LENGTH_MAX] = {0};
-    struct hisi_fb_data_type *hisifd = NULL;
     char lcd_reg[] = {0x00};
     int i = 0;
     int ret = 0;
@@ -1417,7 +1416,6 @@ error_out:
 static ssize_t lcdkit_reg_read_store(void* pdata, const char *buf)
 {
     int ret = 0;
-    unsigned long val = 0;
     unsigned int reg_value[100];
     char *cur;
     char *token;
