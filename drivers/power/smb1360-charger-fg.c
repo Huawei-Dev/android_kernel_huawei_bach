@@ -5385,7 +5385,7 @@ static void smb1360_charge_get_fuelguage_register_head(char *reg_head)
 
 static void smb1360_charge_fuelguage_dump_register(char *reg_value)
 {
-	int systemp_level = 0, bch_en = 0, icur_max = 0,current_max = 0;;
+	int systemp_level = 0, bch_en = 0, icur_max = 0;
 
 	if (NULL == reg_value) {
 		pr_err("the reg_value is NULL\n");

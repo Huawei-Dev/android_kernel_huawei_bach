@@ -451,8 +451,6 @@ put_vdda18_lpm:
 	if (ret < 0)
 		dev_err(qphy->phy.dev, "Unable to set LPM of vdda18\n");
 
-disable_vdd:
-	ret = qusb_phy_vdd(qphy, false);
 err_vdd:
 	qphy->power_enabled = false;
 	dev_dbg(qphy->phy.dev, "QUSB PHY's regulators are turned OFF.\n");

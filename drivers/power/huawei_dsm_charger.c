@@ -855,7 +855,6 @@ static int huawei_dsm_charger_probe(struct platform_device *pdev)
 	struct power_supply *usb_psy;
 	struct power_supply *batt_psy;
 	struct device_node* np;
-	int rc = 0;
 
 	usb_psy = power_supply_get_by_name("usb");
 	if (!usb_psy) {

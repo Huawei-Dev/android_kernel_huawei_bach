@@ -496,23 +496,22 @@ static int huawei_charger_set_in_thermal(struct charge_device_info *di, int val)
 static int huawei_charger_set_rt_current(struct charge_device_info *di, int val)
 {
     int iin_rt_curr = 0;
-    int ret = 0;
 
-    if ((di == NULL)||(di->batt_psy == NULL)) {
+    if ((di == NULL) || (di->batt_psy == NULL)) {
         pr_err("charge_device is not ready! cannot set runningtest\n");
         return -1;
     }
 
     if (0 == val)
         iin_rt_curr = get_property_from_psy(di->batt_psy, POWER_SUPPLY_PROP_INPUT_CURRENT_MAX);
-    else if ((val <= MIN_CURRENT)&&(val > 0))
+    else if ((val <= MIN_CURRENT) && (val > 0))
          iin_rt_curr = MIN_CURRENT;
     else
         iin_rt_curr = val;
 
     set_property_on_psy(di->batt_psy, POWER_SUPPLY_PROP_INPUT_CURRENT_MAX, iin_rt_curr);
 
-    di->sysfs_data.iin_rt_curr= iin_rt_curr;
+    di->sysfs_data.iin_rt_curr = iin_rt_curr;
     return 0 ;
 }
 
@@ -520,7 +519,7 @@ static int huawei_charger_set_hz_mode(struct charge_device_info *di, int val)
 {
     int hiz_mode = 0;
 
-    if ((di == NULL)||(di->batt_psy == NULL)) {
+    if ((di == NULL) || (di->batt_psy == NULL)) {
         pr_err("charge_device is not ready! cannot set runningtest\n");
         return -1;
     }

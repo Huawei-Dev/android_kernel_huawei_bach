@@ -15,14 +15,14 @@ extern ssize_t lm36923_set_backlight_reg(uint32_t bl_level);
 extern ssize_t lm36923_chip_initial(void);
 extern ssize_t Is_lm36923_used(void);
 extern ssize_t lp8556_set_backlight_reg(uint32_t bl_level);
+
 void mdss_dsi_panel_bklt_dcs(void *pdata, int bl_level)
 {
     struct lcdkit_dsi_panel_cmds *bl_cmds
                 = &lcdkit_info.panel_infos.backlight_cmds;
-    struct mdss_dsi_ctrl_pdata *ctrl_pdata = pdata;
-    static int pre_level=0;
+    static int pre_level = 0;
 
-    if(pre_level == bl_level)
+    if (pre_level == bl_level)
         return ;
     if (bl_cmds->cmd_cnt != 1)
         return;
@@ -37,21 +37,18 @@ void lcdkit_dsi_panel_bklt_IC_TI(void *pdata, int bl_level)
 {
     struct lcdkit_dsi_panel_cmds *bl_cmds
                 = &lcdkit_info.panel_infos.backlight_cmds;
-    struct mdss_dsi_ctrl_pdata *ctrl_pdata = pdata;
-    static int pre_bl_level=0;
+    static int pre_bl_level = 0;
+    int reg_level = 0;
 
-    if(pre_bl_level == bl_level)
+    if (pre_bl_level == bl_level)
         return;
     if (bl_cmds->cmd_cnt != 1)
         return;
 
-    if(lcdkit_info.panel_infos.bl_chip_init == BL_MODULE_LP8556)
-    {
+    if (lcdkit_info.panel_infos.bl_chip_init == BL_MODULE_LP8556) {
         bl_cmds->cmds[0].payload[1] = 0xFF;
-        int reg_level = 0;
         reg_level = bl_level;
-        if((bl_level > 0) && (pre_bl_level == 0))
-        {
+        if((bl_level > 0) && (pre_bl_level == 0)) {
              lcdkit_delay(lcdkit_info.panel_infos.delay_af_blic_init);
              lp8556_reset();
         }
@@ -59,16 +56,15 @@ void lcdkit_dsi_panel_bklt_IC_TI(void *pdata, int bl_level)
         lp8556_set_backlight_reg(reg_level);
         lcdkit_dsi_tx(pdata, &lcdkit_info.panel_infos.backlight_cmds);
     }
-    else if(lcdkit_info.panel_infos.bl_chip_init == BL_MODULE_LM36923){
+    else if (lcdkit_info.panel_infos.bl_chip_init == BL_MODULE_LM36923) {
         bl_cmds->cmds[0].payload[1] = 0xFF;
-        int reg_level=0;
         reg_level = bl_level * 2047 * lcdkit_info.panel_infos.bl_level_limit_percent/(lcdkit_info.panel_infos.bl_level_max * 100); //22/25=>1785/2047 match with 22mA
-        if(0==pre_bl_level && 0!=bl_level){
+        if (0 == pre_bl_level && 0 != bl_level) {
             lm36923_chip_initial();
             lcdkit_delay(lcdkit_info.panel_infos.delay_af_blic_init);
         }
         lm36923_set_backlight_reg(reg_level);
-        if(0==pre_bl_level && 0!=bl_level){
+        if (0 == pre_bl_level && 0 != bl_level){
             lcdkit_dsi_tx(pdata, &lcdkit_info.panel_infos.backlight_cmds);
         }
         pre_bl_level = bl_level;
@@ -121,15 +117,14 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 
 	if (enable) {
 
-		if(is_first_reset )
-        {
+		if(is_first_reset ) {
 		    rc = mdss_dsi_request_gpios(ctrl_pdata);
-    		is_first_reset = false;
-	    	if (rc) {
-		    	LCDKIT_ERR("gpio request failed\n");
-			    return rc;
-		    }
-	    }
+    		    is_first_reset = false;
+	    		if (rc) {
+		    		LCDKIT_ERR("gpio request failed\n");
+			    	return rc;
+		   	}
+	    	}
 
 		if (!pinfo->cont_splash_enabled) {
 			if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
