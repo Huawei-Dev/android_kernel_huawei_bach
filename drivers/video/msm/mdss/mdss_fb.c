@@ -3670,13 +3670,13 @@ int mdss_fb_atomic_commit(struct fb_info *info,
 			__ioctl_transition_dyn_mode_state(mfd,
 				MSMFB_ATOMIC_COMMIT, true, false);
 			if (mfd->panel.type == WRITEBACK_PANEL) {
-				output_layer = commit_v1->output_layer;
-				if (!output_layer) {
+				if (!commit_v1->output_layer) {
 					pr_err("Output layer is null\n");
 					return ret;
 				}
+				output_layer = commit_v1->output_layer;
 				wb_change = !mdss_fb_is_wb_config_same(mfd,
-						commit_v1->output_layer);
+						output_layer);
 				if (wb_change) {
 					old_xres = pinfo->xres;
 					old_yres = pinfo->yres;
