@@ -35,7 +35,6 @@
 #include <linux/spi/spi.h>
 
 #include <linux/ion.h>
-//#include <linux/hisi/hisi_ion.h>
 #include <linux/gpio.h>
 
 #include <linux/of.h>
@@ -172,80 +171,6 @@ enum
         } \
         *ptr_out_value = (char)temp; \
     } while (0)
-
-static char* sence_array[SENCE_ARRAY_SIZE] = {
-    "LCD_INCOME0",   "MMI0",   "RUNNINGTEST0", "PROJECT_MENU0",
-    "LCD_INCOME1",   "MMI1",   "RUNNINGTEST1",  "PROJECT_MENU1",
-    "LCD_INCOME2",   "MMI2",   "RUNNINGTEST2",  "PROJECT_MENU2",
-    "LCD_INCOME3",   "MMI3",   "RUNNINGTEST3",  "PROJECT_MENU3",
-    "LCD_INCOME4",   "MMI4",   "RUNNINGTEST4",  "PROJECT_MENU4",
-    "LCD_INCOME5",   "MMI5",   "RUNNINGTEST5",  "PROJECT_MENU5",
-    "LCD_INCOME6",   "MMI6",   "RUNNINGTEST6",  "PROJECT_MENU6",
-    "LCD_INCOME7",   "MMI7",   "RUNNINGTEST7",  "PROJECT_MENU7",
-    "LCD_INCOME8",   "MMI8",   "RUNNINGTEST8",  "PROJECT_MENU8",
-    "LCD_INCOME9",   "MMI9",   "RUNNINGTEST9",  "PROJECT_MENU9",
-    "LCD_INCOME10",  "MMI10",  "RUNNINGTEST10",  "PROJECT_MENU10",
-    "LCD_INCOME11",  "MMI11",  "RUNNINGTEST11",  "PROJECT_MENU11",
-    "LCD_INCOME12",  "MMI12",  "RUNNINGTEST12",  "PROJECT_MENU12",
-    "LCD_INCOME13",  "MMI13",  "RUNNINGTEST13",  "PROJECT_MENU13",
-    "LCD_INCOME14",  "MMI14",  "RUNNINGTEST14",  "PROJECT_MENU14",
-    "LCD_INCOME15",  "MMI15",  "RUNNINGTEST15",  "PROJECT_MENU15",
-    "LCD_INCOME16",  "MMI16",  "RUNNINGTEST16",  "PROJECT_MENU16",
-    "LCD_INCOME17",  "MMI17",  "RUNNINGTEST17",  "PROJECT_MENU17",
-    "CURRENT1_0",    "CURRENT1_1", "CURRENT1_2",  "CURRENT1_3",
-    "CURRENT1_4",    "CURRENT1_5", "CHECKSUM1",  "CHECKSUM2",
-    "CHECKSUM3",     "CHECKSUM4", "BL_OPEN_SHORT",  "PCD_ERRORFLAG",
-    "DOTINVERSION",  "CHECKREG", "COLUMNINVERSION",   "POWERONOFF",
-    "BLSWITCH",};
-
-static char* cmd_array[SENCE_ARRAY_SIZE] = {
-    "CURRENT1_0",   "CURRENT1_0",  "CURRENT1_0",  "CURRENT1_0",//current test0
-    "CURRENT1_1",   "CURRENT1_1",  "CURRENT1_1",  "CURRENT1_1",//current test1
-    "CURRENT1_2",   "CURRENT1_2",  "CURRENT1_2",  "CURRENT1_2",//current test2
-    "CURRENT1_3",   "CURRENT1_3",  "CURRENT1_3",  "CURRENT1_3",//current test3
-    "CURRENT1_4",   "CURRENT1_4",  "CURRENT1_4",  "CURRENT1_4",//current test4
-    "CURRENT1_5",   "CURRENT1_5",  "CURRENT1_5",  "CURRENT1_5",//current test5
-    "CHECKSUM1",   "CHECKSUM1",   "CHECKSUM1", "CHECKSUM1",//checksum1
-    "CHECKSUM2",   "CHECKSUM2",   "CHECKSUM2", "CHECKSUM2",//checksum2
-    "CHECKSUM3",    "CHECKSUM3",   "CHECKSUM3", "CHECKSUM3",//checksum3
-    "CHECKSUM4",   "CHECKSUM4",   "CHECKSUM4", "CHECKSUM4",//checksum4
-    "BL_OPEN_SHORT",   "BL_OPEN_SHORT",   "BL_OPEN_SHORT", "BL_OPEN_SHORT",//backlight open short test
-    "PCD_ERRORFLAG",   "PCD_ERRORFLAG",  "PCD_ERRORFLAG", "PCD_ERRORFLAG", // PCD and errorflag test
-    "DOTINVERSION",    "DOTINVERSION",  "DOTINVERSION", "DOTINVERSION",// dot inversion test
-    "CHECKREG",    "CHECKREG",  "CHECKREG", "CHECKREG",// check ic status reg
-    "COLUMNINVERSION", "COLUMNINVERSION", "COLUMNINVERSION", "COLUMNINVERSION", //column inversion test
-    "POWERONOFF",   "POWERONOFF",  "POWERONOFF",  "POWERONOFF",// power on/off test
-    "BLSWITCH",    "BLSWITCH",  "BLSWITCH", "BLSWITCH",// backlight switch test
-    "GPU_TEST",   "GPU_TEST",  "GPU_TEST", "GPU_TEST", //GPU SLT test
-    "/sys/class/ina231/ina231_0/ina231_set," \
-    "/sys/class/ina231/ina231_0/ina231_value," \
-    "1,9999999,1,9999999,1,99999",
-    "/sys/class/ina231/ina231_0/ina231_set," \
-    "/sys/class/ina231/ina231_0/ina231_value," \
-    "1,9999999,1,9999999,1,99999",
-    "/sys/class/ina231/ina231_0/ina231_set," \
-    "/sys/class/ina231/ina231_0/ina231_value," \
-    "1,9999999,1,9999999,1,99999",
-    "/sys/class/ina231/ina231_0/ina231_set," \
-    "/sys/class/ina231/ina231_0/ina231_value," \
-    "1,9999999,1,9999999,1,99999",
-    "/sys/class/ina231/ina231_0/ina231_set," \
-    "/sys/class/ina231/ina231_0/ina231_value," \
-    "1,9999999,1,9999999,1,99999",
-    "/sys/class/ina231/ina231_0/ina231_set," \
-    "/sys/class/ina231/ina231_0/ina231_value," \
-    "1,9999999,1,9999999,1,99999",
-    "/sys/class/graphics/fb0/lcd_checksum",
-    "/sys/class/graphics/fb0/lcd_checksum",
-    "/sys/class/graphics/fb0/lcd_checksum",
-    "/sys/class/graphics/fb0/lcd_checksum",
-    "/sys/class/lm36923/lm36923/self_test",
-    "/sys/class/graphics/fb0/amoled_pcd_errflag_check",
-    "/sys/class/graphics/fb0/lcd_inversion_mode",
-    "/sys/class/graphics/fb0/lcd_check_reg",
-    "/sys/class/graphics/fb0/lcd_inversion_mode",
-    "/sys/class/graphics/fb0/lcd_check_reg",
-    "/sys/class/graphics/fb0/lcd_check_reg",};
 
 /* gpio desc */
 struct lcdkit_gpio_desc
@@ -611,7 +536,6 @@ struct lcdkit_panel_infos
     u32 frame_updated;
     struct delayed_work bkl_work;
 
-
     /*HKADC test*/
     int  hkadc_buf;
     u8 hkadc_support;
@@ -646,8 +570,8 @@ struct lcdkit_panel_infos
     /*support check mode*/
     char* support_check_mode;
 
-	/*for fake panel*/
-	u32 bl_enable_flag;
+    /*for fake panel*/
+    u32 bl_enable_flag;
 
     /*max light*/
     u32 bl_max_nit;
@@ -671,12 +595,13 @@ struct lcdkit_panel_infos
     /*display effect on cmds */
     struct lcdkit_dsi_panel_cmds display_effect_on_cmds;
     u8 display_effect_on_support;
-    /***************
+
    /*check reg in panel on*/
     u8 check_reg_on_support;
     struct lcdkit_array_data check_reg_on_value;
     struct lcdkit_array_data check_reg_expect_value;
     struct lcdkit_array_data check_reg_mask_value;
+
     /*for dynamic gamma*/
     u8 dynamic_gamma_support;
     u32 gama_cmd_page;
@@ -708,7 +633,7 @@ struct lcdkit_panel_infos
     u8 first_reset;
     u8 second_reset;
 
-    /***************
+    /*
     **for gpio ctrl
     */
     /*ID0*/
