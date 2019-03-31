@@ -2211,18 +2211,33 @@ VOS_STATUS hdd_tx_fetch_packet_cbk( v_VOID_t *vosContext,
                                           pHddCtx->cfg_ini->gEnableDebugLog);
       if (VOS_PKT_PROTO_TYPE_EAPOL & proto_type)
       {
+#ifdef CONFIG_HUAWEI_WIFI
+         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                   "STA TX EAPOL");
+#else
          VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
                    "STA TX EAPOL");
+#endif
       }
       else if (VOS_PKT_PROTO_TYPE_DHCP & proto_type)
       {
+#ifdef CONFIG_HUAWEI_WIFI
+         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                   "STA TX DHCP");
+#else
          VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
                    "STA TX DHCP");
+#endif
       }
       else if (VOS_PKT_PROTO_TYPE_ARP & proto_type)
       {
+#ifdef CONFIG_HUAWEI_WIFI
+         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                   "STA TX ARP");
+#else
          VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
                    "STA TX ARP");
+#endif
       }
    }
 
@@ -2805,8 +2820,13 @@ VOS_STATUS hdd_rx_packet_cbk( v_VOID_t *vosContext,
                                              pHddCtx->cfg_ini->gEnableDebugLog);
          if (VOS_PKT_PROTO_TYPE_EAPOL & proto_type)
          {
+#ifdef CONFIG_HUAWEI_WIFI
+            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                      "STA RX EAPOL");
+#else
             VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
                       "STA RX EAPOL");
+#endif
          }
          else if (VOS_PKT_PROTO_TYPE_DHCP & proto_type)
          {
@@ -2815,8 +2835,13 @@ VOS_STATUS hdd_rx_packet_cbk( v_VOID_t *vosContext,
          }
          else if (VOS_PKT_PROTO_TYPE_ARP & proto_type)
          {
+#ifdef CONFIG_HUAWEI_WIFI
+            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                      "STA RX ARP");
+#else
             VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
                       "STA RX ARP");
+#endif
          }
       }
 

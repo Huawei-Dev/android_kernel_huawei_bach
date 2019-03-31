@@ -42,6 +42,10 @@
 #define WLAN_FTM_STOP               2        
 #define WLAN_FTM_CMD                3
 
+#ifdef CONFIG_HUAWEI_WIFI
+#define fem_check_flag                0
+#define fem_check_5g_flag           1
+#endif
 
 #define WLAN_FTM_PHY_CMD         100
 #define SIR_HAL_FTM_CMD          10
@@ -71,6 +75,14 @@
 #define WE_GET_CHANNEL      1
 #define WE_GET_TX_POWER     2
 #define WE_GET_RX_PKT_CNT   3
+#ifdef CONFIG_HUAWEI_WIFI
+#define FEM_PDET_IS_VALID 0
+#define FEM_PDET_TOO_HIGH 1
+#define FEM_PDET_TOO_LOW 2
+#define FEM_THRESHOLD_GET_FAIL 3
+#define WE_GET_TX_POWER_RAW_ADC   4
+#define WE_GET_5G_TX_POWER_RAW_ADC   5
+#endif
 
 /* Private ioctls and their sub-ioctls */
 #define WLAN_FTM_PRIV_SET_INT_GET_INT     (SIOCIWFIRSTPRIV + 2)

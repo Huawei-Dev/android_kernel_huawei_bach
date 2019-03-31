@@ -4152,9 +4152,43 @@ VOS_STATUS hdd_parse_config_ini(hdd_context_t* pHddCtx)
    /* cfgIniTable is static to avoid excess stack usage */
    static tCfgIniEntry cfgIniTable[MAX_CFG_INI_ITEMS];
    VOS_STATUS vos_status = VOS_STATUS_SUCCESS;
+#ifdef CONFIG_HUAWEI_WIFI
+   char configini_path_with_ini_type[NVBIN_PATH_LENTH] = {0};
+#endif
 
    memset(cfgIniTable, 0, sizeof(cfgIniTable));
 
+#ifdef CONFIG_HUAWEI_WIFI
+   status = construct_configini_with_ini_type(configini_path_with_ini_type);
+   if (0 == status){
+      status = request_firmware(&fw, configini_path_with_ini_type, pHddCtx->parent_dev);
+   }
+
+   if(status || !fw || !fw->data || !fw->size) {
+      pr_err("wcnss: %s: request_firmware failed for %s (status = %d)\n",
+         __func__, configini_path_with_ini_type, status);
+      status = request_firmware(&fw, WLAN_INI_FILE, pHddCtx->parent_dev);
+      if(status)
+      {
+          hddLog(VOS_TRACE_LEVEL_FATAL, "%s: request_firmware failed %d",__func__, status);
+          vos_status = VOS_STATUS_E_FAILURE;
+          goto config_exit;
+      }
+      else if(!fw || !fw->data || !fw->size)
+      {
+          hddLog(VOS_TRACE_LEVEL_FATAL, "%s: %s download failed",
+              __func__, WLAN_INI_FILE);
+          vos_status = VOS_STATUS_E_FAILURE;
+          goto config_exit;
+      }else{
+          pr_err("wcnss: %s:download firmware_path %s successed;\n",
+              __func__, WLAN_INI_FILE);
+      }
+   }else {
+      pr_err("wcnss: %s:download firmware_path %s successed;\n",
+          __func__, configini_path_with_ini_type);
+   }
+#else
    status = request_firmware(&fw, WLAN_INI_FILE, pHddCtx->parent_dev);
 
    if(status)
@@ -4170,6 +4204,7 @@ VOS_STATUS hdd_parse_config_ini(hdd_context_t* pHddCtx)
       vos_status = VOS_STATUS_E_FAILURE;
       goto config_exit;
    }
+#endif
 
    hddLog(VOS_TRACE_LEVEL_INFO , "%s: qcom_cfg.ini Size %zu", __func__, fw->size);
 

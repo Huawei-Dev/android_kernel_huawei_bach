@@ -141,7 +141,15 @@ limProcessDeauthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession p
 
     // Get reasonCode from Deauthentication frame body
     reasonCode = sirReadU16(pBody); 
-
+#ifdef CONFIG_HUAWEI_WIFI
+    PELOGE(limLog(pMac, LOGE,
+        FL("Received Deauth frame for Addr: "HWMAC_ADDRESS_STR" (mlm state = %s,"
+        " sme state = %d systemrole  = %d) with reason code %d from "
+        MAC_ADDRESS_STR), HWMAC_ADDR_ARRAY(pHdr->da),
+        limMlmStateStr(psessionEntry->limMlmState), psessionEntry->limSmeState,
+        psessionEntry->limSystemRole, reasonCode,
+        MAC_ADDR_ARRAY(pHdr->sa));)
+#else
     PELOGE(limLog(pMac, LOGE,
         FL("Received Deauth frame for Addr: "MAC_ADDRESS_STR" (mlm state = %s,"
         " sme state = %d systemrole  = %d) with reason code %d from "
@@ -149,7 +157,8 @@ limProcessDeauthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession p
         limMlmStateStr(psessionEntry->limMlmState), psessionEntry->limSmeState,
         psessionEntry->limSystemRole, reasonCode,
         MAC_ADDR_ARRAY(pHdr->sa));)
-      
+#endif
+     
     if (limCheckDisassocDeauthAckPending(pMac, (tANI_U8*)pHdr->sa))
     {
         PELOGE(limLog(pMac, LOGE,

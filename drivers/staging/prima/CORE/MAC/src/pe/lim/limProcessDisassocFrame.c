@@ -135,14 +135,21 @@ limProcessDisassocFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession
 
     // Get reasonCode from Disassociation frame body
     reasonCode = sirReadU16(pBody);
-
+#ifdef CONFIG_HUAWEI_WIFI
+    limLog(pMac, LOGE,
+        FL("Received Disassoc frame for Addr: "HWMAC_ADDRESS_STR
+        "(mlm state=%s, sme state=%d),"
+        "with reason code %d from "MAC_ADDRESS_STR), HWMAC_ADDR_ARRAY(pHdr->da),
+        limMlmStateStr(psessionEntry->limMlmState), psessionEntry->limSmeState,
+        reasonCode, MAC_ADDR_ARRAY(pHdr->sa));
+#else
     limLog(pMac, LOGE,
         FL("Received Disassoc frame for Addr: "MAC_ADDRESS_STR
         "(mlm state=%s, sme state=%d),"
         "with reason code %d from "MAC_ADDRESS_STR), MAC_ADDR_ARRAY(pHdr->da),
         limMlmStateStr(psessionEntry->limMlmState), psessionEntry->limSmeState,
         reasonCode, MAC_ADDR_ARRAY(pHdr->sa));
-
+#endif
     /**
    * Extract 'associated' context for STA, if any.
    * This is maintained by DPH and created by LIM.
