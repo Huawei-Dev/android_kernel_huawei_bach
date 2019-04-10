@@ -1,4 +1,4 @@
-/* Copyright (c) 2008-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2008-2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -891,6 +891,9 @@ static inline u32 mdss_panel_get_framerate(struct mdss_panel_info *panel_info,
 		break;
 	case WRITEBACK_PANEL:
 		frame_rate = DEFAULT_FRAME_RATE;
+		break;
+	case SPI_PANEL:
+		frame_rate = panel_info->spi.frame_rate;
 		break;
 	case DTV_PANEL:
 		if (panel_info->dynamic_fps) {
