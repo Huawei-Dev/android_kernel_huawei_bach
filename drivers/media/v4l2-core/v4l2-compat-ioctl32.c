@@ -442,10 +442,6 @@ static int put_v4l2_plane32(struct v4l2_plane __user *up,
 	case V4L2_MEMORY_DMABUF:
 		if (copy_in_user(&up32->m.fd, &up->m.fd, sizeof(up->m.fd)))
 			return -EFAULT;
-	if (memory == V4L2_MEMORY_USERPTR)
-		if (copy_in_user(&up32->m.userptr, &up->m.userptr,
-					sizeof(compat_long_t)))
-			return -EFAULT;
 		break;
 	}
 
@@ -509,18 +505,9 @@ static int get_v4l2_buffer32(struct v4l2_buffer __user *kp,
 				   &up->timestamp.tv_usec))
 			return -EFAULT;
 
-	if (V4L2_TYPE_IS_PRIVATE(kp->type)) {
-		compat_long_t tmp;
+	if (V4L2_TYPE_IS_MULTIPLANAR(type)) {
+		u32 num_planes = length;
 
-		if (get_user(kp->length, &up->length) ||
-				get_user(tmp, &up->m.userptr))
-			return -EFAULT;
-
-		kp->m.userptr = (unsigned long)compat_ptr(tmp);
-	}
-
-	if (V4L2_TYPE_IS_MULTIPLANAR(kp->type)) {
-		u32 num_planes = kp->length;
 		if (num_planes == 0) {
 			/*
 			 * num_planes == 0 is legal, e.g. when userspace doesn't
