@@ -915,9 +915,6 @@ static inline u32 mdss_panel_get_framerate(struct mdss_panel_info *panel_info,
 			frame_rate = panel_info->lcdc.frame_rate;
 			break;
 		}
-	case SPI_PANEL:
-		frame_rate = panel_info->spi.frame_rate;
-		break;
 	default:
 		pixel_total = (panel_info->lcdc.h_back_porch +
 			  panel_info->lcdc.h_front_porch +
