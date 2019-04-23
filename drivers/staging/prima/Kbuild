@@ -638,8 +638,7 @@ CDEFINES +=	-DWLAN_DEBUG \
 		-DSME_TRACE_RECORD \
 		-DPE_DEBUG_LOGW \
 		-DPE_DEBUG_LOGE \
-                -DDXE_TRACE \
-		-DDEBUG
+                -DDXE_TRACE
 endif
 
 ifeq ($(CONFIG_SLUB_DEBUG_ON),y)
@@ -746,7 +745,7 @@ CDEFINES += -DEXISTS_MSM_SMSM
 endif
 
 # Fix build for GCC 4.7
-EXTRA_CFLAGS += -Wno-maybe-uninitialized -Wno-unused-function
+EXTRA_CFLAGS += -DNDEBUG -Wno-maybe-uninitialized -Wno-unused-function
 
 ifeq ($(CONFIG_WLAN_OFFLOAD_PACKETS),y)
 CDEFINES += -DWLAN_FEATURE_OFFLOAD_PACKETS

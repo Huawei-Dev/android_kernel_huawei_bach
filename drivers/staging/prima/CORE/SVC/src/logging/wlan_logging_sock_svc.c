@@ -819,7 +819,7 @@ static int send_fw_log_pkt_to_user(void)
 
 		ret = nl_srv_bcast(skb);
 		if ((ret < 0) && (ret != -ESRCH)) {
-			pr_info("%s: Send Failed %d drop_count = %u\n",
+			pr_debug("%s: Send Failed %d drop_count = %u\n",
 				__func__, ret, ++gwlan_logging.fw_log_pkt_drop_cnt);
 		} else {
 			ret = 0;
@@ -915,7 +915,7 @@ static int send_data_mgmt_log_pkt_to_user(void)
 
 		ret =  nl_srv_bcast(skb);
 		if (ret < 0) {
-			pr_info("%s: Send Failed %d drop_count = %u\n",
+			pr_debug("%s: Send Failed %d drop_count = %u\n",
 				__func__, ret, ++gwlan_logging.pkt_drop_cnt);
 		} else {
 			ret = 0;
@@ -1074,7 +1074,7 @@ static int send_filled_buffers_to_user(void)
 		if (ret < 0) {
 			if (__ratelimit(&errCnt))
 			{
-			    pr_info("%s: Send Failed %d drop_count = %u\n",
+			    pr_debug("%s: Send Failed %d drop_count = %u\n",
 				  __func__, ret, gwlan_logging.drop_count);
 			}
 			gwlan_logging.drop_count++;
@@ -1186,7 +1186,7 @@ static int send_per_pkt_stats_to_user(void)
 
 		ret = nl_srv_bcast(plog_msg->skb);
 		if (ret < 0) {
-			pr_info("%s: Send Failed %d drop_count = %u\n",
+			pr_debug("%s: Send Failed %d drop_count = %u\n",
 				__func__, ret, ++gwlan_logging.fw_log_pkt_drop_cnt);
 		} else {
 			ret = 0;
@@ -1348,7 +1348,7 @@ static int wlan_logging_proc_sock_rx_msg(struct sk_buff *skb)
 
         if (TRUE == vos_isUnloadInProgress())
         {
-                pr_info("%s: unload in progress\n",__func__);
+                pr_debug("%s: unload in progress\n",__func__);
                 return -ENODEV;
         }
 
@@ -1479,7 +1479,7 @@ int wlan_logging_sock_activate_svc(int log_fe_to_console, int num_buf,
 	bool failure = FALSE;
 	struct log_msg *temp;
 
-	pr_info("%s: Initalizing FEConsoleLog = %d NumBuff = %d\n",
+	pr_debug("%s: Initalizing FEConsoleLog = %d NumBuff = %d\n",
 			__func__, log_fe_to_console, num_buf);
 
 	gapp_pid = INVALID_PID;
@@ -1510,7 +1510,7 @@ int wlan_logging_sock_activate_svc(int log_fe_to_console, int num_buf,
 	spin_unlock_irqrestore(&gwlan_logging.spin_lock, irq_flag);
 	if(pkt_stats_enabled)
 	{
-		pr_info("%s: Initalizing Pkt stats pkt_stats_buff = %d\n",
+		pr_debug("%s: Initalizing Pkt stats pkt_stats_buff = %d\n",
 			__func__, pkt_stats_buff);
 		pkt_stats_buffers = (struct pkt_stats_msg *) kzalloc(
 			 pkt_stats_buff * sizeof(struct pkt_stats_msg), GFP_KERNEL);
@@ -1853,7 +1853,7 @@ int wlan_queue_fw_mem_dump_for_app(vos_pkt_t *pPacket)
                 ++gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_pkt_drop_cnt ;
 		spin_unlock_irqrestore(&gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_lock,
 					flags);
-                pr_info("%s : fw mem_dump pkt cnt --> %d\n" ,__func__, gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_pkt_drop_cnt);
+                pr_debug("%s : fw mem_dump pkt cnt --> %d\n" ,__func__, gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_pkt_drop_cnt);
 		vos_pkt_return_packet(free_pkt);
 	} else {
 		spin_unlock_irqrestore(&gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_lock,
@@ -1910,7 +1910,7 @@ int wlan_queue_logpkt_for_app(vos_pkt_t *pPacket, uint32 pkt_type)
 		break;
 
 	default:
-		pr_info("%s: Unknown pkt received %d", __func__, pkt_type);
+		pr_debug("%s: Unknown pkt received %d", __func__, pkt_type);
 		status = VOS_STATUS_E_INVAL;
 		break;
 	};
@@ -1925,7 +1925,7 @@ void wlan_process_done_indication(uint8 type, uint32 reason_code)
             if ((type == WLAN_FW_LOGS) &&
                 (wlan_is_log_report_in_progress() == TRUE))
             {
-                pr_info("%s: Setting LOGGER_FATAL_EVENT %d\n",
+                pr_debug("%s: Setting LOGGER_FATAL_EVENT %d\n",
                          __func__, reason_code);
                 set_bit(LOGGER_FATAL_EVENT_POST, &gwlan_logging.event_flag);
                 wake_up_interruptible(&gwlan_logging.wait_queue);
@@ -1939,7 +1939,7 @@ void wlan_process_done_indication(uint8 type, uint32 reason_code)
 	{
 		if(wlan_is_log_report_in_progress() == TRUE)
 		{
-                        pr_info("%s: Setting LOGGER_FATAL_EVENT %d\n",
+                        pr_debug("%s: Setting LOGGER_FATAL_EVENT %d\n",
                                  __func__, reason_code);
 			set_bit(LOGGER_FATAL_EVENT_POST, &gwlan_logging.event_flag);
 			wake_up_interruptible(&gwlan_logging.wait_queue);
@@ -1973,7 +1973,7 @@ void wlan_process_done_indication(uint8 type, uint32 reason_code)
 									flags);
 
 			/*Firmware Initiated*/
-			pr_info("%s : FW triggered Fatal Event, reason_code : %d\n", __func__,
+			pr_debug("%s : FW triggered Fatal Event, reason_code : %d\n", __func__,
 			reason_code);
 			wlan_set_log_completion(WLAN_LOG_TYPE_FATAL,
 					WLAN_LOG_INDICATOR_FIRMWARE,
@@ -1984,7 +1984,7 @@ void wlan_process_done_indication(uint8 type, uint32 reason_code)
 	}
 	if(type == WLAN_FW_MEMORY_DUMP && vos_is_wlan_logging_enabled())
 	{
-		pr_info("%s: Setting FW MEM DUMP LOGGER event\n", __func__);
+		pr_debug("%s: Setting FW MEM DUMP LOGGER event\n", __func__);
 		set_bit(LOGGER_FW_MEM_DUMP_PKT_POST_DONE, &gwlan_logging.event_flag);
 		wake_up_interruptible(&gwlan_logging.wait_queue);
 	}
@@ -1998,7 +1998,7 @@ void wlan_flush_host_logs_for_fatal()
 	unsigned long flags;
 
 	if (wlan_is_log_report_in_progress()) {
-		pr_info("%s:flush all host logs Setting HOST_LOG_POST\n",
+		pr_debug("%s:flush all host logs Setting HOST_LOG_POST\n",
 				 __func__);
 
 		spin_lock_irqsave(&gwlan_logging.spin_lock, flags);
@@ -2075,7 +2075,7 @@ bool wlan_fwr_mem_dump_test_and_set_write_allowed_bit(){
 		gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_status = FW_MEM_DUMP_WRITE_IN_PROGRESS;
 	}
 	spin_unlock_irqrestore(&gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_lock, flags);
-	pr_info("%s:fw mem dump state --> %d ", __func__,gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_status);
+	pr_debug("%s:fw mem dump state --> %d ", __func__,gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_status);
 
 	if(write_done)
 		wlan_free_fwr_mem_dump_buffer();
@@ -2092,7 +2092,7 @@ bool wlan_fwr_mem_dump_test_and_set_read_allowed_bit(){
           gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_status = FW_MEM_DUMP_READ_IN_PROGRESS;
 	}
 	spin_unlock_irqrestore(&gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_lock, flags);
-	//pr_info("%s:fw mem dump state --> %d ", __func__,gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_status);
+	//pr_debug("%s:fw mem dump state --> %d ", __func__,gwlan_logging.fw_mem_dump_ctx.fw_mem_dump_status);
 
 	return ret;
 }
@@ -2215,7 +2215,7 @@ void wlan_indicate_mem_dump_complete(bool status )
 	}
 	/*indicate mem dump complete*/
 	cfg80211_vendor_cmd_reply(skb);
-	pr_info("Memdump event sent successfully to user space : recvd size %d",(int)(gwlan_logging.fw_mem_dump_ctx.fw_dump_current_loc - gwlan_logging.fw_mem_dump_ctx.fw_dump_start_loc));
+	pr_debug("Memdump event sent successfully to user space : recvd size %d",(int)(gwlan_logging.fw_mem_dump_ctx.fw_dump_current_loc - gwlan_logging.fw_mem_dump_ctx.fw_dump_start_loc));
 	return;
 
 nla_put_failure:
