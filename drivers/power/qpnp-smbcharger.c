@@ -5357,10 +5357,8 @@ static void handle_usb_removal(struct smbchg_chip *chip)
 				chip->usb_present);
 		power_supply_set_present(chip->usb_psy, chip->usb_present);
 	}
-	charger_type_notifier_call_chain(POWER_SUPPLY_TYPE_UNKNOWN);
 	set_usb_psy_dp_dm(chip, POWER_SUPPLY_DP_DM_DPR_DMR);
-	if (!chip->not_set_usb_online)
-		schedule_work(&chip->usb_set_online_work);
+	schedule_work(&chip->usb_set_online_work);
 	pr_smb(PR_MISC, "setting usb psy health UNKNOWN\n");
 	rc = power_supply_set_health_state(chip->usb_psy,
 			POWER_SUPPLY_HEALTH_UNKNOWN);
@@ -5390,9 +5388,6 @@ static void handle_usb_removal(struct smbchg_chip *chip)
 		HVDCP_SHORT_DEGLITCH_VOTER, false, 0);
 	if (!chip->hvdcp_not_supported && !chip->device_not_support_hvdcp)
 		restore_from_hvdcp_detection(chip);
-	cancel_delayed_work_sync(&chip->monitor_charging_work);
-	chip->ibus_detecting = false;
-	cancel_delayed_work_sync(&chip->ibus_detect_work);
 }
 
 static bool is_usbin_uv_high(struct smbchg_chip *chip)
@@ -5450,8 +5445,7 @@ static void handle_usb_insertion(struct smbchg_chip *chip)
 				"usb psy does not allow updating prop %d rc = %d\n",
 				POWER_SUPPLY_HEALTH_GOOD, rc);
 	}
-	if (!chip->not_set_usb_online)
-		schedule_work(&chip->usb_set_online_work);
+	schedule_work(&chip->usb_set_online_work);
 
 	if (!chip->hvdcp_not_supported && !chip->device_not_support_hvdcp
 			&& (usb_supply_type == POWER_SUPPLY_TYPE_USB_DCP)) {
@@ -6567,6 +6561,8 @@ static int smbchg_battery_set_property(struct power_supply *psy,
 		rc = vote(chip->dc_suspend_votable, USER_EN_VOTER,
 				!val->intval, 0);
 		chip->chg_enabled = val->intval;
+		power_supply_changed(chip->usb_psy);
+		schedule_work(&chip->usb_set_online_work);
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY:
 		chip->fake_battery_soc = val->intval;
