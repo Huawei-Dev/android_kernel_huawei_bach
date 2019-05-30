@@ -28,6 +28,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/of_gpio.h>
 #include <linux/clk/msm-clk.h>
+
 #ifdef CONFIG_HUAWEI_MODEM_CRASH_LOG
 #include <linux/sched.h>
 #include <linux/uaccess.h>
@@ -35,7 +36,6 @@
 #include <linux/fs.h>
 #include <linux/slab.h>
 #include <linux/store_exception.h>
-
 #endif
 
 #include <soc/qcom/subsystem_restart.h>
@@ -60,7 +60,6 @@
 #define MODEM_EXCEPTION "modem_exception"
 #define MODEM_CRASH_LOG "modem_crash_log"
 #define MODEM_F3_TRACE      "modem_f3_trace"
-
 #define ERR_DATA_MAX_SIZE 0x4000U //16K
 #define DIAG_F3_TRACE_BUFFER_SIZE 0x4000U  //16K
 
@@ -194,8 +193,6 @@ static void log_modem_f3_track_log(int record_enabled)
 
 }
 
-#endif
-
 static void log_modem_sfr(int record_enabled)
 {
     u32 size;
@@ -245,6 +242,37 @@ static void restart_modem(struct modem_data *drv)
 
     subsystem_restart_dev(drv->subsys);
 }
+#else
+static void log_modem_sfr(void)
+{
+	u32 size;
+	char *smem_reason, reason[MAX_SSR_REASON_LEN];
+
+	smem_reason = smem_get_entry_no_rlock(SMEM_SSR_REASON_MSS0, &size, 0,
+							SMEM_ANY_HOST_FLAG);
+	if (!smem_reason || !size) {
+		pr_err("modem subsystem failure reason: (unknown, smem_get_entry_no_rlock failed).\n");
+		return;
+	}
+	if (!smem_reason[0]) {
+		pr_err("modem subsystem failure reason: (unknown, empty string found).\n");
+		return;
+	}
+
+	strlcpy(reason, smem_reason, min(size, MAX_SSR_REASON_LEN));
+	pr_err("modem subsystem failure reason: %s.\n", reason);
+
+	smem_reason[0] = '\0';
+	wmb();
+}
+
+static void restart_modem(struct modem_data *drv)
+{
+	log_modem_sfr();
+	drv->ignore_errors = true;
+	subsystem_restart_dev(drv->subsys);
+}
+#endif
 
 static irqreturn_t modem_err_fatal_intr_handler(int irq, void *dev_id)
 {
