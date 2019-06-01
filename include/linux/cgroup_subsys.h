@@ -11,10 +11,6 @@ SUBSYS(cpuset)
 SUBSYS(cpu)
 #endif
 
-#if IS_ENABLED(CONFIG_HW_CGROUP_PIDS)
-SUBSYS(pids)
-#endif
-
 #if IS_ENABLED(CONFIG_CGROUP_CPUACCT)
 SUBSYS(cpuacct)
 #endif

@@ -133,9 +133,6 @@ struct fs_struct;
 struct perf_event_context;
 struct blk_plug;
 struct filename;
-#ifdef CONFIG_HW_CGROUP_PIDS
-struct group_pids;
-#endif
 
 #define VMACACHE_BITS 2
 #define VMACACHE_SIZE (1U << VMACACHE_BITS)
@@ -1644,10 +1641,6 @@ struct task_struct {
 	struct css_set __rcu *cgroups;
 	/* cg_list protected by css_set_lock and tsk->alloc_lock */
 	struct list_head cg_list;
-#endif
-#ifdef CONFIG_HW_CGROUP_PIDS
-	struct list_head group_pids_list;
-	struct group_pids *group_pids;
 #endif
 #ifdef CONFIG_FUTEX
 	struct robust_list_head __user *robust_list;
