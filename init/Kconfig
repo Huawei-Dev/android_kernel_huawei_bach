@@ -982,8 +982,6 @@ config CGROUP_FREEZER
 	  Provides a way to freeze and unfreeze all tasks in a
 	  cgroup.
 
-source "kernel/cgroup_huawei/Kconfig"
-
 config CGROUP_DEVICE
 	bool "Device controller for cgroups"
 	help
