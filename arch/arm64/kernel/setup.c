@@ -62,11 +62,6 @@
 #include <asm/psci.h>
 #include <asm/efi.h>
 
-#ifdef CONFIG_DUMP_SYS_INFO
-#include <linux/module.h>
-#include <linux/srecorder.h>
-#endif
-
 char* (*arch_read_hardware_id)(void);
 EXPORT_SYMBOL(arch_read_hardware_id);
 

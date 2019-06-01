@@ -50,16 +50,12 @@ int reboot_force;
 
 void (*pm_power_off_prepare)(void);
 
-#ifdef CONFIG_SRECORDER
-#ifdef CONFIG_POWERCOLLAPSE
 #ifndef CONFIG_KPROBES
 static void emergency_restart_prepare(char *reason)
 {
     raw_notifier_call_chain(&emergency_reboot_notifier_list, SYS_RESTART, reason);
 }
 #endif
-#endif
-#endif /* CONFIG_SRECORDER */
 
 /**
  *	emergency_restart - reboot the system
@@ -71,13 +67,9 @@ static void emergency_restart_prepare(char *reason)
  */
 void emergency_restart(void)
 {
-#ifdef CONFIG_SRECORDER
-#ifdef CONFIG_POWERCOLLAPSE
 #ifndef CONFIG_KPROBES
 	emergency_restart_prepare(NULL);
 #endif
-#endif
-#endif /* CONFIG_SRECORDER */
 	kmsg_dump(KMSG_DUMP_EMERG);
 	machine_emergency_restart();
 }
@@ -122,8 +114,6 @@ int unregister_reboot_notifier(struct notifier_block *nb)
 }
 EXPORT_SYMBOL(unregister_reboot_notifier);
 
-#ifdef CONFIG_SRECORDER
-#ifdef CONFIG_POWERCOLLAPSE
 #ifndef CONFIG_KPROBES
 /**
  *	register_emergency_reboot_notifier - Register function to be called at reboot time
@@ -156,8 +146,6 @@ int unregister_emergency_reboot_notifier(struct notifier_block *nb)
 }
 EXPORT_SYMBOL(unregister_emergency_reboot_notifier);
 #endif
-#endif
-#endif /* CONFIG_SRECORDER */
 
 /*
  *	Notifier list for kernel code which wants to be called

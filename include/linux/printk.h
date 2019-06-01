@@ -12,7 +12,6 @@ extern const char linux_proc_banner[];
 
 extern char *log_buf_addr_get(void);
 extern u32 log_buf_len_get(void);
-extern void hwboot_get_printk_buf_info(u64 **fseq, u32 **fidx, u64 **nseq);
 
 static inline int printk_get_level(const char *buffer)
 {

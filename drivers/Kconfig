@@ -210,8 +210,6 @@ source "drivers/hw_fac_info/Kconfig"
 
 source "drivers/devdetect/Kconfig"
 
-source "drivers/srecorder/Kconfig"
-
 source "drivers/devkit/lcdkit/Kconfig"
 
 source "drivers/devkit/tpkit/Kconfig"

@@ -49,10 +49,6 @@
 
 #include <asm/uaccess.h>
 
-#ifdef CONFIG_SRECORDER
-#include <linux/srecorder.h>
-#endif
-
 #define CREATE_TRACE_POINTS
 #include <trace/events/printk.h>
 
@@ -263,11 +259,7 @@ static u32 log_first_idx;
 
 /* index and sequence number of the next record to store in the buffer */
 static u64 log_next_seq;
-#ifndef CONFIG_SRECORDER
 static u32 log_next_idx;
-#else
-static u32 log_next_idx __attribute__((__section__(".data")));
-#endif
 
 /* the next printk record to write to the console */
 static u64 console_seq;
@@ -284,32 +276,9 @@ static u32 clear_idx;
 /* record buffer */
 #define LOG_ALIGN __alignof__(struct printk_log)
 #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
-
-#ifndef CONFIG_SRECORDER
 static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
 static char *log_buf = __log_buf;
 static u32 log_buf_len = __LOG_BUF_LEN;
-#else
-static char __log_buf[__LOG_BUF_LEN] __attribute__((__section__(".data")));
-static char *log_buf __attribute__((__section__(".data"))) = __log_buf;
-static int log_buf_len __attribute__((__section__(".data"))) = __LOG_BUF_LEN;
-
-void srecorder_get_printk_buf_info(unsigned long* p_log_buf, unsigned* p_log_end, unsigned* p_log_buf_len)
-{
-    *p_log_buf = (unsigned long)log_buf;
-    *p_log_end = (unsigned)log_next_idx;
-    *p_log_buf_len = log_buf_len;
-}
-EXPORT_SYMBOL(srecorder_get_printk_buf_info);
-#endif
-
-void hwboot_get_printk_buf_info(u64 **fseq, u32 **fidx, u64 **nseq)
-{
-   *fseq = &log_first_seq;
-   *fidx = &log_first_idx;
-   *nseq = &log_next_seq;
-   return;
-}
 
 /* Return log buffer address */
 char *log_buf_addr_get(void)

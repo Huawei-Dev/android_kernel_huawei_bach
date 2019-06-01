@@ -38,14 +38,10 @@ extern int reboot_force;
 extern int register_reboot_notifier(struct notifier_block *);
 extern int unregister_reboot_notifier(struct notifier_block *);
 
-#ifdef CONFIG_SRECORDER
-#ifdef CONFIG_POWERCOLLAPSE
 #ifndef CONFIG_KPROBES
 extern int register_emergency_reboot_notifier(struct notifier_block *);
 extern int unregister_emergency_reboot_notifier(struct notifier_block *);
 #endif
-#endif
-#endif /* CONFIG_SRECORDER */
 extern int register_restart_handler(struct notifier_block *);
 extern int unregister_restart_handler(struct notifier_block *);
 extern void do_kernel_restart(char *cmd);
