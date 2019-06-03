@@ -30,10 +30,5 @@ int mmc_send_hpi_cmd(struct mmc_card *card, u32 *status);
 int mmc_can_ext_csd(struct mmc_card *card);
 int mmc_discard_queue(struct mmc_host *host, u32 tasks);
 int mmc_switch_status(struct mmc_card *card, bool ignore_crc);
-
-#ifdef CONFIG_MMC_PASSWORDS
-int mmc_lock_unlock_by_buf(struct mmc_card *card, u8* key_buf,int key_len, int mode);
-#endif
-
 #endif
 

@@ -2879,10 +2879,6 @@ static const struct mmc_bus_ops mmc_ops = {
 	.alive = mmc_alive,
 	.change_bus_speed = mmc_change_bus_speed,
 	.shutdown = mmc_shutdown,
-#ifdef CONFIG_MMC_PASSWORDS
-	.sysfs_add = NULL,
-	.sysfs_remove = NULL,
-#endif
 };
 
 /*

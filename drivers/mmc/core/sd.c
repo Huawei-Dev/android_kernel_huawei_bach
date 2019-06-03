@@ -27,10 +27,6 @@
 #include "sd.h"
 #include "sd_ops.h"
 
-#ifdef CONFIG_MMC_PASSWORDS
-#include "lock.h"
-#endif
-
 #ifdef CONFIG_HUAWEI_SDCARD_DSM
 #include <linux/mmc/dsm_sdcard.h>
 u32 sd_manfid;
@@ -767,11 +763,7 @@ out:
 /*
  * UHS-I specific initialization procedure
  */
-#ifdef CONFIG_MMC_PASSWORDS
-int mmc_sd_init_uhs_card(struct mmc_card *card)
-#else
 static int mmc_sd_init_uhs_card(struct mmc_card *card)
-#endif
 {
 	int err;
 	u8 *status;
@@ -874,31 +866,6 @@ ATTRIBUTE_GROUPS(sd_std);
 struct device_type sd_type = {
 	.groups = sd_std_groups,
 };
-
-#ifdef CONFIG_MMC_PASSWORDS
-/*
- * Adds sysfs entries as relevant.
- */
-static int mmc_sd_sysfs_add(struct mmc_host *host, struct mmc_card *card)
-{
-	int ret;
-
-	ret = mmc_lock_add_sysfs(card);
-	if (ret < 0) {
-		return ret;
-	}
-
-	return 0;
-}
-
-/*
- * Removes the sysfs entries added by mmc_sysfs_add().
- */
-static void mmc_sd_sysfs_remove(struct mmc_host *host, struct mmc_card *card)
-{
-	mmc_lock_remove_sysfs(card);
-}
-#endif
 
 /*
  * Fetch CID from card.
@@ -1192,36 +1159,19 @@ unsigned mmc_sd_get_max_clock(struct mmc_card *card)
 	return max_dtr;
 }
 
-#ifdef CONFIG_MMC_PASSWORDS
-void mmc_sd_go_highspeed(struct mmc_card *card)
-{
-	//mmc_card_set_highspeed(card);//temp remove this
-	mmc_set_timing(card->host, MMC_TIMING_SD_HS);
-}
-#endif
-
 /*
  * Handle the detection and initialisation of a card.
  *
  * In the case of a resume, "oldcard" will contain the card
  * we're trying to reinitialise.
  */
-#ifdef CONFIG_MMC_PASSWORDS
-int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
-	struct mmc_card *oldcard)
-#else
 static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 	struct mmc_card *oldcard)
-#endif
 {
 	struct mmc_card *card;
 	int err;
 	u32 cid[4];
 	u32 rocr = 0;
-
-#ifdef CONFIG_MMC_PASSWORDS
-	u32 status = 0;
-#endif
 
 #ifdef CONFIG_HUAWEI_SDCARD_DSM
 	int i=0;
@@ -1302,27 +1252,6 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 		host->card = card;
 	}
 
-#ifdef CONFIG_MMC_PASSWORDS
-    /* whether voltage switch just for sd card */
-	if (rocr & SD_ROCR_S18A)
-		card->swith_voltage = true;
-	else
-		card->swith_voltage = false;
-
-	printk("%s, sd card voltage swith(3.3v--> 1.8v) is %d\n", __func__, card->swith_voltage);
-
-	/*
-	 * Check if card is locked.
-	 */
-	err = mmc_send_status(card, &status);
-	if (err)
-		goto free_card;
-	if (status & R1_CARD_IS_LOCKED) {
-		mmc_card_set_encrypted(card);
-		mmc_card_set_locked(card);
-	}
-#endif
-
 	if (!oldcard) {
 		err = mmc_sd_get_csd(host, card);
 
@@ -1369,48 +1298,6 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 			goto free_card;
 		}
 	}
-#ifdef CONFIG_MMC_PASSWORDS
-	if (status & R1_CARD_IS_LOCKED) {
-		if (card->auto_unlock ) {
-			if (card->unlock_pwd[0] > 0 ) {
-				//unlock sd card
-				err = mmc_lock_unlock_by_buf(card,  card->unlock_pwd+1,(int)card->unlock_pwd[0], MMC_LOCK_MODE_UNLOCK);
-				if(err) {
-					printk("[SDLOCK] %s unlock failed \n",__func__);
-				} else {
-					printk("[SDLOCK] %s unlock success \n",__func__);
-
-					if(!mmc_card_locked(card)) {
-						card->auto_unlock = false;
-						printk("[SDLOCK] %s unlock success and sdcard status is unlocked.\n",__func__);
-					} else {
-						printk("[SDLOCK] %s unlock success but sdcard status is locked, abnormal status.\n",__func__);
-					}
-				}
-
-				//Check if card is locked
-				err = mmc_send_status(card, &status);
-				if (err) {
-					printk("[SDLOCK] %s resume sd card exception /n",__func__);
-					goto free_card;
-				}
-			} else {
-				printk("[SDLOCK] %s unlock password is null\n",__func__);
-			}
-		}
-
-		if (status & R1_CARD_IS_LOCKED) {
-			printk(KERN_WARNING "[SDLOCK] sdcard is locked\n");
-			host->card = card;
-			goto locked_card;
-		} else {
-			printk(KERN_WARNING "[SDLOCK] sdcard resume to unlocked\n");
-		}
-	} else {
-		printk(KERN_WARNING "[SDLOCK] sdcard is unlocked\n");
-	}
-#endif
-
 	err = mmc_sd_setup_card(host, card, oldcard != NULL);
 	if (err)
 	{
@@ -1475,9 +1362,6 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 	card->clk_scaling_highest = mmc_sd_get_max_clock(card);
 	card->clk_scaling_lowest = host->f_min;
 
-#ifdef CONFIG_MMC_PASSWORDS
-locked_card:
-#endif
 	return 0;
 
 free_card:
@@ -1598,14 +1482,6 @@ static int _mmc_sd_suspend(struct mmc_host *host)
 		mmc_power_off(host);
 		mmc_card_set_suspended(host->card);
 	}
-
-#ifdef CONFIG_MMC_PASSWORDS
-	/*if sd is unlock , set auto unlock flag , so system resume auto unlock sd card */
-	if (!mmc_card_locked(host->card)) {
-		pr_err("%s: [SDLOCK] sdcard is unlocked on suspend and set auto_unlock = true. \n", mmc_hostname(host));
-		host->card->auto_unlock = true;
-	}
-#endif
 
 out:
 	mmc_release_host(host);
@@ -1800,10 +1676,6 @@ static const struct mmc_bus_ops mmc_sd_ops = {
 	.power_restore = mmc_sd_power_restore,
 	.alive = mmc_sd_alive,
 	.change_bus_speed = mmc_sd_change_bus_speed,
-#ifdef CONFIG_MMC_PASSWORDS
-	.sysfs_add = mmc_sd_sysfs_add,
-	.sysfs_remove = mmc_sd_sysfs_remove,
-#endif
 };
 
 /*
