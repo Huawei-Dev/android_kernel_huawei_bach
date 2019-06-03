@@ -1202,11 +1202,6 @@ struct mm_walk {
 			     struct mm_walk *walk);
 	struct mm_struct *mm;
 	void *private;
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	bool hiber;
-	unsigned nr_reclaimed;
-	unsigned nr_writedblock;
-#endif
 };
 
 int walk_page_range(unsigned long addr, unsigned long end,

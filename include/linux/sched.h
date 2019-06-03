@@ -1320,14 +1320,6 @@ enum perf_event_task_context {
 	perf_nr_task_contexts,
 };
 
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-struct reclaim_result {
-	unsigned nr_reclaimed;
-	unsigned nr_writedblock;
-	s64 elapsed_centisecs64;
-};
-#endif
-
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1794,9 +1786,6 @@ struct task_struct {
 #if defined(CONFIG_BCACHE) || defined(CONFIG_BCACHE_MODULE)
 	unsigned int	sequential_io;
 	unsigned int	sequential_io_avg;
-#endif
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	struct reclaim_result *proc_reclaimed_result;
 #endif
 };
 

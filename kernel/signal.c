@@ -1861,14 +1861,6 @@ static inline int may_ptrace_stop(void)
 	return 1;
 }
 
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-int reclaim_sigusr_pending(struct task_struct *tsk)
-{
-	return	sigismember(&tsk->pending.signal, SIGUSR2) ||
-		sigismember(&tsk->signal->shared_pending.signal, SIGUSR2);
-}
-#endif
-
 /*
  * Return non-zero if there is a SIGKILL that should be waking us up.
  * Called with the siglock held.

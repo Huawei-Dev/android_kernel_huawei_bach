@@ -32,5 +32,4 @@ proc-$(CONFIG_PROC_VMCORE)	+= vmcore.o
 proc-$(CONFIG_PRINTK)	+= kmsg.o
 proc-$(CONFIG_PROC_PAGE_MONITOR)	+= page.o
 proc-$(CONFIG_APP_INFO)         += app_info.o
-proc-$(CONFIG_HUAWEI_SWAP_ZDATA) += process_reclaim_info.o
 proc-$(CONFIG_TASK_PROTECT_LRU) += protect_lru.o

@@ -21,10 +21,6 @@
 #include <asm/tlbflush.h>
 #include "internal.h"
 
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-#include <linux/signal.h>
-#endif
-
 void task_mem(struct seq_file *m, struct mm_struct *mm)
 {
 	unsigned long data, text, lib, swap;
@@ -1483,13 +1479,7 @@ cont:
 		}
 	}
 	pte_unmap_unlock(pte - 1, ptl);
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	reclaimed = reclaim_pages_from_list(&page_list, vma,
-				walk->hiber, &walk->nr_writedblock);
-	walk->nr_reclaimed += reclaimed;
-#else
 	reclaimed = reclaim_pages_from_list(&page_list, vma);
-#endif
 	rp->nr_reclaimed += reclaimed;
 	rp->nr_to_reclaim -= reclaimed;
 	if (rp->nr_to_reclaim < 0)
@@ -1569,13 +1559,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	unsigned long start = 0;
 	unsigned long end = 0;
 	struct reclaim_param rp = {NULL, 0, 0, 0, false, false, RECLAIM_ANON};
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	struct timeval start_time;
-	struct timeval stop_time;
-	s64 elapsed_centisecs64;
-	reclaim_walk.nr_reclaimed = 0;
-	reclaim_walk.nr_writedblock = 0;
-#endif
 
 	memset(buffer, 0, sizeof(buffer));
 	if (count > sizeof(buffer) - 1)
@@ -1585,9 +1568,7 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		return -EFAULT;
 
 	type_buf = strstrip(buffer);
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	reclaim_walk.hiber = false;
-#endif
+
 	if (!strcmp(type_buf, "soft"))
 		type = RECLAIM_SOFT;
 	else if (!strcmp(type_buf, "inactive"))
@@ -1598,18 +1579,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		type = RECLAIM_ANON;
 	else if (!strcmp(type_buf, "all"))
 		type = RECLAIM_ALL;
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	else if (!strcmp(type_buf, "hiber")) {
-		type = RECLAIM_ALL;
-		reclaim_walk.hiber = true;
-	} else if (!strcmp(type_buf, "hiber_anon")) {
-		type = RECLAIM_ANON;
-		reclaim_walk.hiber = true;
-	} else if (!strcmp(type_buf, "hiber_file")) {
-		type = RECLAIM_FILE;
-		reclaim_walk.hiber = true;
-	}
-#endif
 	else if (isdigit(*type_buf))
 		type = RECLAIM_RANGE;
 	else
@@ -1666,10 +1635,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 
 	reclaim_walk.mm = mm;
 	reclaim_walk.pmd_entry = reclaim_pte_range;
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	if (reclaim_walk.hiber)
-		do_gettimeofday(&start_time);
-#endif
 
 	rp.nr_to_reclaim = ~0;
 	rp.nr_reclaimed = 0;
@@ -1695,10 +1660,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 			if (is_vm_hugetlb_page(vma))
 				continue;
 
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-			if (reclaim_walk.hiber && reclaim_sigusr_pending(current))
-				break;
-#endif
 			rp.vma = vma;
 			walk_page_range(vma->vm_start, vma->vm_end,
 				&reclaim_walk);
@@ -1708,16 +1669,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	flush_tlb_mm(mm);
 	up_read(&mm->mmap_sem);
 	mmput(mm);
-#ifdef CONFIG_HUAWEI_SWAP_ZDATA
-	if (reclaim_walk.hiber) {
-		do_gettimeofday(&stop_time);
-		elapsed_centisecs64 = timeval_to_ns(&stop_time) -
-					timeval_to_ns(&start_time);
-
-		process_reclaim_result_write(task, reclaim_walk.nr_reclaimed,
-			reclaim_walk.nr_writedblock, elapsed_centisecs64);
-	}
-#endif
 out:
 	put_task_struct(task);
 	return count;

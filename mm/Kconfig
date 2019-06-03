@@ -705,25 +705,6 @@ config PROCESS_RECLAIM
 
 	 Any other vaule is ignored.
 
-config HUAWEI_SWAP_ZDATA
-	bool "Compressed data to swap"
-	depends on SWAP
-	depends on PROCESS_RECLAIM
-	default n
-	help
-	  Save compressed data to swap page.
-
-	  If unsure, say Y to enable swap_zdata.
-
-config HUAWEI_DIRECT_SWAPPINESS
-	bool "Allow to adjust direct reclaim swappiness"
-	depends on SWAP && PROC_FS
-	default n
-	help
-	  Used to adjust direct reclaim cmpress priority by /proc/sys/vm/direct_swappiness.
-
-	  only 0 to 60 is valid. If unsure, say N to use it's original value(60).
-
 config DEBUG_VMALLOC
 	bool "Enable VMALLOC debugging support"
 	help
