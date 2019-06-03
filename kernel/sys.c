@@ -58,10 +58,6 @@
 
 #include <linux/kmsg_dump.h>
 
-#ifdef CONFIG_HUAWEI_UID_IO_STATS
-#include <linux/profile.h>
-#endif
-
 /* Move somewhere else to avoid recompiling? */
 #include <generated/utsrelease.h>
 
@@ -628,13 +624,7 @@ SYSCALL_DEFINE3(setresuid, uid_t, ruid, uid_t, euid, uid_t, suid)
 	if (retval < 0)
 		goto error;
 
-#ifdef CONFIG_HUAWEI_UID_IO_STATS
-	retval = commit_creds(new);
-	profile_end_setresuid(current);
-	return retval;
-#else
 	return commit_creds(new);
-#endif
 
 error:
 	abort_creds(new);
