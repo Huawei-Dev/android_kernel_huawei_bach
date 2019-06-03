@@ -52,36 +52,6 @@ DEFINE_EVENT(mmc_blk_erase_class, mmc_blk_erase_end,
 	TP_PROTO(unsigned int cmd, unsigned int addr, unsigned int size),
 	TP_ARGS(cmd, addr, size));
 	
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-/**/
-DECLARE_EVENT_CLASS(mmc_blk_cmdq_rw_class,
-	TP_PROTO(unsigned int cmd, unsigned int tag, unsigned int addr, unsigned int size),
-	TP_ARGS(cmd, tag, addr, size),
-	TP_STRUCT__entry(
-		__field(unsigned int, cmd)
-        __field(unsigned int, tag)
-		__field(unsigned int, addr)
-		__field(unsigned int, size)
-	),
-	TP_fast_assign(
-		__entry->cmd = cmd;
-        __entry->tag = tag;
-		__entry->addr = addr;
-		__entry->size = size;
-	),
-	TP_printk("cmd=%u,tag=%u, addr=0x%08x,size=0x%08x",
-		  __entry->cmd, __entry->tag, __entry->addr, __entry->size)
-);
-
-DEFINE_EVENT(mmc_blk_cmdq_rw_class, mmc_blk_cmdq_rw_start,
-	TP_PROTO(unsigned int cmd, unsigned int tag, unsigned int addr, unsigned int size),
-	TP_ARGS(cmd, tag, addr, size));
-
-DEFINE_EVENT(mmc_blk_cmdq_rw_class, mmc_blk_cmdq_rw_end,
-	TP_PROTO(unsigned int cmd, unsigned int tag, unsigned int addr, unsigned int size),
-	TP_ARGS(cmd, tag, addr, size));
-#endif
-
 /*
  * Logging of start of read or write mmc block operation,
  * including cmd, address, size

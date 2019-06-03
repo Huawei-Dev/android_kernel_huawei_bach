@@ -22,11 +22,6 @@
 
 #include <trace/events/block.h>
 
-#ifdef CONFIG_HUAWEI_IO_TRACING
-#include <huawei_platform/iotrace/iotrace.h>
-DEFINE_TRACE(block_dm_request);
-#endif
- 
 #define DM_MSG_PREFIX "core"
 
 #ifdef CONFIG_PRINTK
@@ -1749,10 +1744,6 @@ int dm_request_based(struct mapped_device *md)
 static void dm_request(struct request_queue *q, struct bio *bio)
 {
 	struct mapped_device *md = q->queuedata;
-
-#ifdef CONFIG_HUAWEI_IO_TRACING
-	trace_block_dm_request(q, bio);
-#endif
 
 	if (dm_request_based(md))
 		blk_queue_bio(q, bio);

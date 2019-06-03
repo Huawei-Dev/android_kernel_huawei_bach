@@ -51,14 +51,6 @@
 
 #include <asm/mman.h>
 
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-#include <huawei_platform/iotrace/iotrace.h>
-DEFINE_TRACE(generic_perform_write_enter);
-DEFINE_TRACE(generic_perform_write_end);
-DEFINE_TRACE(generic_file_read_begin);
-DEFINE_TRACE(generic_file_read_end);
-#endif
-
 /*
  * Shared mappings implemented 30.11.1994. It's not fully working yet,
  * though.
@@ -1513,10 +1505,6 @@ static ssize_t do_generic_file_read(struct file *filp, loff_t *ppos,
 	last_index = (*ppos + iter->count + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT;
 	offset = *ppos & ~PAGE_CACHE_MASK;
 
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-	trace_generic_file_read_begin(filp, iter->count);
-#endif
-
 	for (;;) {
 		struct page *page;
 		pgoff_t end_index;
@@ -1708,9 +1696,6 @@ no_cached_page:
 	}
 
 out:
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-	trace_generic_file_read_end(filp, written);
-#endif
 	ra->prev_pos = prev_index;
 	ra->prev_pos <<= PAGE_CACHE_SHIFT;
 	ra->prev_pos |= prev_offset;

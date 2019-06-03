@@ -43,12 +43,6 @@
 #include <linux/bit_spinlock.h>
 #include <trace/events/block.h>
 
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-#include <huawei_platform/iotrace/iotrace.h>
-DEFINE_TRACE(block_write_begin_enter);
-DEFINE_TRACE(block_write_begin_end);
-#endif
-
 static int fsync_buffers_list(spinlock_t *lock, struct list_head *list);
 
 #define BH_ENTRY(list) list_entry((list), struct buffer_head, b_assoc_buffers)
@@ -1950,10 +1944,6 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
 	BUG_ON(to > PAGE_CACHE_SIZE);
 	BUG_ON(from > to);
 
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-	trace_block_write_begin_enter(inode, page, pos, len);
-#endif
-
 	head = create_page_buffers(page, inode, 0);
 	blocksize = head->b_size;
 	bbits = block_size_bits(blocksize);
@@ -2015,10 +2005,6 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
 	}
 	if (unlikely(err))
 		page_zero_new_buffers(page, from, to);
-
-#ifdef CONFIG_HUAWEI_IO_TRACING	
-	trace_block_write_begin_end(inode, page, err);
-#endif
 
 	return err;
 }
