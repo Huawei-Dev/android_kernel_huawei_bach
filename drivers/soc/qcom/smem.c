@@ -29,10 +29,6 @@
 
 #include <soc/qcom/smem.h>
 
-#ifdef CONFIG_HUAWEI_MODEM_CRASH_LOG
-#include <soc/qcom/subsystem_restart.h>
-#endif
-
 #include "smem_private.h"
 
 #define MODEM_SBL_VERSION_INDEX 7
@@ -1025,10 +1021,6 @@ static int restart_notifier_cb(struct notifier_block *this,
 		if (!(smem_ramdump_dev && (notifdata->enable_mini_ramdumps
 						|| notifdata->enable_ramdump)))
 			break;
-#ifdef CONFIG_HUAWEI_MODEM_CRASH_LOG
-		if (!enable_ramdumps)
-			break;
-#endif
 		SMEM_DBG("%s: saving ramdump\n", __func__);
 		/*
 		 * XPU protection does not currently allow the

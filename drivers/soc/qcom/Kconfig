@@ -913,12 +913,6 @@ config QCOM_SMCINVOKE
 	  Enable SMCInvoke driver which supports capability based secure
 	  communication between QSEE and HLOS.
 
-config HUAWEI_MODEM_CRASH_LOG
-	bool "huawei modem crash log"
-	default n
-	help
-	huawei modem crash log control
-
 config QCOM_QDSS_BRIDGE
 	bool "Configure bridge driver for Qualcomm Technologies, Inc. MDM"
 	depends on MSM_MHI
