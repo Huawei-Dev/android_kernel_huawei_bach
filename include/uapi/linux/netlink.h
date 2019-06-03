@@ -42,10 +42,6 @@
 #ifdef CONFIG_HUAWEI_KSTATE
 #define NETLINK_HW_KSTATE	30	/* kstate send event to user */
 #endif
-/* Define 32 avoid Qualcomm's custom netlink where define for 31 */
-#ifdef CONFIG_HW_NETFILTER_MODULE
-#define NETLINK_HW_NF   32
-#endif
 
 #define MAX_LINKS 33
 
