@@ -3977,11 +3977,6 @@ CONFIG_MSM_TZ_LOG=y
 CONFIG_HUAWEI_STORE_EXCEPTION=y
 
 #
-# HUAWEI_VIRT_TO_PHYS
-#
-# CONFIG_HUAWEI_VIRT_TO_PHYS is not set
-
-#
 # huawei linux device driver for qcom
 #
 CONFIG_HUAWEI_CC_DRV=y

@@ -1,6 +1,5 @@
 menu "huawei linux device driver support package"
 
 source "drivers/huawei/store_exception/Kconfig"
-source "drivers/huawei/memory/Kconfig"
 
 endmenu
