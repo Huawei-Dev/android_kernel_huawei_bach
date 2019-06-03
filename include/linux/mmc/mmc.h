@@ -247,9 +247,6 @@ struct _mmc_csd {
 #define EXT_CSD_WR_REL_PARAM		166	/* RO */
 #define EXT_CSD_RPMB_MULT		168	/* RO */
 #define EXT_CSD_FW_CONFIG		169	/* R/W */
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-#define EXT_CSD_USER_WP			171	/* R/W */
-#endif
 #define EXT_CSD_BOOT_WP			173	/* R/W */
 #define EXT_CSD_ERASE_GROUP_DEF		175	/* R/W */
 #define EXT_CSD_PART_CONFIG		179	/* R/W */

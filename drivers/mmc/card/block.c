@@ -185,11 +185,7 @@ MODULE_PARM_DESC(perdev_minors, "Minors numbers to allocate per device");
 
 static inline int mmc_blk_part_switch(struct mmc_card *card,
 				      struct mmc_blk_data *md);
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-int get_card_status(struct mmc_card *card, u32 *status, int retries);
-#else
 static int get_card_status(struct mmc_card *card, u32 *status, int retries);
-#endif
 static int mmc_blk_cmdq_switch(struct mmc_card *card,
 			       struct mmc_blk_data *md, bool enable);
 
@@ -209,11 +205,7 @@ static inline void mmc_blk_clear_packed(struct mmc_queue_req *mqrq)
 	packed->blocks = 0;
 }
 
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-struct mmc_blk_data *mmc_blk_get(struct gendisk *disk)
-#else
 static struct mmc_blk_data *mmc_blk_get(struct gendisk *disk)
-#endif
 {
 	struct mmc_blk_data *md;
 
@@ -227,9 +219,6 @@ static struct mmc_blk_data *mmc_blk_get(struct gendisk *disk)
 
 	return md;
 }
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-EXPORT_SYMBOL(mmc_blk_get);
-#endif
 
 static inline int mmc_get_devidx(struct gendisk *disk)
 {
@@ -1287,11 +1276,7 @@ static u32 mmc_sd_num_wr_blocks(struct mmc_card *card)
 	return result;
 }
 
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-int get_card_status(struct mmc_card *card, u32 *status, int retries)
-#else
 static int get_card_status(struct mmc_card *card, u32 *status, int retries)
-#endif
 {
 	struct mmc_command cmd = {0};
 	int err;
@@ -1398,10 +1383,6 @@ static int send_stop(struct mmc_card *card, unsigned int timeout_ms,
 
 	return card_busy_detect(card, timeout_ms, use_r1b_resp, req, gen_err);
 }
-
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-EXPORT_SYMBOL(get_card_status);
-#endif
 
 #define ERR_NOMEDIUM	3
 #define ERR_RETRY	2

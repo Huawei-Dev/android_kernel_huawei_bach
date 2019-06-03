@@ -452,10 +452,6 @@ err:
 	return ret;
 }
 
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-EXPORT_SYMBOL(mmc_send_csd);
-#endif
-
 int mmc_send_cid(struct mmc_host *host, u32 *cid)
 {
 	int ret, i;

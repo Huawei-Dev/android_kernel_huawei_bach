@@ -124,9 +124,4 @@ config BLOCK_COMPAT
 	depends on BLOCK && COMPAT
 	default y
 
-config HW_SYSTEM_WR_PROTECT
-	bool "write protection function of system partitions."
-	depends on BLOCK && HUAWEI_KERNEL
-	default n
-
 source block/Kconfig.iosched

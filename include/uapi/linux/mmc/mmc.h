@@ -49,10 +49,6 @@
 #define MMC_CLR_WRITE_PROT       29   /* ac   [31:0] data addr   R1b */
 #define MMC_SEND_WRITE_PROT      30   /* adtc [31:0] wpdata addr R1  */
 
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-#define MMC_SEND_WRITE_PROT_TYPE 31   /* adtc [31:0] wpdata addr R1  */
-#endif
-
   /* class 5 */
 #define MMC_ERASE_GROUP_START    35   /* ac   [31:0] data addr   R1  */
 #define MMC_ERASE_GROUP_END      36   /* ac   [31:0] data addr   R1  */

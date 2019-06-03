@@ -16,9 +16,6 @@
 #include <linux/mod_devicetable.h>
 #include <linux/notifier.h>
 
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-#include <linux/genhd.h>
-#endif
 #ifdef CONFIG_HUAWEI_EMMC_DSM
 #define EXT_CSD_PRE_EOL_INFO_NORMAL     0x01
 #define EXT_CSD_PRE_EOL_INFO_WARNING     0x02
@@ -759,9 +756,4 @@ extern struct mmc_wr_pack_stats *mmc_blk_get_packed_statistics(
 extern void mmc_blk_init_packed_statistics(struct mmc_card *card);
 extern int mmc_send_pon(struct mmc_card *card);
 extern void mmc_blk_cmdq_req_done(struct mmc_request *mrq);
-#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
-extern struct mmc_blk_data *mmc_blk_get(struct gendisk *disk);
-extern int get_card_status(struct mmc_card *card, u32 *status, int retries);
-extern int mmc_send_csd(struct mmc_card *card, u32 *csd);
-#endif
 #endif /* LINUX_MMC_CARD_H */
