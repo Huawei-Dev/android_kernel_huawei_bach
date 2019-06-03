@@ -105,12 +105,6 @@
 		};
 
 
-		srecorder_mem: srecorder_region@0 {
-			compatible = "removed-dma-pool", "srecorder_mem";
-			no-map;
-			reg = <0x0 0x8f100000 0x0 0x400000>;
-		};
-
 		venus_mem: venus_region@0 {
 			compatible = "shared-dma-pool";
 			reusable;
@@ -143,12 +137,6 @@
 
 		cont_splash_mem: splash_region@83000000 {
 			reg = <0x0 0x90000000 0x0 0x1400000>;
-		};
-
-		sahara_mem: sahara_region@0x92000000 {
-			compatible = "sahara_mem";
-			no-map;
-			reg = <0x0 0x92000000 0x0 0x0200000>;
 		};
 
 		hwlog_tz_mem: hwlog_tz_region@0 {
