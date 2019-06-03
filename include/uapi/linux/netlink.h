@@ -39,10 +39,6 @@
 
 #define NETLINK_INET_DIAG	NETLINK_SOCK_DIAG
 
-#ifdef CONFIG_HUAWEI_KSTATE
-#define NETLINK_HW_KSTATE	30	/* kstate send event to user */
-#endif
-
 #define MAX_LINKS 33
 
 struct sockaddr_nl {

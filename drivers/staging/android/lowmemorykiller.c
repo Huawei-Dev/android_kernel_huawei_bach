@@ -50,9 +50,6 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/almk.h>
-#ifdef CONFIG_HUAWEI_KSTATE
-#include <linux/hw_kcollect.h>
-#endif
 
 #ifdef CONFIG_HIGHMEM
 #define _ZONE ZONE_HIGHMEM
@@ -586,9 +583,6 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 
 		lowmem_deathpending_timeout = jiffies + HZ;
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
-#ifdef CONFIG_HUAWEI_KSTATE
-		hwkillinfo(selected->tgid, 0);  /*0 stand for low memory kill*/
-#endif
 		send_sig(SIGKILL, selected, 0);
 		rem += selected_tasksize;
 		rcu_read_unlock();
