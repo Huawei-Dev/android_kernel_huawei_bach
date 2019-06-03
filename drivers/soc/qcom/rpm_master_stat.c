@@ -412,10 +412,6 @@ err:
 static  int msm_rpm_master_stats_probe(struct platform_device *pdev)
 {
 	struct dentry *dent;
-#ifdef CONFIG_HUAWEI_SLEEPLOG
-	struct dentry *dent_dir = NULL;
-	struct dentry *dent_rpmmaster = NULL;
-#endif
 	struct msm_rpm_master_stats_platform_data *pdata;
 	struct resource *res = NULL;
 
@@ -454,20 +450,6 @@ static  int msm_rpm_master_stats_probe(struct platform_device *pdev)
 	}
 
 	platform_set_drvdata(pdev, dent);
-#ifdef CONFIG_HUAWEI_SLEEPLOG
-	dent_dir = debugfs_create_dir("rpmmaster", NULL);
-	if (dent_dir == NULL) {
-		pr_err("%s: ERROR rpmmaster debugfs_create_dir failed\n" , __func__);
-		return -ENOMEM;
-	}
-	dent_rpmmaster = debugfs_create_file("rpm_master_stats", S_IRUGO, dent_dir,
-			pdata, &msm_rpm_master_stats_fops);
-	if (!dent_rpmmaster) {
-		dev_err(&pdev->dev, "%s: ERROR rpmmaster/rpm_master_stats debugfs_create_file failed\n",
-				__func__);
-		return -ENOMEM;
-	}
-#endif
 	return 0;
 }
 

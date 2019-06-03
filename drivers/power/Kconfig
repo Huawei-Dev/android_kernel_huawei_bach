@@ -645,9 +645,5 @@ source "drivers/power/reset/Kconfig"
 endif # POWER_SUPPLY
 
 source "drivers/power/avs/Kconfig"
-source "drivers/power/qcom/Kconfig"
 
-config HUAWEI_SLEEPLOG
-     bool "huawei sleeplogcat"
-     default n
-     help
+source "drivers/power/qcom/Kconfig"

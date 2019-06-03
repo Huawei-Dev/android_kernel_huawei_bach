@@ -478,10 +478,6 @@ fail:
 static int msm_rpmstats_probe(struct platform_device *pdev)
 {
 	struct dentry *dent = NULL;
-#ifdef CONFIG_HUAWEI_SLEEPLOG
-	struct dentry *dent_dir = NULL;
-	struct dentry *dent_rpmstats = NULL;
-#endif
 	struct msm_rpmstats_platform_data *pdata;
 	struct msm_rpmstats_platform_data *pd;
 	struct resource *res = NULL, *offset = NULL;
@@ -542,21 +538,6 @@ static int msm_rpmstats_probe(struct platform_device *pdev)
 			kfree(pdata);
 			return -ENOMEM;
 		}
-#ifdef CONFIG_HUAWEI_SLEEPLOG
-		dent_dir = debugfs_create_dir("rpmstats", NULL);
-		if (dent_dir == NULL) {
-			pr_err("%s: ERROR rpmstats debugfs_create_dir failed\n" , __func__);
-			return -ENOMEM;
-		}
-		dent_rpmstats = debugfs_create_file("rpm_stats", S_IRUGO, dent_dir,
-				pdata, &msm_rpmstats_fops);
-		if (!dent_rpmstats) {
-			pr_err("%s: ERROR rpmstats/rpm_stats debugfs_create_file	fail\n",
-					__func__);
-			return -ENOMEM;
-		}
-#endif
-
 	} else {
 		kfree(pdata);
 		return -EINVAL;
