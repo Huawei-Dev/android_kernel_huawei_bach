@@ -25,9 +25,6 @@ MODULE_DESCRIPTION("Overlay filesystem");
 MODULE_LICENSE("GPL");
 
 #define OVERLAYFS_SUPER_MAGIC 0x794c7630
-#ifdef CONFIG_HUAWEI_PATCH_OVERLAY
-#define PATCH_HW_PATH_NAME "/patch_hw/"
-#endif
 
 struct ovl_config {
 	char *lowerdir;
@@ -765,17 +762,7 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 	if (IS_ERR(ufs->workdir)) {
 		pr_err("overlayfs: failed to create directory %s/%s\n",
 		       ufs->config.workdir, OVL_WORKDIR_NAME);
-#ifdef CONFIG_HUAWEI_PATCH_OVERLAY
-        if(0 == strncmp(ufs->config.workdir, PATCH_HW_PATH_NAME, strlen(PATCH_HW_PATH_NAME))){
-            pr_err("overlayfs: workdir is %s ,need continue\n",ufs->config.workdir);
-            sb->s_flags |= MS_RDONLY;
-            ufs->workdir = NULL;
-        } else {
-            goto out_put_lower_mnt;
-        }
-#else
 		goto out_put_lower_mnt;
-#endif
 	}
 
 	/*

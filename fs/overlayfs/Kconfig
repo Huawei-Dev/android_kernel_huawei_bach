@@ -8,11 +8,3 @@ config OVERLAY_FS
 	  merged with the 'upper' object.
 
 	  For more information see Documentation/filesystems/overlayfs.txt
-
-config HUAWEI_PATCH_OVERLAY
-	bool "overlay filesystem support mount read-only filesystem"
-	depends on OVERLAY_FS != n
-	default n
-	help
-	  This is used for a read-only file system mount to an overlay filesystem
-	  when patch partition is not empty.
