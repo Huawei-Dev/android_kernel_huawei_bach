@@ -58,9 +58,6 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/vmscan.h>
-#ifdef CONFIG_SHRINK_MEMORY
-#include <linux/suspend.h>
-#endif
 
 #ifdef CONFIG_TASK_PROTECT_LRU
 #include <linux/protect_lru.h>
@@ -3619,7 +3616,7 @@ void wakeup_kswapd(struct zone *zone, int order, enum zone_type classzone_idx)
 	wake_up_interruptible(&pgdat->kswapd_wait);
 }
 
-#if defined (CONFIG_HIBERNATION) || defined (CONFIG_SHRINK_MEMORY)
+#if defined (CONFIG_HIBERNATION)
 /*
  * Try to free `nr_to_reclaim' of memory, system-wide, and return the number of
  * freed pages.
@@ -3664,26 +3661,6 @@ unsigned long shrink_all_memory(unsigned long nr_to_reclaim)
 	return nr_reclaimed;
 }
 #endif /* CONFIG_HIBERNATION */
-#ifdef CONFIG_SHRINK_MEMORY
-int sysctl_shrink_memory;
-#define DEFAULT_FREE_RATIO 30
-int sysctl_shrinkmem_handler(struct ctl_table *table, int write,
-							 void __user *buffer, size_t *length, loff_t *ppos)
-{
-	int ret;
-	ret = proc_dointvec_minmax(table,write,buffer,length,ppos);
-	if (ret)
-		return ret;
-	if (write) {
-		int free_ratio = sysctl_shrink_memory;
-		if (sysctl_shrink_memory == 1)
-			free_ratio = DEFAULT_FREE_RATIO;
-
-		shrink_all_memory(totalram_pages*free_ratio/100);
-	}
-	return 0;
-}
-#endif
 
 /* It's optimal to keep kswapds on the same CPUs as their memory, but
    not required for correctness.  So if the last cpu in a node goes

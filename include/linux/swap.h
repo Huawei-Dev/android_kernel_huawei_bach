@@ -345,11 +345,6 @@ extern int sysctl_swap_ratio;
 extern int sysctl_swap_ratio_enable;
 extern int remove_mapping(struct address_space *mapping, struct page *page);
 extern unsigned long vm_total_pages;
-#ifdef CONFIG_SHRINK_MEMORY
-extern int sysctl_shrink_memory;
-extern int sysctl_shrinkmem_handler(struct ctl_table *table, int write,
-									void __user *buffer, size_t *length , loff_t *ppos);
-#endif
 #ifdef CONFIG_NUMA
 extern int zone_reclaim_mode;
 extern int sysctl_min_unmapped_ratio;
