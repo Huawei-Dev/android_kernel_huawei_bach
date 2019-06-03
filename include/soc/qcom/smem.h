@@ -181,9 +181,6 @@ typedef struct
 {
     unsigned int lpddrID;                  /* DDR ID */
     unsigned int update_flag[2];           /* sd auto update flag */
-#ifdef CONFIG_HUAWEI_DEBUG_MODE
-    unsigned int huawei_debug;
-#endif
     unsigned int pwrkpd_reset;
     unsigned int reserved;                  /* reserved for filling */
 	/*AR0005AFIC yuanshuai 20160919 begin */

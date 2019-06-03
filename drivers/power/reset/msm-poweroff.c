@@ -58,10 +58,6 @@ struct bootloader_message {
 #define SCM_EDLOAD_MODE			0X01
 #define SCM_DLOAD_CMD			0x10
 
-#ifdef CONFIG_HUAWEI_DEBUG_MODE
-extern char *saved_command_line;
-#endif
-
 static int restart_mode;
 static void *dload_type_addr;
 static void *restart_reason;
@@ -592,13 +588,6 @@ static int msm_restart_probe(struct platform_device *pdev)
 		if (!emergency_dload_mode_addr)
 			pr_err("unable to map imem EDLOAD mode offset\n");
 	}
-#ifdef CONFIG_HUAWEI_DEBUG_MODE
-	if(strstr(saved_command_line,"huawei_debug_mode=1")!=NULL)
-	{
-		printk("For debug mode,download_mode is true");
-		download_mode = 1;
-	}
-#endif
 	np = of_find_compatible_node(NULL, NULL,
 				"qcom,msm-imem-dload-type");
 	if (!np) {
