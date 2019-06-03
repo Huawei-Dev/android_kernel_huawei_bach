@@ -1100,10 +1100,6 @@ cmd_done:
 	return err;
 }
 
-#ifdef CONFIG_HW_EMMC_PROTECT_MODULE
-extern int hw_mmc_blk_phy_wp(struct block_device *bdev);
-#endif
-
 static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
 	unsigned int cmd, unsigned long arg)
 {
@@ -1113,17 +1109,6 @@ static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
 	if (cmd == MMC_IOC_RPMB_CMD)
 		ret = mmc_blk_ioctl_rpmb_cmd(bdev,
 				(struct mmc_ioc_rpmb __user *)arg);
-#ifdef CONFIG_HW_EMMC_PROTECT_MODULE
-    if(cmd == MMC_IOC_WP_CMD)
-    {
-        pr_debug("[HW]:%s.ioclt MMC_IOC_WP_CMD.\n", __func__);
-        if(arg == 0x1) {
-            ret = hw_mmc_blk_phy_wp(bdev);
-            if(ret)
-                pr_err("%s; set mmc system wp failed.\n", __func__);
-        }
-    }
-#endif
 	return ret;
 }
 

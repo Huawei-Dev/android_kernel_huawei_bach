@@ -88,13 +88,6 @@ config MMC_BLOCK_TEST
 	  Currently used to test eMMC 4.5 features (packed commands, sanitize,
 	  BKOPs).
 
-config HW_EMMC_PROTECT_MODULE
-	tristate "EMMC write protect driver by Huawei"
-	depends on HW_SYSTEM_WR_PROTECT && HUAWEI_KERNEL
-	default n
-	help
-	  This is for EMMC to write protect
-
 config MMC_FFU
 	bool "FFU SUPPORT"
 	depends on MMC != n
