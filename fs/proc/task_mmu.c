@@ -1625,7 +1625,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		goto out;
 	//here we add a soft shrinker for reclaim
 	if (type == RECLAIM_SOFT) {
-		smart_soft_shrink(mm);
 		mmput(mm);
 		goto out;
 	}
