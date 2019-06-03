@@ -477,10 +477,6 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 					__func__, payload[0], payload[1]);
 				audio_dsm_report_num(DSM_AUDIO_ADSP_SETUP_FAIL_ERROR_NO,
 								DSM_AUDIO_MESG_DSP_CMD_ERROR);
-#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
-				/*this is added for factory*/
-				panic("adsp_cmd_errors: when send cmd error, force to enter dump to get logs!!");
-#endif
 			}
 			switch (payload[0]) {
 			case AFE_PORT_CMD_SET_PARAM_V2:

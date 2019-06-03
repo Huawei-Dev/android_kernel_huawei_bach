@@ -158,138 +158,6 @@ static int mmc_blk_cmdq_hangup(struct mmc_card *card)
 	return err;
 }
 
-/* get write protection block info */
-#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
-static int hw_mmc_do_get_write_protection_info(struct gendisk *disk, struct hd_struct *part)
-{
-	struct mmc_blk_data *md;
-	struct mmc_card *card;
-	struct mmc_request mrq = {NULL};
-	struct mmc_command cmd = {0};
-	struct mmc_data data = {0};
-	struct scatterlist sg;
-	void *data_buf;
-	int len = 8;
-	unsigned char buf[8], temp_char, wp_flag;
-	unsigned int sector_start_addr, wp_group_size;
-	char line_buf[128];
-	int i, j, ret = 0;
-	/* make sure this is a main partition */
-	md = mmc_blk_get(disk);
-	if((!md) || (!(md->area_type & MMC_BLK_DATA_AREA_MAIN))) {
-		ret = -EINVAL;
-		return ret;
-	}
-	card = md->queue.card;
-	if(IS_ERR(card)) {
-		ret = PTR_ERR(card);
-		return ret;
-	}
-	/* get system sector start address */
-	sector_start_addr = (unsigned int)(part->start_sect);
-
-	wp_group_size = (512 * 1024) * card->ext_csd.raw_hc_erase_gap_size \
-						* card->ext_csd.raw_hc_erase_grp_size / 512;
-	sector_start_addr = sector_start_addr / wp_group_size * wp_group_size;
-	pr_err("[INFO] %s: sector_start_addr = 0x%08x. wp_group_size = 0x%08x.\n", __func__, sector_start_addr, wp_group_size);
-	data_buf = kzalloc(len, GFP_KERNEL);
-	if(!data_buf) {
-		pr_err("Malloc err at %d.\n", __LINE__);
-		return -ENOMEM;
-	}
-	mrq.cmd = &cmd;
-	mrq.data = &data;
-	cmd.opcode = MMC_SEND_WRITE_PROT_TYPE;
-	cmd.arg = sector_start_addr;
-	cmd.flags = MMC_RSP_R1 | MMC_CMD_ADTC;
-
-	data.blksz = len;
-	data.blocks = 1;
-	data.flags = MMC_DATA_READ;
-	data.sg = &sg;
-	data.sg_len = 1;
-
-	sg_init_one(&sg, data_buf, len);
-	mmc_get_card(card);
-
-	if (mmc_card_cmdq(card)) {
-		ret = mmc_cmdq_halt_on_empty_queue(card->host);
-		if (ret) {
-			pr_err("%s: halt failed while doing %s err (%d)\n",
-					mmc_hostname(card->host),
-					__func__, ret);
-		}
-
-		ret = mmc_blk_cmdq_hangup(card);
-		if (ret) {
-			pr_err("%s: halt failed while doing %s err (%d)\n",
-					mmc_hostname(card->host),
-					__func__, ret);
-		}
-	}
-
-	mmc_set_data_timeout(&data, card);
-	mmc_wait_for_req(card->host, &mrq);
-
-	memcpy(buf, data_buf, len);
-
-	for(i = 7; i >= 0; i--) {
-		temp_char = buf[i];
-		for(j = 0; j < 4; j++) {
-			wp_flag = temp_char & 0x3;
-			snprintf(line_buf, strlen(line_buf),"[0x%08x~0x%08x] Write protection group is ",
-						sector_start_addr, sector_start_addr + wp_group_size - 1);
-			sector_start_addr += wp_group_size;
-			temp_char = temp_char >> 2;
-			switch(wp_flag) {
-				case 0:
-					strncat(line_buf, "disable", strlen(line_buf));
-					break;
-				case 1:
-					strncat(line_buf, "temporary write protection", strlen(line_buf));
-					break;
-				case 2:
-					strncat(line_buf, "power-on write protection", strlen(line_buf));
-					break;
-				case 3:
-					strncat(line_buf, "permanent write protection", strlen(line_buf));
-					break;
-				default:
-					break;
-			}
-			pr_err("%s: %s\n", mmc_hostname(card->host), line_buf);
-		}
-	}
-
-	if(cmd.error) {
-		ret = 1;
-		pr_err("cmd.error=%d\n", cmd.error);
-		goto out;
-	}
-	if(data.error) {
-		ret = 1;
-		pr_err("data.error=%d\n", data.error);
-		goto out;
-	}
-
-	ret = mmc_blk_cmdq_switch_hw(card, NULL, true);
-	if (ret) {
-		pr_err("%s: %s: cmdq unhalt failed\n",
-			   mmc_hostname(card->host), __func__);
-	}
-
-	if (mmc_cmdq_halt(card->host, false))
-		pr_err("%s: %s: cmdq unhalt failed\n",
-			   mmc_hostname(card->host), __func__);
-
-out:
-	mmc_put_card(card);
-
-	kfree(data_buf);
-	return ret;
-}
-#endif
-
 /* physical write protect */
 static int hw_mmc_do_set_write_protection(struct gendisk *disk, struct hd_struct *part)
 {
@@ -482,17 +350,6 @@ static int hw_mmc_set_wp_state(struct block_device *bdev)
 	return ret;
 }
 
-#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
-static int hw_mmc_get_wp_state(struct block_device *bdev)
-{
-	int i, ret = 0;
-	for(i = 0; i < narr; i++) {
-		ret |= hw_mmc_part_wp_action(bdev, part_name[i], hw_mmc_do_get_write_protection_info);
-	}
-	return ret;
-}
-#endif
-
 int hw_mmc_blk_phy_wp(void)
 {
 	int ret;
@@ -506,12 +363,6 @@ int hw_mmc_blk_phy_wp(void)
 	if(ret) {
 		pr_err("%s: hw mmc set partion wp failed.\n", __func__);
 	}
-#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
-	ret = hw_mmc_get_wp_state(bdev);
-	if(ret) {
-		pr_err("%s: hw mmc get partion wp info failed.\n", __func__);
-	}
-#endif
 	return ret;
 }
 EXPORT_SYMBOL(hw_mmc_blk_phy_wp);

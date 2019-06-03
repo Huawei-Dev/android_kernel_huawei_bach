@@ -231,32 +231,7 @@ int usb_update_thread(void *__unused)
     }
     return 0;
 }
-#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
-static void enable_emergency_dload_mode(void)
-{
-	int ret;
 
-	if (emergency_dload_mode_addr) {
-		__raw_writel(EMERGENCY_DLOAD_MAGIC1,
-				emergency_dload_mode_addr);
-		__raw_writel(EMERGENCY_DLOAD_MAGIC2,
-				emergency_dload_mode_addr +
-				sizeof(unsigned int));
-		__raw_writel(EMERGENCY_DLOAD_MAGIC3,
-				emergency_dload_mode_addr +
-				(2 * sizeof(unsigned int)));
-
-		/* Need disable the pmic wdt, then the emergency dload mode
-		 * will not auto reset. */
-		qpnp_pon_wd_config(0);
-		mb();
-	}
-
-	ret = scm_set_dload_mode(SCM_EDLOAD_MODE, 0);
-	if (ret)
-		pr_err("Failed to set secure EDLOAD mode: %d\n", ret);
-}
-#endif
 static int dload_set(const char *val, struct kernel_param *kp)
 {
 	int ret;
@@ -422,12 +397,8 @@ static void msm_restart_prepare(const char *cmd)
 			if (!ret)
 				__raw_writel(0x6f656d00 | (code & 0xff),
 					     restart_reason);
-#ifdef CONFIG_HUAWEI_KERNEL_DEBUG
-		} else if (!strncmp(cmd, "edl", 3)) {
-			enable_emergency_dload_mode();
-#endif
 #ifdef CONFIG_HUAWEI_RESET_DETECT
-		}else if (!strncmp(cmd, "emergency_restart", 17)) {
+		} else if (!strncmp(cmd, "emergency_restart", 17)) {
 		pr_info("do nothing\n");
 #endif
 		} else {

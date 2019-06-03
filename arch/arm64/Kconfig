@@ -1191,6 +1191,7 @@ source "arch/arm64/Kconfig.debug"
 source "security/Kconfig"
 
 source "crypto/Kconfig"
+
 if CRYPTO
 source "arch/arm64/crypto/Kconfig"
 endif
@@ -1200,19 +1201,13 @@ config HUAWEI_KERNEL
 	default n
 	help
 	  use huawei code
+
 config MSM8940_SUPPORTED_PRODUCT
 	bool "8940 supported huawei product"
 	default n
 	help
 	  8940 supported huawei product
 	  
-config HUAWEI_KERNEL_DEBUG
-	bool "Use Huawei kernel debug mode"
-	depends on HUAWEI_KERNEL
-	default n
-	help
-	  Enable sysrq, dump mode and some debug masks by default.
-
 source "lib/Kconfig"
 
 source "arch/arm64/mm/Kconfig"
