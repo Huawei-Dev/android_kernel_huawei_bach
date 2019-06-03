@@ -94,11 +94,6 @@ struct scan_control {
 	/* Scan (total_size >> priority) pages at once */
 	int priority;
 
-#ifdef CONFIG_HUAWEI_RCC
-        /* 0: not in rcc module, 1: scan anon; 2: scan file; 3: scan both*/
-        int rcc_mode;
-#endif
-
 	unsigned int may_writepage:1;
 
 	/* Can mapped pages be reclaimed? */
@@ -2266,18 +2261,6 @@ static void get_scan_count(struct lruvec *lruvec, int swappiness,
 	fraction[1] = fp;
 	denominator = ap + fp + 1;
 out:
-#ifdef CONFIG_HUAWEI_RCC
-    if(sc->rcc_mode){
-        //pr_info("scan mode: %d->%d.\n",sc->rcc_mode,scan_balance);
-        if(sc->rcc_mode==RCC_MODE_ANON)
-            scan_balance = SCAN_ANON;
-        else if(sc->rcc_mode==RCC_MODE_FILE)
-            scan_balance = SCAN_FILE;
-        else{
-            scan_balance = SCAN_EQUAL;
-        }
-    }
-#endif
 	some_scanned = false;
 	/* Only use force_scan on second pass. */
 	for (pass = 0; !some_scanned && pass < 2; pass++) {
@@ -4145,30 +4128,3 @@ void check_move_unevictable_pages(struct page **pages, int nr_pages)
 	}
 }
 #endif /* CONFIG_SHMEM */
-#ifdef CONFIG_HUAWEI_RCC
-/* purpose: add for free pages in rcc mode
- * arguments:
- *    nr_pages: page count need to free.
- *    mode:  1: scan anon; 2: scan file; 3: scan both.
- * output:
- *    page count free  in this time.
- */
-int try_to_free_pages_ex(int nr_pages, int mode)
-{
-	gfp_t mask = GFP_KERNEL|__GFP_HIGHMEM|__GFP_FS|__GFP_IO;
-	struct scan_control sc = {
-		.gfp_mask = mask,
-		.may_writepage = 0,
-		.nr_to_reclaim = nr_pages,
-		.may_unmap = 1,
-		.may_swap = !!(mode & RCC_MODE_ANON),
-		.order = 0,
-		.priority = DEF_PRIORITY,
-		.rcc_mode = mode,
-		.target_mem_cgroup = NULL,
-		.nodemask = NULL,
-	};
-	struct zonelist *zonelist = node_zonelist(numa_node_id(), mask);
-	return do_try_to_free_pages(zonelist, &sc);
-}
-#endif

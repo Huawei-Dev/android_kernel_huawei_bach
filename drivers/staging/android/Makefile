@@ -13,4 +13,3 @@ obj-$(CONFIG_SYNC)			+= sync.o
 obj-$(CONFIG_SW_SYNC)			+= sw_sync.o
 obj-$(CONFIG_ONESHOT_SYNC)		+= oneshot_sync.o
 obj-$(CONFIG_HW_LOGGER)			+= hwlogger/
-obj-$(CONFIG_HUAWEI_RCC)        += rcc.o
