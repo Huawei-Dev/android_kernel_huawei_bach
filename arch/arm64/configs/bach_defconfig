@@ -3980,7 +3980,6 @@ CONFIG_HUAWEI_STORE_EXCEPTION=y
 # HUAWEI_VIRT_TO_PHYS
 #
 # CONFIG_HUAWEI_VIRT_TO_PHYS is not set
-# CONFIG_HUAWEI_BOOT_TIME is not set
 
 #
 # huawei linux device driver for qcom

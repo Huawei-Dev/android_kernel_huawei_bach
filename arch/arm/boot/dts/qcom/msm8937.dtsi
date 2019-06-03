@@ -2119,12 +2119,6 @@
 	status = "okay";
 };
 
-/{
-         huawei_boot_time {
-                 compatible = "huawei,hw_boot_time_info";
-         };
-};
-
 /* GPU overrides */
 &msm_gpu {
 

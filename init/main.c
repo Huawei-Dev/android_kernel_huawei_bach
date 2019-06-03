@@ -847,11 +847,7 @@ static char *initcall_level_names[] __initdata = {
 	"device",
 	"late",
 };
-/*AR0005AFIC yuanshuai 20160919 begin */
-#ifdef CONFIG_HUAWEI_BOOT_TIME
-extern void log_boot(char *str);
-#endif
-/*AR0005AFIC yuanshuai 20160919 end */
+
 static void __init do_initcall_level(int level)
 {
 	initcall_t *fn;
@@ -973,11 +969,7 @@ static int __ref kernel_init(void *unused)
 	numa_default_policy();
 
 	flush_delayed_fput();
-	/*AR0005AFIC yuanshuai 20160919 begin */
-	#ifdef CONFIG_HUAWEI_BOOT_TIME
-    log_boot("Kernel_init_done");
-	#endif
-	/*AR0005AFIC yuanshuai 20160919 end */
+
 	if (ramdisk_execute_command) {
 		ret = run_init_process(ramdisk_execute_command);
 		if (!ret)
