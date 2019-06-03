@@ -344,15 +344,6 @@ config DEBUG_FORCE_WEAK_PER_CPU
 
 endmenu # "Compiler options"
 
-config HW_DETECT_HUNG_TASK
-	bool "Huawei Enhance DETECT_HUNG_TASK"
-	depends on DETECT_HUNG_TASK
-	default n
-	help
-	  Say Y here to enable the Huawei enhance hungtask,
-	  Enhanced by add function of Whitelist or Blacklist,
-	  that controls the processes be monitored by hungtask.
-
 config MAGIC_SYSRQ
 	bool "Magic SysRq key"
 	depends on !UML
