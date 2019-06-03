@@ -338,32 +338,7 @@ static ssize_t regulator_uV_show(struct device *dev,
 
 	return ret;
 }
-
-#ifdef CONFIG_HW_MMC_TEST
-extern char *saved_command_line;
-/*regulator voltage write interface*/
-static ssize_t regulator_uV_store(struct device *dev, struct device_attribute *attr,
-            const char *buf, size_t count)
-{
-	struct regulator_dev *rdev = dev_get_drvdata(dev);
-	int min_uV = 0;
-	int max_uV = 0;
-
-	/*check if it is factory mode*/
-	if(strstr(saved_command_line,"androidboot.huawei_swtype=factory")!=NULL) {
-		mutex_lock(&rdev->mutex);
-		sscanf(buf, "%d,%d", &min_uV,&max_uV);
-		pr_info("regulator_uV_store:%d, %d\n", max_uV, min_uV);
-		_regulator_do_set_voltage(rdev,min_uV,max_uV);
-		mutex_unlock(&rdev->mutex);
-	}
-
-	return count;
-}
-static DEVICE_ATTR(microvolts, 0644, regulator_uV_show, regulator_uV_store);
-#else
 static DEVICE_ATTR(microvolts, 0444, regulator_uV_show, NULL);
-#endif
 
 static ssize_t regulator_uA_show(struct device *dev,
 				struct device_attribute *attr, char *buf)

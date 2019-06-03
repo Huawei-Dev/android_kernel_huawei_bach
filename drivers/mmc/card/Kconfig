@@ -88,27 +88,6 @@ config MMC_BLOCK_TEST
 	  Currently used to test eMMC 4.5 features (packed commands, sanitize,
 	  BKOPs).
 
-config HW_MMC_TEST
-	bool "MMC host test driver by Huawei"
-	depends on  HUAWEI_KERNEL
-	default n
-	help
-	  it's used as a pre-compile macro for mmc test driver by huawei.
-
-config HW_MMC_TEST_MODULE
-	tristate "MMC host test driver by Huawei"
-	depends on HW_MMC_TEST && HUAWEI_KERNEL
-	default n
-	help
-	  Development driver that performs a series of reads and writes
-	  to a memory card in order to expose certain well known bugs
-	  in host controllers. The tests are executed by writing to the
-	  "test" file in debugfs under each card. Note that whatever is
-	  on your card will be overwritten by these tests.
-
-	  This driver is only of interest to those developing or
-	  testing a host driver. Most people should say N here.
-
 config HW_EMMC_PROTECT_MODULE
 	tristate "EMMC write protect driver by Huawei"
 	depends on HW_SYSTEM_WR_PROTECT && HUAWEI_KERNEL

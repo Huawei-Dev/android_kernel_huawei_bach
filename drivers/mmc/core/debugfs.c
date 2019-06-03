@@ -843,84 +843,6 @@ static const struct file_operations mmc_dbg_bkops_stats_fops = {
 	.write		= mmc_bkops_stats_write,
 };
 
-#ifdef CONFIG_HW_MMC_TEST
-static int mmc_card_addr_open(struct inode *inode, struct file *filp)
-{
-	struct mmc_card *card = inode->i_private;
-	filp->private_data = card;
-
-	return 0;
-}
-
-static ssize_t mmc_card_addr_read(struct file *filp, char __user *ubuf,
-				     size_t cnt, loff_t *ppos)
-{
-	char buf[64] = {0};
-	struct mmc_card *card = filp->private_data;
-	long card_addr = (long)card;
-
-	card_addr = (long)(card_addr ^ CARD_ADDR_MAGIC);
-	snprintf(buf, sizeof(buf), "%ld", card_addr);
-
-	return simple_read_from_buffer(ubuf, cnt, ppos,
-			buf, sizeof(buf));
-}
-
-static const struct file_operations mmc_dbg_card_addr_fops = {
-	.open		= mmc_card_addr_open,
-	.read		= mmc_card_addr_read,
-	.llseek     = default_llseek,
-};
-
-static int mmc_test_st_open(struct inode *inode, struct file *filp)
-{
-	struct mmc_card *card = inode->i_private;
-
-	filp->private_data = card;
-
-	return 0;
-}
-
-static ssize_t mmc_test_st_read(struct file *filp, char __user *ubuf,
-				     size_t cnt, loff_t *ppos)
-{
-	char buf[64] = {0};
-	struct mmc_card *card = filp->private_data;
-
-	if (!card)
-		return cnt;
-
-	snprintf(buf, sizeof(buf), "%d", card->host->test_status);
-
-	return simple_read_from_buffer(ubuf, cnt, ppos,
-			buf, sizeof(buf));
-
-}
-
-static ssize_t mmc_test_st_write(struct file *filp,
-				      const char __user *ubuf, size_t cnt,
-				      loff_t *ppos)
-{
-	struct mmc_card *card = filp->private_data;
-	int value;
-
-	if (!card) {
-		return cnt;
-	}
-
-	sscanf(ubuf, "%d", &value);
-	card->host->test_status = value;
-
-	return cnt;
-}
-
-static const struct file_operations mmc_dbg_test_st_fops = {
-	.open		= mmc_test_st_open,
-	.read		= mmc_test_st_read,
-	.write		= mmc_test_st_write,
-};
-#endif
-
 void mmc_add_card_debugfs(struct mmc_card *card)
 {
 	struct mmc_host	*host = card->host;
@@ -965,17 +887,6 @@ void mmc_add_card_debugfs(struct mmc_card *card)
 		if (!debugfs_create_file("bkops_stats", S_IRUSR, root, card,
 					 &mmc_dbg_bkops_stats_fops))
 			goto err;
-#ifdef CONFIG_HW_MMC_TEST
-	if (mmc_card_mmc(card))
-		if (!debugfs_create_file("card_addr", S_IRUSR, root, card,
-				&mmc_dbg_card_addr_fops))
-			goto err;
-
-	if (mmc_card_mmc(card))
-		if (!debugfs_create_file("test_st", S_IRUSR, root, card,
-				&mmc_dbg_test_st_fops))
-			goto err;
-#endif
 	return;
 
 err:
