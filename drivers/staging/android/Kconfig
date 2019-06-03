@@ -131,17 +131,6 @@ config ONESHOT_SYNC_USER
 	help
 	  Provide a userspace API for creating oneshot sync objects.
 
-config HISI_SMART_RECLAIM
-	bool "Enable smart reclaim"
-	default y
-	depends on PROCESS_RECLAIM
-	help
-	  When enabled, memory pages of background processes will be reclaimed.
-	  Depending on if the process is an application or service.
-	  In case of service, advise kernel to reclaim file backed pages
-	  of background processes(file tpyes .dex, .jar and/or .apk).
-	  This triggered by writting soft to /proc/<pid>/reclaim from user space.
-
 config HUAWEI_RCC
 	tristate "RAM Compress and Clean"
 	depends on SYSFS && SWAP
