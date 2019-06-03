@@ -86,10 +86,3 @@ config APP_INFO
 	depends on PROC_FS
 	help
 	  export huawei device infomation by /proc/app_info
-
-config HUAWEI_PROC_MEMORYINFO_FAST
-	bool "/proc/meminfo_lite support"
-	depends on PROC_FS
-	default n
-	help
-	  offer a fast way to get system memory info(free and aviliable)
