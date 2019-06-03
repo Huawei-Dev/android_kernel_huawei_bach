@@ -2041,10 +2041,6 @@ void submit_bio(int rw, struct bio *bio)
 			count_vm_events(PGPGIN, count);
 		}
 
-#ifdef DCHECK_ROOT_FORCE
-		check_wrt(rw, bio);
-#endif
-
 		if (unlikely(block_dump)) {
 			char b[BDEVNAME_SIZE];
 			struct task_struct *tsk;
