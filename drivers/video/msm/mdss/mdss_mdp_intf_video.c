@@ -28,8 +28,6 @@
 #ifdef CONFIG_LCDKIT_DRIVER
 #include <linux/lcdkit_dsm.h>
 #include "lcdkit_dsi_status.h"
-#else
-#include <linux/hw_lcd_common.h>
 #endif
 
 extern unsigned int cpufreq_get(unsigned int cpu);
@@ -1568,7 +1566,7 @@ static int mdss_mdp_video_display(struct mdss_mdp_ctl *ctl, void *arg)
 		mdss_mdp_ctl_intf_event(ctl, MDSS_EVENT_POST_PANEL_ON, NULL,
 			CTL_INTF_EVENT_FLAG_DEFAULT);
 	/*scheduled the esd delay work*/
-#if defined(CONFIG_HUAWEI_KERNEL_LCD) || defined(CONFIG_LCDKIT_DRIVER)
+#if defined(CONFIG_LCDKIT_DRIVER)
 		mdss_dsi_status_check_ctl(ctl->mfd,true);
 #endif
 

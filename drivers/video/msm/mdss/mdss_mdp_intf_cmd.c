@@ -26,8 +26,6 @@
 #ifdef CONFIG_LCDKIT_DRIVER
 #include <linux/lcdkit_dsm.h>
 #include "lcdkit_dsi_status.h"
-#else
-#include <linux/hw_lcd_common.h>
 #endif
 
 #define MAX_RECOVERY_TRIALS 10
@@ -2143,7 +2141,7 @@ static int mdss_mdp_cmd_panel_on(struct mdss_mdp_ctl *ctl,
 				ctl->intf_num, rc);
 
 	/*schedule the esd delay work*/
-#if defined(CONFIG_HUAWEI_KERNEL_LCD) || defined(CONFIG_LCDKIT_DRIVER)
+#if defined(CONFIG_LCDKIT_DRIVER)
 			mdss_dsi_status_check_ctl(ctl->mfd,true);
 #endif
 

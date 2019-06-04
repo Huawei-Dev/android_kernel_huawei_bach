@@ -40,11 +40,7 @@
 #ifdef CONFIG_LCDKIT_DRIVER
 #define DSI_STATUS_CHECK_INIT 0
 #else
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-#define DSI_STATUS_CHECK_INIT 0
-#else
 #define DSI_STATUS_CHECK_INIT -1
-#endif
 #endif
 
 #define DSI_STATUS_CHECK_DISABLE 1
@@ -117,146 +113,6 @@ irqreturn_t hw_vsync_handler(int irq, void *data)
 }
 
 /*
- * sheduled based on mipi timing start
- * cancelled based on mipi timing stop
- */
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-void mdss_dsi_status_check_ctl(struct msm_fb_data_type *mfd, int sheduled)
-{
-	struct mdss_panel_data *pdata = NULL;
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
-
-	if(!mfd)
-	{
-		pr_err("%s: mfd not available\n", __func__);
-		return ;
-	}
-
-	if(!pstatus_data)
-	{
-		pr_err("%s: pstatus_data not available\n", __func__);
-		return ;
-	}
-
-	pdata = dev_get_platdata(&mfd->pdev->dev);
-	if (!pdata) {
-		pr_err("%s: Panel data not available\n", __func__);
-		return;
-	}
-
-	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata, panel_data);
-
-	/*add qcom debug switch so we can close the esd check at sys*/
-	/*if panel not enable esd check switch in dtsi,we do not check bta*/
-	if(!ctrl_pdata->esd_check_enable)
-	{
-		pr_debug("%s: ctrl_pdata->esd_check_enable = %d,don't need check esd!\n", __func__,(int)ctrl_pdata->esd_check_enable);
-		return;
-	}
-	if (dsi_status_disable) {
-		pr_info("%s: DSI status disabled\n", __func__);
-		return ;
-	}
-
-	pr_debug("%s:scheduled=%d\n",__func__,sheduled);
-
-	pstatus_data->mfd = mfd;
-
-	if(sheduled)
-	{
-		schedule_delayed_work(&pstatus_data->check_status,msecs_to_jiffies(interval));
-	}
-	else
-	{
-		cancel_delayed_work_sync(&pstatus_data->check_status);
-	}
-}
-#else
-
-/*
- * fb_event_callback() - Call back function for the fb_register_client()
- *			 notifying events
- * @self  : notifier block
- * @event : The event that was triggered
- * @data  : Of type struct fb_event
- *
- * This function listens for FB_BLANK_UNBLANK and FB_BLANK_POWERDOWN events
- * from frame buffer. DSI status check work is either scheduled again after
- * PANEL_STATUS_CHECK_INTERVAL or cancelled based on the event.
- */
-static int fb_event_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	struct dsi_status_data *pdata = container_of(self,
-				struct dsi_status_data, fb_notifier);
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
-	struct mdss_panel_info *pinfo;
-	struct msm_fb_data_type *mfd;
-
-	if (!evdata) {
-		pr_err("%s: event data not available\n", __func__);
-		return NOTIFY_BAD;
-	}
-
-	/* handle only mdss fb device */
-	if (strncmp("mdssfb", evdata->info->fix.id, 6))
-		return NOTIFY_DONE;
-
-	mfd = evdata->info->par;
-	if (mfd->panel_info->type == SPI_PANEL) {
-		pinfo = mfd->panel_info;
-	} else {
-		ctrl_pdata = container_of(dev_get_platdata(&mfd->pdev->dev),
-				struct mdss_dsi_ctrl_pdata, panel_data);
-		if (!ctrl_pdata) {
-			pr_err("%s: DSI ctrl not available\n", __func__);
-			return NOTIFY_BAD;
-		}
-
-		pinfo = &ctrl_pdata->panel_data.panel_info;
-	}
-
-	if ((!(pinfo->esd_check_enabled) &&
-			dsi_status_disable) ||
-			(dsi_status_disable == DSI_STATUS_CHECK_DISABLE)) {
-		pr_debug("ESD check is disabled.\n");
-		cancel_delayed_work(&pdata->check_status);
-		return NOTIFY_DONE;
-	}
-
-	pdata->mfd = evdata->info->par;
-	if (event == FB_EVENT_BLANK) {
-		int *blank = evdata->data;
-		struct dsi_status_data *pdata = container_of(self,
-				struct dsi_status_data, fb_notifier);
-		pdata->mfd = evdata->info->par;
-
-		switch (*blank) {
-		case FB_BLANK_UNBLANK:
-			schedule_delayed_work(&pdata->check_status,
-				msecs_to_jiffies(interval));
-			break;
-		case FB_BLANK_VSYNC_SUSPEND:
-		case FB_BLANK_NORMAL:
-			pr_debug("%s : ESD thread running\n", __func__);
-			break;
-		case FB_BLANK_POWERDOWN:
-		case FB_BLANK_HSYNC_SUSPEND:
-			cancel_delayed_work(&pdata->check_status);
-			break;
-		default:
-			pr_err("Unknown case in FB_EVENT_BLANK event\n");
-			break;
-		}
-	}
-	return 0;
-}
-#endif
-#endif
-
-/*
  * disable_esd_thread() - Cancels work item for the esd check.
  */
 void disable_esd_thread(void)
@@ -321,20 +177,6 @@ int __init mdss_dsi_status_init(void)
 		pr_err("%s: can't allocate memory\n", __func__);
 		return -ENOMEM;
 	}
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifndef CONFIG_HUAWEI_KERNEL_LCD
-	pstatus_data->fb_notifier.notifier_call = fb_event_callback;
-
-	rc = fb_register_client(&pstatus_data->fb_notifier);
-	if (rc < 0) {
-		pr_err("%s: fb_register_client failed, returned with rc=%d\n",
-								__func__, rc);
-		kfree(pstatus_data);
-		return -EPERM;
-	}
-#endif
-#endif
-
 
 	pr_info("%s: DSI status check interval:%d\n", __func__,	interval);
 
@@ -347,11 +189,6 @@ int __init mdss_dsi_status_init(void)
 
 void __exit mdss_dsi_status_exit(void)
 {
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifndef CONFIG_HUAWEI_KERNEL_LCD
-	fb_unregister_client(&pstatus_data->fb_notifier);
-#endif
-#endif
 	cancel_delayed_work_sync(&pstatus_data->check_status);
 	kfree(pstatus_data);
 	pr_debug("%s: DSI ctrl status work queue removed\n", __func__);

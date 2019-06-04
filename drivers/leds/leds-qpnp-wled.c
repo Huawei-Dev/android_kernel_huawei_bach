@@ -199,10 +199,6 @@
 
 #ifdef CONFIG_LCDKIT_DRIVER
 bool lcdkit_is_default_panel(void);
-#else
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-extern const char *default_panel_name;
-#endif
 #endif
 
 #define NUM_SUPPORTED_AVDD_VOLTAGES		6
@@ -849,12 +845,6 @@ static void qpnp_wled_work(struct work_struct *work)
 	if(lcdkit_is_default_panel()){
 		level = 0;
 	}
-#else
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-	 if(!strcmp(default_panel_name, "truly 1080p video mode dsi panel")){
-		level = 0;
-	}
-#endif
 #endif
 
 	if (level) {

@@ -1334,15 +1334,6 @@ struct mdp_page_protection {
 	uint32_t page_protection;
 };
 
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-enum inversion_mode {
-	COLUMN_INVERSION = 0,
-	DOT_INVERSION = 2,
-};
-#endif
-#endif
-
 struct mdp_mixer_info {
 	int pndx;
 	int pnum;

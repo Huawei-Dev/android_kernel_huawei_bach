@@ -59,8 +59,6 @@
 #include "mdss_mdp_trace.h"
 #ifdef CONFIG_LCDKIT_DRIVER
 #include <linux/lcdkit_dsm.h>
-#else
-#include <linux/hw_lcd_common.h>
 #endif
 #define AXI_HALT_TIMEOUT_US	0x4000
 #define AUTOSUSPEND_TIMEOUT_MS	200
@@ -1610,12 +1608,7 @@ static int mdss_mdp_gdsc_notifier_call(struct notifier_block *self,
 	if (!mdss_mdp_req_init_restore_cfg(mdata) &&
 		(event & REGULATOR_EVENT_ENABLE)) {
 #else
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-	if (!mdss_mdp_req_init_restore_cfg(mdata) &&
-		(event & REGULATOR_EVENT_ENABLE)) {
-#else
 	if (event & REGULATOR_EVENT_ENABLE) {
-#endif
 #endif
  		/*
  		 * As SMMU in low tier targets is not power collapsible,

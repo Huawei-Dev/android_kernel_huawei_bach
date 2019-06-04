@@ -19,8 +19,6 @@
 #include <linux/mutex.h>
 #ifdef CONFIG_LCDKIT_DRIVER
 #include <linux/lcdkit_dsm.h>
-#else
-#include <linux/hw_lcd_common.h>
 #endif
 
 #include "mdss_mdp.h"

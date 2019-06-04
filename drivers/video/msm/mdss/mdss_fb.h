@@ -361,13 +361,6 @@ struct msm_fb_data_type {
 	u32 skip_koff_wait;
 	u32 thermal_level;
 
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-	u32 frame_updated;
-	struct delayed_work bkl_work;
-#endif
-#endif
-
 	int fb_mmap_type;
 	struct led_trigger *boot_notification_led;
 

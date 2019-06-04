@@ -77,11 +77,6 @@ EXTRA_CFLAGS += -Idrivers/devkit/lcdkit/include
 EXTRA_CFLAGS += -Idrivers/devkit/tpkit
 EXTRA_CFLAGS += -Idrivers/devkit/lcdkit/core/common/qcom
 obj-$(CONFIG_LCDKIT_DRIVER) += tp_color.o
-else
-ifeq ($(CONFIG_HUAWEI_KERNEL_LCD),y)
-obj-$(CONFIG_HUAWEI_KERNEL_LCD) += tp_color.o
-obj-$(CONFIG_HUAWEI_KERNEL_LCD) += hw_lcd_debug.o
-endif
 endif
 
 obj-$(CONFIG_FB_MSM_MDSS) += mdss_fb.o mdss_util.o

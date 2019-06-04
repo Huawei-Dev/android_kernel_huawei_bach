@@ -73,13 +73,6 @@ config FB_MSM_MDSS_XLOG_DEBUG
 	driver during fatal errors and enable some display-driver logging
 	into an internal buffer (this avoids logging overhead).
 
-config HUAWEI_KERNEL_LCD
-	depends on HUAWEI_KERNEL
-	bool "LCD display support"
-	default n
-	---help---
-	use huawei feature
-
 config FB_MSM_MDSS_FRC_DEBUG
 	depends on DEBUG_FS && FB_MSM_MDSS
 	bool "Enable Video FRC debugging"

@@ -36,12 +36,6 @@
 
 #ifdef CONFIG_LCDKIT_DRIVER
 #include "lcdkit_dsi.h"
-#else
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-#include <linux/hw_lcd_common.h>
-bool enable_PT_test = 0;
-module_param_named(enable_PT_test, enable_PT_test, bool, S_IRUGO | S_IWUSR);
-#endif
 #endif
 
 #define XO_CLK_RATE	19200000
@@ -53,14 +47,7 @@ static struct mdss_dsi_data *mdss_dsi_res;
 #define DSI_DISABLE_PC_LATENCY 100
 #define DSI_ENABLE_PC_LATENCY PM_QOS_DEFAULT_VALUE
 
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-struct mdss_panel_data *global_pdata = NULL;
-#endif
-#endif
-
 static struct pm_qos_request mdss_dsi_pm_qos_request;
-
 
 extern ssize_t Is_lm36923_used(void);
 
@@ -1434,7 +1421,7 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 	int cur_power_state;
 
-#if defined(CONFIG_HUAWEI_KERNEL_LCD) || defined(CONFIG_LCDKIT_DRIVER)
+#if defined(CONFIG_LCDKIT_DRIVER)
 	unsigned long timeout = jiffies;
 #endif
 
@@ -1512,15 +1499,6 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 			  MDSS_DSI_LINK_CLK, MDSS_DSI_CLK_ON);
 	mdss_dsi_sw_reset(ctrl_pdata, true);
 
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-	LCD_LOG_INFO("%s: dsi_on_time = %u\n",
-			__func__,jiffies_to_msecs(jiffies-timeout));
-#endif
-#else
-    LCDKIT_INFO(": dsi_on_time = %u\n", jiffies_to_msecs(jiffies-timeout));
-#endif
-
 	/*
 	 * Issue hardware reset line after enabling the DSI clocks and data
 	 * data lanes for LP11 init
@@ -1532,9 +1510,7 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 	}
 
 #ifdef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_DSM
 	lcd_pwr_status.panel_power_on = 1;
-#endif
 #endif
 
 	if (mipi->init_delay)
@@ -4257,12 +4233,6 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 
 	mipi  = &(pinfo->mipi);
 
-#ifndef CONFIG_LCDKIT_DRIVER
-#ifdef CONFIG_HUAWEI_KERNEL_LCD
-	global_pdata = &(ctrl_pdata->panel_data);
-#endif
-#endif
-
 	pinfo->type =
 		((mipi->mode == DSI_VIDEO_MODE)
 			? MIPI_VIDEO_PANEL : MIPI_CMD_PANEL);
@@ -4279,7 +4249,7 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 	pr_debug("%s: pclk=%d, bclk=%d\n", __func__,
 			ctrl_pdata->pclk_rate, ctrl_pdata->byte_clk_rate);
 
-    #ifndef CONFIG_LCDKIT_DRIVER
+#ifndef CONFIG_LCDKIT_DRIVER
 	rc = mdss_dsi_get_dt_vreg_data(&ctrl_pdev->dev, pan_node,
 		&ctrl_pdata->panel_power_data, DSI_PANEL_PM);
 	if (rc) {
@@ -4296,14 +4266,14 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 						__func__, rc);
 		return rc;
 	}
-    #else
+#else
     rc = lcdkit_power_config(ctrl_pdev, ctrl_pdata, pan_node);
 	if (rc) {
 		pr_err("%s: failed to init panel power, rc=%d\n",
 						__func__, rc);
 		return rc;
 	}
-    #endif
+#endif
 
 	rc = mdss_dsi_parse_ctrl_params(ctrl_pdev, pan_node, ctrl_pdata);
 	if (rc) {
@@ -4323,11 +4293,11 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 		return rc;
 	}
 
-	#ifdef CONFIG_LCDKIT_DRIVER
+#ifdef CONFIG_LCDKIT_DRIVER
     lcdkit_ctrl_gpio_init(ctrl_pdata);
 
     lcdkit_set_dsi_ctrl_pdev(ctrl_pdev);
-    #endif
+#endif
 
 	if (mdss_dsi_retrieve_ctrl_resources(ctrl_pdev,
 					     pinfo->pdest,
