@@ -60,16 +60,6 @@ static struct dsm_dev public_client_devices[] = {
 		.fops = NULL,
 		.buff_size = 1024,
     },
-#ifdef CONFIG_HUAWEI_SDCARD_VOLD
-	{
-		.name = "sdcard_vold",
-		.device_name = NULL,
-		.ic_name = NULL,
-		.module_name = NULL,
-		.fops = NULL,
-		.buff_size = 1024,
-	},
-#endif
     {
 		.name = "dsm_e4defrag",
 		.device_name = NULL,

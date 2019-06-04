@@ -488,10 +488,6 @@ static ssize_t dsm_write(struct file *file, const char __user *buf, size_t count
 {
 	char *buff = NULL;
 
-#ifdef CONFIG_HUAWEI_SDCARD_VOLD
-	char  err_string[20] = {0};
-	int   err;
-#endif
 	DSM_LOG_DEBUG("%s enter\n", __func__);
 	if (NULL == buf) {
 		DSM_LOG_ERR("buf is null\n");
