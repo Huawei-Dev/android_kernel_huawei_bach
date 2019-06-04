@@ -103,12 +103,7 @@ void set_tp_pre_lcd_status(bool enable);
 #define MMI_TEST_FAIL_REASON_PANEL    "panel_reason"
 
 #define TOUCH_DETECTED 1
-
-#if defined(CONFIG_DEBUG_HUAWEI_FLOW_LOGLEVEL) && CONFIG_DEBUG_HUAWEI_FLOW_LOGLEVEL
-extern int KERNEL_HWFLOW;
-#else
 #define KERNEL_HWFLOW 	1
-#endif
 extern int hw_tp_common_debug_mask;
 #ifndef TP_LOG_NAME
 #define TP_LOG_NAME "[COMMON]"

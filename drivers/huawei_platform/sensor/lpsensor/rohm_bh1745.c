@@ -1473,9 +1473,6 @@ static int parse_tp_color_and_module_manufacture(struct rgb_bh1745_data *data)
 	int tp_color = 0;
 	tp_color = read_tp_color();
 	pdata->tp_color = tp_color_to_id(tp_color);
-#ifdef CONFIG_HUAWEI_TOUCH_SCREEN
-	pdata->panel_id = get_tp_type();
-#endif
 	BH1745_INFO("%s:%d panel_id = %d tp_color=%d,pdata->tp_color = %d\n", __FUNCTION__, __LINE__,pdata->panel_id,tp_color,pdata->tp_color);
 	if( UNKNOW_PRODUCT_MODULE == pdata->panel_id)
 	{
