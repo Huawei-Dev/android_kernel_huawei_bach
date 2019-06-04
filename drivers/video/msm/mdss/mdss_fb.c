@@ -57,6 +57,10 @@
 #include "mdss_mdp.h"
 #include "mdp3_ctrl.h"
 
+#ifdef CONFIG_LCDKIT_DRIVER
+#include "lcdkit_fb.c"
+#endif
+
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MDSS_FB_NUM 3
 #else
@@ -2862,9 +2866,6 @@ static int mdss_fb_open(struct fb_info *info, int user)
 	}
 
 	if (!mfd->ref_cnt) {
-#ifdef CONFIG_LOG_JANK
-		LOG_JANK_D(JLID_KERNEL_LCD_OPEN,"%s", "JL_KERNEL_LCD_OPEN");
-#endif
 		result = mdss_fb_blank_sub(FB_BLANK_UNBLANK, info,
 					   mfd->op_enable);
 		if (result) {
@@ -5245,10 +5246,6 @@ void mdss_fb_report_panel_dead(struct msm_fb_data_type *mfd)
 		KOBJ_CHANGE, envp);
 	pr_err("Panel has gone bad, sending uevent - %s\n", envp[0]);
 }
-
-#ifdef CONFIG_LCDKIT_DRIVER
-#include "lcdkit_fb.c"
-#endif
 
 /*
  * mdss_fb_calc_fps() - Calculates fps value.
