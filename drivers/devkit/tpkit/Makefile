@@ -14,7 +14,6 @@ obj-$(CONFIG_HUAWEI_TS_KIT) += qcom_adapter/
 $(info find tpkit qcom adapter folder, include it now!)
 endif
 
-obj-$(CONFIG_HUAWEI_HOST_TS_KIT) += hostprocessing/
 obj-$(CONFIG_HUAWEI_TS_KIT)  += huawei_ts_kit_core.o
 obj-$(CONFIG_HUAWEI_TS_KIT)  += huawei_ts_kit_fsnode.o
 obj-$(CONFIG_HUAWEI_TS_KIT)  += huawei_ts_kit_api.o
