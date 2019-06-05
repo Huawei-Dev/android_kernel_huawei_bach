@@ -43,7 +43,6 @@ struct uscp_device_info
     int interval_switch_temp;
     int check_interval;
     int keep_check_cnt;
-    int no_need_uscp;//support uscp or not
 };
 
 static struct dsm_dev dsm_uscp =
@@ -617,7 +616,6 @@ static int uscp_probe(struct platform_device *pdev)
     struct power_supply *bms_psy = NULL;
     int ret = 0;
     int batt_present = TRUE;
-    int need_uscp = TRUE;
 
     usb_psy = power_supply_get_by_name("usb");
     if (!usb_psy) {
@@ -686,55 +684,45 @@ static int uscp_probe(struct platform_device *pdev)
     }
     gpio_direction_output(di->gpio_uscp, GPIO_LOW);
 
-    ret = of_property_read_u32(np, "no_need_uscp", &(di->no_need_uscp));
-    if (ret)
-    {
-        pr_err("get open_mosfet_temp info fail!\n");
-        ret = -EINVAL;
-        goto free_gpio;
-    }
-    pr_info("no_need_uscp = %d\n", di->no_need_uscp);
-    ret = of_property_read_u32(np, "uscp_threshold_tusb", &(di->uscp_threshold_tusb));
-    if (ret)
-    {
-        di->uscp_threshold_tusb = DEFAULT_TUSB_THRESHOLD;
-        pr_err("get uscp_threshold_tusb info fail!use default threshold = %d\n",di->uscp_threshold_tusb);
-    }
-    pr_info("uscp_threshold_tusb = %d\n", di->uscp_threshold_tusb);
     ret = of_property_read_u32(np, "open_mosfet_temp", &(di->open_mosfet_temp));
     if (ret)
     {
         pr_err("get open_mosfet_temp info fail!\n");
         ret = -EINVAL;
         goto free_gpio;
-    }
+    } else 
     pr_info("open_mosfet_temp = %d\n", di->open_mosfet_temp);
+
     ret = of_property_read_u32(np, "close_mosfet_temp", &(di->close_mosfet_temp));
     if (ret)
     {
         pr_err("get close_mosfet_temp info fail!\n");
         ret = -EINVAL;
         goto free_gpio;
-    }
+    } else
     pr_info("close_mosfet_temp = %d\n", di->close_mosfet_temp);
+
     ret = of_property_read_u32(np, "interval_switch_temp", &(di->interval_switch_temp));
     if (ret)
     {
         pr_err("get interval_switch_temp info fail!\n");
         ret = -EINVAL;
         goto free_gpio;
-    }
+    } else
     pr_info("interval_switch_temp = %d\n", di->interval_switch_temp);
+
+    ret = of_property_read_u32(np, "uscp_threshold_tusb", &(di->uscp_threshold_tusb));
+    if (ret)
+    {
+        di->uscp_threshold_tusb = DEFAULT_TUSB_THRESHOLD;
+        pr_err("get uscp_threshold_tusb info fail ! use default threshold = %d\n",di->uscp_threshold_tusb);
+    } else
+    pr_info("uscp_threshold_tusb = %d\n", di->uscp_threshold_tusb);
 
     check_ntc_error();
     batt_present = get_loginfo_int(batt_psy, POWER_SUPPLY_PROP_PRESENT);
 
-    if((is_factory_mode)&& (di->no_need_uscp == TRUE))
-    {
-        need_uscp = FALSE; //qcom not need uscp in factory mode
-    }
-
-   if ((!batt_present) ||(FALSE == need_uscp)) {
+    if ((!batt_present) || (is_factory_mode)) {
         pr_err("battery is not exist or no need uscp in factory mode, disable usb short protect!\n");
         protect_enable = FALSE;
     }
@@ -753,7 +741,7 @@ static int uscp_probe(struct platform_device *pdev)
     {
        pr_err("hisi_charger_type_notifier_register failed\n");
        ret = -EINVAL;
-        goto free_gpio;
+       goto free_gpio;
     }
 
     type = get_loginfo_int(usb_psy, POWER_SUPPLY_PROP_TYPE);
