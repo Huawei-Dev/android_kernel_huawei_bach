@@ -21,10 +21,7 @@ obj-$(CONFIG_HUAWEI_TS_KIT)  += huawei_ts_kit_algo.o
 obj-$(CONFIG_HUAWEI_TS_KIT)  += panel/
 
 obj-$(CONFIG_HUAWEI_TS_KIT)  += huawei_ts_kit_csvparse.o
-obj-$(CONFIG_HUAWEI_TS_KIT_TEST)  += huawei_ts_kit_test.o
 obj-$(CONFIG_HUAWEI_TP_KIT_COLOR_INFO) += tp_color.o
-ifeq ($(CONFIG_HUAWEI_TS_KIT_TEST),y)
-EXTRA_CFLAGS += -DHUAWEI_TS_KIT_TEST
-endif
+
 EXTRA_CFLAGS += -Idrivers/hisi/tzdriver
 EXTRA_CFLAGS += -Idrivers/tzdriver
