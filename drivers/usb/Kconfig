@@ -166,5 +166,4 @@ config USB_LED_TRIG
 	  gadget.
 
 source "drivers/usb/switch/Kconfig"
-source "drivers/usb/typec/Kconfig"
 endif # USB_SUPPORT
