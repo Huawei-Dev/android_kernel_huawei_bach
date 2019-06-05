@@ -1,6 +1,0 @@
-config HUAWEI_TYPEC
-	bool "support Type C feature"
-	default n
-	---help---
-	  Say Y here to support Type C feature
-

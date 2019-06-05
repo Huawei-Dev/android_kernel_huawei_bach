@@ -8645,17 +8645,7 @@ static int smbchg_request_irqs(struct smbchg_chip *chip)
 					otg_oc_handler,
 					(IRQF_TRIGGER_RISING | IRQF_ONESHOT),
 					rc);
-#ifndef CONFIG_HUAWEI_TYPEC
-				REQUEST_IRQ(chip, spmi_resource,
-					chip->usbid_change_irq, "usbid-change",
-					usbid_change_handler,
-					(IRQF_TRIGGER_FALLING | IRQF_ONESHOT),
-					rc);
-#endif
 				enable_irq_wake(chip->otg_oc_irq);
-#ifndef CONFIG_HUAWEI_TYPEC
-				enable_irq_wake(chip->usbid_change_irq);
-#endif
 				enable_irq_wake(chip->otg_fail_irq);
 			}
 			enable_irq_wake(chip->usbin_uv_irq);
@@ -8686,13 +8676,6 @@ static int smbchg_request_irqs(struct smbchg_chip *chip)
 		case SMBCHG_OTG_SUBTYPE:
 			break;
 		case SMBCHG_LITE_OTG_SUBTYPE:
-#ifndef CONFIG_HUAWEI_TYPEC
-			REQUEST_IRQ(chip, spmi_resource,
-				chip->usbid_change_irq, "usbid-change",
-				usbid_change_handler,
-				(IRQF_TRIGGER_FALLING | IRQF_ONESHOT),
-				rc);
-#endif
 			REQUEST_IRQ(chip, spmi_resource,
 				chip->otg_oc_irq, "otg-oc",
 				otg_oc_handler,
@@ -8700,9 +8683,6 @@ static int smbchg_request_irqs(struct smbchg_chip *chip)
 			REQUEST_IRQ(chip, spmi_resource,
 				chip->otg_fail_irq, "otg-fail",
 				otg_fail_handler, flags, rc);
-#ifndef CONFIG_HUAWEI_TYPEC
-			enable_irq_wake(chip->usbid_change_irq);
-#endif
 			enable_irq_wake(chip->otg_oc_irq);
 			enable_irq_wake(chip->otg_fail_irq);
 			break;
@@ -9539,9 +9519,6 @@ static void smbchg_shutdown(struct spmi_device *spmi)
 	disable_irq(chip->power_ok_irq);
 	disable_irq(chip->recharge_irq);
 	disable_irq(chip->taper_irq);
-#ifndef CONFIG_HUAWEI_TYPEC
-	disable_irq(chip->usbid_change_irq);
-#endif
 	disable_irq(chip->usbin_ov_irq);
 	disable_irq(chip->vbat_low_irq);
 	disable_irq(chip->wdog_timeout_irq);

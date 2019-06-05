@@ -63,4 +63,3 @@ obj-$(CONFIG_USB_COMMON)	+= common/
 
 obj-$(CONFIG_USBIP_CORE)	+= usbip/
 obj-$(CONFIG_SWITCH)		+= switch/
-obj-$(CONFIG_HUAWEI_TYPEC)	+= typec/

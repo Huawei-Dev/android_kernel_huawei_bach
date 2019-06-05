@@ -32,7 +32,7 @@
 #ifdef CONFIG_SWITCH_FSA9685
 #include <linux/usb/switch_chip.h>
 #endif
-#ifdef CONFIG_HUAWEI_TYPEC
+#ifdef CONFIG_DUAL_ROLE_USB_INTF
 #include <linux/usb/hw_typec.h>
 #endif
 #ifdef CONFIG_HUAWEI_USB
@@ -180,82 +180,6 @@ struct qpnp_typec_chip {
 static char *mode_text[] = {
 	"ufp", "dfp", "none"
 };
-
-#ifdef CONFIG_HUAWEI_TYPEC
-static struct qpnp_typec_chip *g_chip = NULL;
-
-static enum typec_cc_orient qpnp_typec_detect_cc_orientation(void)
-{
-	enum typec_cc_orient cc_orient = TYPEC_ORIENT_NOT_READY;
-
-	if (!g_chip) {
-		pr_err("no chip found\n");
-		return cc_orient;
-	}
-
-	pr_info("cc_line_state = %d\n", g_chip->cc_line_state);
-	switch (g_chip->cc_line_state) {
-	case CC_1:
-		cc_orient = TYPEC_ORIENT_CC1;
-		break;
-	case CC_2:
-		cc_orient = TYPEC_ORIENT_CC2;
-		break;
-	default:
-		cc_orient = TYPEC_ORIENT_NOT_READY;
-	}
-
-	return cc_orient;
-}
-
-static void typec_wake_lock(struct typec_device_info *di)
-{
-	if (!wake_lock_active(&di->wake_lock)) {
-		pr_err("usb typec wake lock\n");
-		wake_lock(&di->wake_lock);
-	}
-}
-
-static void typec_wake_unlock(struct typec_device_info *di)
-{
-	if (wake_lock_active(&di->wake_lock)) {
-		pr_err("usb typec wake unlock\n");
-		wake_unlock(&di->wake_lock);
-	}
-}
-
-static enum typec_input_current qpnp_typec_detect_input_current(void)
-{
-	enum typec_input_current input_current = TYPEC_DEV_CURRENT_NOT_READY;
-
-	if (!g_chip) {
-		pr_err("no chip found\n");
-		return input_current;
-	}
-
-	pr_info("current_ma = %d\n", g_chip->current_ma);
-	switch (g_chip->current_ma) {
-	case TYPEC_STD_MA:
-		input_current = TYPEC_DEV_CURRENT_DEFAULT;
-		break;
-	case TYPEC_MED_MA:
-		input_current = TYPEC_DEV_CURRENT_MID;
-		break;
-	case TYPEC_HIGH_MA:
-		input_current = TYPEC_DEV_CURRENT_HIGH;
-		break;
-	default:
-		input_current = TYPEC_DEV_CURRENT_NOT_READY;
-	}
-
-	return input_current;
-}
-
-static struct typec_device_ops qpnp_typec_ops = {
-	.detect_cc_orientation = qpnp_typec_detect_cc_orientation,
-	.detect_input_current = qpnp_typec_detect_input_current,
-};
-#endif
 
 /* SPMI operations */
 static int __qpnp_typec_read(struct spmi_device *spmi, u8 *val, u16 addr,
@@ -1595,17 +1519,6 @@ static int qpnp_typec_probe(struct spmi_device *spmi)
 		pr_err("failed to request irqs rc=%d\n", rc);
 		goto unregister_psy;
 	}
-#ifdef CONFIG_HUAWEI_TYPEC
-	rc = typec_chip_register(&qpnp_typec_ops);
-	if (rc) {
-		pr_err("failed to register typec chip\n");
-	}
-	g_chip = chip;
-	qpnp_create_sysfs();
-
-	/*set Rp connect threshold to 0.6V */
-	qpnp_typec_otg_threshold(chip, THRESHOLD_0P6);
-#endif
 	pr_info("TypeC successfully probed state=%d CC-line-state=%d\n",
 			chip->typec_state, chip->cc_line_state);
 	return 0;
