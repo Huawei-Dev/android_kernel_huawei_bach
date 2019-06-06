@@ -51,6 +51,8 @@
 #include "mdss_fb.h"
 #include "mdss_mdp_splash_logo.h"
 
+#include <linux/lcdkit_dsm.h>
+
 #define CREATE_TRACE_POINTS
 #include "mdss_debug.h"
 #include "mdss_smmu.h"
@@ -59,6 +61,10 @@
 
 #ifdef CONFIG_LCDKIT_DRIVER
 #include "lcdkit_fb.c"
+#include "../../../devkit/lcdkit/include/lcdkit_fb_util.h"
+#include "../../../devkit/lcdkit/include/lcdkit_dbg.h"
+#include "../../../devkit/lcdkit/core/common/qcom/lcdkit_dsi_status.h"
+#include "../../../devkit/lcdkit/core/common/qcom/lcdkit_fb.h"
 #endif
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
@@ -102,7 +108,6 @@ static struct msm_mdp_interface *mdp_instance;
 static int mdss_fb_register(struct msm_fb_data_type *mfd);
 static int mdss_fb_open(struct fb_info *info, int user);
 static int mdss_fb_release(struct fb_info *info, int user);
-static int mdss_fb_release_all(struct fb_info *info, bool release_all);
 static int mdss_fb_pan_display(struct fb_var_screeninfo *var,
 			       struct fb_info *info);
 static int mdss_fb_check_var(struct fb_var_screeninfo *var,
@@ -2888,7 +2893,7 @@ pm_error:
 	return result;
 }
 
-static int mdss_fb_release_all(struct fb_info *info, bool release_all)
+int mdss_fb_release_all(struct fb_info *info, bool release_all)
 {
 	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
 	struct mdss_fb_file_info *file_info = NULL, *temp_file_info = NULL;
@@ -3080,11 +3085,11 @@ static int __mdss_fb_wait_for_fence_sub(struct msm_sync_pt_data *sync_pt_data,
 	if (ret < 0) {
 #ifdef CONFIG_HUAWEI_DSM
 		/* report fence dsm error */
-		#ifdef CONFIG_LCDKIT_DRIVER
+#ifdef CONFIG_LCDKIT_DRIVER
 		lcdkit_report_dsm_err(DSM_LCD_MDSS_FENCE_ERROR_NO,0,ret,0);
-		#else
+#else
 		lcd_report_dsm_err(DSM_LCD_MDSS_FENCE_ERROR_NO,ret,0);
-		#endif
+#endif
 #endif
 		pr_err("%s: sync_fence_wait failed! ret = %x\n",
 				sync_pt_data->fence_name, ret);

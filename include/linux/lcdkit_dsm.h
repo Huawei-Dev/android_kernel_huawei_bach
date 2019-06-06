@@ -31,6 +31,6 @@ void lcdkit_dcm_pwr_status_handler(unsigned long data);
 void lcdkit_underrun_dsm_report(unsigned long num,unsigned long underrun_cnt,
         int cpu_freq,unsigned long clk_axi,unsigned long clk_ahb);
 #endif
-
+int mdss_fb_release_all(struct fb_info *info, bool release_all);
 #endif
 
