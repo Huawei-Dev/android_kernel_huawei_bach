@@ -116,7 +116,6 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 	ret = filemap_write_and_wait_range(inode->i_mapping, start, end);
 	if (ret)
 		return ret;
-
 	/*
 	 * data=writeback,ordered:
 	 *  The caller's filemap_fdatawrite()/wait will sync the data.

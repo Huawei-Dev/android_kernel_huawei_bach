@@ -2724,7 +2724,6 @@ static int ext4_da_write_begin(struct file *file, struct address_space *mapping,
 						      pagep, fsdata);
 		if (ret < 0)
 			return ret;
-
 		if (ret == 1)
 			return 0;
 	}
