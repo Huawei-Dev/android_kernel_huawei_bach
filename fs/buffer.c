@@ -2006,7 +2006,6 @@ int __block_write_begin(struct page *page, loff_t pos, unsigned len,
 	}
 	if (unlikely(err))
 		page_zero_new_buffers(page, from, to);
-
 	return err;
 }
 EXPORT_SYMBOL(__block_write_begin);
