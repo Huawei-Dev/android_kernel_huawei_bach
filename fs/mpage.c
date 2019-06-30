@@ -626,7 +626,7 @@ page_is_mapped:
 	 * This page will go to BIO.  Do we need to send this BIO off first?
 	 */
 	if (bio && mpd->last_block_in_bio != blocks[0] - 1)
-		bio = mpage_bio_submit(wbc_to_write_cmd(wbc), bio);
+		bio = mpage_bio_submit(WRITE, bio);
 
 alloc_new:
 	if (bio == NULL) {
@@ -650,7 +650,7 @@ alloc_new:
 	 */
 	length = first_unmapped << blkbits;
 	if (bio_add_page(bio, page, length, 0) < length) {
-		bio = mpage_bio_submit(wbc_to_write_cmd(wbc), bio);
+		bio = mpage_bio_submit(WRITE, bio);
 		goto alloc_new;
 	}
 
@@ -660,7 +660,7 @@ alloc_new:
 	set_page_writeback(page);
 	unlock_page(page);
 	if (boundary || (first_unmapped != blocks_per_page)) {
-		bio = mpage_bio_submit(wbc_to_write_cmd(wbc), bio);
+		bio = mpage_bio_submit(WRITE, bio);
 		if (boundary_block) {
 			write_boundary_block(boundary_bdev,
 					boundary_block, 1 << blkbits);
@@ -672,7 +672,7 @@ alloc_new:
 
 confused:
 	if (bio)
-		bio = mpage_bio_submit(wbc_to_write_cmd(wbc), bio);
+		bio = mpage_bio_submit(WRITE, bio);
 
 	if (mpd->use_writepage) {
 		ret = mapping->a_ops->writepage(page, wbc);
