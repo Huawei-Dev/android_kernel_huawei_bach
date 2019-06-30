@@ -558,13 +558,6 @@ void migrate_page_copy(struct page *newpage, struct page *page)
 			__set_page_dirty_nobuffers(newpage);
  	}
 
-#ifdef CONFIG_TASK_PROTECT_LRU
-	if (PageProtect(page)) {
-		SetPageProtect(newpage);
-		set_page_num(newpage, get_page_num(page));
-	}
-#endif
-
 	/*
 	 * Copy NUMA information to the new page, to prevent over-eager
 	 * future migrations of this same page.

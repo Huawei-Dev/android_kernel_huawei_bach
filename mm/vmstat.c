@@ -761,12 +761,6 @@ const char * const vmstat_text[] = {
 	"nr_inactive_file",
 	"nr_active_file",
 	"nr_unevictable",
-#ifdef CONFIG_TASK_PROTECT_LRU
-	"nr_inactive_prot_anon",
-	"nr_active_prot_anon",
-	"nr_inactive_prot_file",
-	"nr_active_prot_file",
-#endif
 	"nr_mlock",
 	"nr_anon_pages",
 	"nr_mapped",

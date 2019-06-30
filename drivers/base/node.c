@@ -76,12 +76,6 @@ static ssize_t node_read_meminfo(struct device *dev,
 		       "Node %d Active(file):   %8lu kB\n"
 		       "Node %d Inactive(file): %8lu kB\n"
 		       "Node %d Unevictable:    %8lu kB\n"
-#ifdef CONFIG_TASK_PROTECT_LRU
-		       "Node %d Active(prot_anon):   %8lu kB\n"
-		       "Node %d Inactive(prot_anon): %8lu kB\n"
-		       "Node %d Active(prot_file):   %8lu kB\n"
-		       "Node %d Inactive(prot_file): %8lu kB\n"
-#endif
 		       "Node %d Mlocked:        %8lu kB\n",
 		       nid, K(i.totalram),
 		       nid, K(i.freeram),
@@ -95,12 +89,6 @@ static ssize_t node_read_meminfo(struct device *dev,
 		       nid, K(node_page_state(nid, NR_ACTIVE_FILE)),
 		       nid, K(node_page_state(nid, NR_INACTIVE_FILE)),
 		       nid, K(node_page_state(nid, NR_UNEVICTABLE)),
-#ifdef CONFIG_TASK_PROTECT_LRU
-		       nid, K(node_page_state(nid, NR_PROTECT_ACTIVE_ANON)),
-		       nid, K(node_page_state(nid, NR_PROTECT_INACTIVE_ANON)),
-		       nid, K(node_page_state(nid, NR_PROTECT_ACTIVE_FILE)),
-		       nid, K(node_page_state(nid, NR_PROTECT_INACTIVE_FILE)),
-#endif
 		       nid, K(node_page_state(nid, NR_MLOCK)));
 
 #ifdef CONFIG_HIGHMEM

@@ -17,9 +17,6 @@
 #include <linux/pageblock-flags.h>
 #include <linux/page-flags-layout.h>
 #include <linux/atomic.h>
-#ifdef CONFIG_TASK_PROTECT_LRU
-#include <linux/mm_types.h>
-#endif
 #include <asm/page.h>
 
 /* Free memory management - zoned buddy allocator.  */
@@ -139,13 +136,6 @@ enum zone_stat_item {
 	NR_INACTIVE_FILE,	/*  "     "     "   "       "         */
 	NR_ACTIVE_FILE,		/*  "     "     "   "       "         */
 	NR_UNEVICTABLE,		/*  "     "     "   "       "         */
-#ifdef CONFIG_TASK_PROTECT_LRU
-	NR_PROTECT_LRU_BASE,
-	NR_PROTECT_INACTIVE_ANON = NR_PROTECT_LRU_BASE,
-	NR_PROTECT_ACTIVE_ANON,
-	NR_PROTECT_INACTIVE_FILE,
-	NR_PROTECT_ACTIVE_FILE,
-#endif
 	NR_MLOCK,		/* mlock()ed pages found and moved off LRU */
 	NR_ANON_PAGES,	/* Mapped anonymous pages */
 	NR_FILE_MAPPED,	/* pagecache pages mapped into pagetables.
@@ -239,23 +229,8 @@ struct zone_reclaim_stat {
 	unsigned long		recent_scanned[2];
 };
 
-#ifdef CONFIG_TASK_PROTECT_LRU
-/* 4 comes from PROTECT_LRU_WIDTH, 3 protect heads and 1 normal head */
-#define PROTECT_HEAD_MAX 4
-#define PROTECT_HEAD_END (PROTECT_HEAD_MAX - 1)
-
-struct protect_head {
-	struct page protect_page[NR_LRU_LISTS - 1];
-	unsigned long max_pages;
-	unsigned long pages;
-};
-#endif
-
 struct lruvec {
 	struct list_head lists[NR_LRU_LISTS];
-#ifdef CONFIG_TASK_PROTECT_LRU
-	struct protect_head heads[PROTECT_HEAD_MAX];
-#endif
 	struct zone_reclaim_stat reclaim_stat;
 #ifdef CONFIG_MEMCG
 	struct zone *zone;

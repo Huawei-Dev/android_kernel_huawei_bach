@@ -478,10 +478,6 @@ struct mm_struct {
 #ifdef CONFIG_MSM_APP_SETTINGS
 	int app_setting;
 #endif
-
-#ifdef CONFIG_TASK_PROTECT_LRU
-	int protect;
-#endif
 };
 
 static inline void mm_init_cpumask(struct mm_struct *mm)

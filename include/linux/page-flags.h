@@ -112,9 +112,6 @@ enum pageflags {
 #ifdef CONFIG_ZCACHE
 	PG_was_active,
 #endif
-#ifdef CONFIG_TASK_PROTECT_LRU
-	PG_protect,
-#endif
 	__NR_PAGEFLAGS,
 
 	/* Filesystems */
@@ -295,9 +292,6 @@ PAGEFLAG_FALSE(HWPoison)
 #define __PG_HWPOISON 0
 #endif
 
-#ifdef CONFIG_TASK_PROTECT_LRU
-PAGEFLAG(Protect, protect)
-#endif
 u64 stable_page_flags(struct page *page);
 
 static inline int PageUptodate(struct page *page)

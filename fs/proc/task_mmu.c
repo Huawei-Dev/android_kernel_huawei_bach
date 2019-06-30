@@ -1445,12 +1445,6 @@ cont:
 		if (!page)
 			continue;
 
-#ifdef CONFIG_TASK_PROTECT_LRU
-		// don't reclaim page in protected.
-		if (PageProtect(page))
-			continue;
-#endif
-
 		//we don't reclaim page in active lru list
 		if (rp->inactive_lru && (PageActive(page) ||
 		    PageUnevictable(page)))

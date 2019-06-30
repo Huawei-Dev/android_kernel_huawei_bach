@@ -29,28 +29,6 @@ bool list_lru_add(struct list_lru *lru, struct list_head *item)
 }
 EXPORT_SYMBOL_GPL(list_lru_add);
 
-#ifdef CONFIG_TASK_PROTECT_LRU
-void list_lru_move(struct list_lru *lru, struct list_head *item)
-{
-	/*lint -save -e648 -e730 -e834*/
-	int nid = page_to_nid(virt_to_page(item));
-	struct list_lru_node *nlru = &lru->node[nid];
-
-	spin_lock(&nlru->lock);
-	if (unlikely(list_empty(item))) {
-		/* if item is not in any list, just add to tail of the list */
-		list_add_tail(item, &nlru->list);
-		nlru->nr_items++;
-	} else
-		list_move_tail(item, &nlru->list);
-	/*lint -restore*/
-	spin_unlock(&nlru->lock);
-
-	return;
-}
-EXPORT_SYMBOL_GPL(list_lru_move);
-#endif
-
 bool list_lru_del(struct list_lru *lru, struct list_head *item)
 {
 	int nid = page_to_nid(virt_to_page(item));

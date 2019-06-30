@@ -646,10 +646,6 @@ struct inode {
 #endif
 
 	void			*i_private; /* fs or device private pointer */
-
-#ifdef CONFIG_TASK_PROTECT_LRU
-	int			i_protect;
-#endif
 };
 
 static inline int inode_unhashed(struct inode *inode)

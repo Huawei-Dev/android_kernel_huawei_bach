@@ -715,10 +715,6 @@ void do_set_pte(struct vm_area_struct *vma, unsigned long address,
 #define NODES_PGOFF		(SECTIONS_PGOFF - NODES_WIDTH)
 #define ZONES_PGOFF		(NODES_PGOFF - ZONES_WIDTH)
 #define LAST_CPUPID_PGOFF	(ZONES_PGOFF - LAST_CPUPID_WIDTH)
-#ifdef CONFIG_TASK_PROTECT_LRU
-#define PROTECT_LRU_PGOFF	(LAST_CPUPID_PGOFF - PROTECT_LRU_WIDTH)
-#endif
-
 /*
  * Define the bit shifts to access each section.  For non-existent
  * sections we define the shift as 0; that plus a 0 mask ensures
@@ -728,10 +724,6 @@ void do_set_pte(struct vm_area_struct *vma, unsigned long address,
 #define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
 #define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
 #define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
-#ifdef CONFIG_TASK_PROTECT_LRU
-#define PROTECT_LRU_PGSHIFT	(PROTECT_LRU_PGOFF * (PROTECT_LRU_WIDTH != 0))
-#endif
-
 /* NODE:ZONE or SECTION:ZONE is used to ID a zone for the buddy allocator */
 #ifdef NODE_NOT_IN_PAGE_FLAGS
 #define ZONEID_SHIFT		(SECTIONS_SHIFT + ZONES_SHIFT)
@@ -754,9 +746,6 @@ void do_set_pte(struct vm_area_struct *vma, unsigned long address,
 #define SECTIONS_MASK		((1UL << SECTIONS_WIDTH) - 1)
 #define LAST_CPUPID_MASK	((1UL << LAST_CPUPID_SHIFT) - 1)
 #define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
-#ifdef CONFIG_TASK_PROTECT_LRU
-#define PROTECT_LRU_MASK	((1UL << PROTECT_LRU_WIDTH) - 1)
-#endif
 
 static inline enum zone_type page_zonenum(const struct page *page)
 {
@@ -950,28 +939,6 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
 	set_page_section(page, pfn_to_section_nr(pfn));
 #endif
 }
-
-#ifdef CONFIG_TASK_PROTECT_LRU
-static inline int get_page_num(const struct page *page)
-{
-	return (page->flags >> PROTECT_LRU_PGSHIFT) & PROTECT_LRU_MASK;
-}
-
-static inline void set_page_num(struct page *page, int num)
-{
-	unsigned long old_flags, flags;
-
-	do {
-		/*
-		 * old_flags maybe use the same register of page->flags
-		 * by gcc, so cmpxchg maybe not help.
-		 */
-		old_flags = flags = ACCESS_ONCE(page->flags);
-		flags &= ~(PROTECT_LRU_MASK << PROTECT_LRU_PGSHIFT);
-		flags |= (num & PROTECT_LRU_MASK) << PROTECT_LRU_PGSHIFT;
-	} while (cmpxchg(&page->flags, old_flags, flags) != old_flags);
-}
-#endif
 
 /*
  * Some inline functions in vmstat.h depend on page_zone()
