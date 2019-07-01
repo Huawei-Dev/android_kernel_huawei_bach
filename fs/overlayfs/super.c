@@ -803,8 +803,6 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 	sb->s_root = root_dentry;
 	sb->s_fs_info = ufs;
 
-	security_sb_clone_mnt_opts(ufs->lower_mnt->mnt_sb, sb);
-
 	return 0;
 
 out_put_workdir:
