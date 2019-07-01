@@ -18,6 +18,9 @@
 
 #include <asm/ioctls.h>
 
+/* So that the fiemap access checks can't overflow on 32 bit machines. */
+#define FIEMAP_MAX_EXTENTS	(UINT_MAX / sizeof(struct fiemap_extent))
+
 /**
  * vfs_ioctl - call filesystem specific ioctl methods
  * @filp:	open file to invoke ioctl method on
@@ -145,7 +148,7 @@ int fiemap_check_flags(struct fiemap_extent_info *fieinfo, u32 fs_flags)
 }
 EXPORT_SYMBOL(fiemap_check_flags);
 
-int fiemap_check_ranges(struct super_block *sb,
+static int fiemap_check_ranges(struct super_block *sb,
 			       u64 start, u64 len, u64 *new_len)
 {
 	u64 maxbytes = (u64) sb->s_maxbytes;
@@ -587,6 +590,7 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 
 	case FIGETBSZ:
 		return put_user(inode->i_sb->s_blocksize, argp);
+
 	default:
 		if (S_ISREG(inode->i_mode))
 			error = file_ioctl(filp, cmd, arg);
