@@ -2188,15 +2188,6 @@ static inline void setup_nr_node_ids(void) {}
 #endif
 
 #ifdef CONFIG_PROCESS_RECLAIM
-enum reclaim_type {
-	RECLAIM_FILE,
-	RECLAIM_ANON,
-	RECLAIM_ALL,
-	RECLAIM_RANGE,
-	RECLAIM_SOFT,
-	RECLAIM_INACTIVE,
-};
-
 struct reclaim_param {
 	struct vm_area_struct *vma;
 	/* Number of pages scanned */
@@ -2205,9 +2196,6 @@ struct reclaim_param {
 	int nr_to_reclaim;
 	/* pages reclaimed */
 	int nr_reclaimed;
-	bool inactive_lru;
-	bool is_task_anon;
-	enum reclaim_type type;
 };
 extern struct reclaim_param reclaim_task_anon(struct task_struct *task,
 		int nr_to_reclaim);

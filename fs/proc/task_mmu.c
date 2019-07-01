@@ -1424,15 +1424,8 @@ static int reclaim_pte_range(pmd_t *pmd, unsigned long addr,
 	int reclaimed;
 
 	split_huge_page_pmd(vma, addr, pmd);
-
-	if (rp->is_task_anon) {
-		if (pmd_trans_unstable(pmd) || !rp->nr_to_reclaim)
-			return 0;
-	} else {
-		if (pmd_trans_unstable(pmd))
-			return 0;
-	}
-
+	if (pmd_trans_unstable(pmd) || !rp->nr_to_reclaim)
+		return 0;
 cont:
 	isolated = 0;
 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
@@ -1445,16 +1438,6 @@ cont:
 		if (!page)
 			continue;
 
-		//we don't reclaim page in active lru list
-		if (rp->inactive_lru && (PageActive(page) ||
-		    PageUnevictable(page)))
-			continue;
-
-		if (rp->type == RECLAIM_ANON && !PageAnon(page))
-			continue;
-		if (rp->type == RECLAIM_FILE && PageAnon(page))
-			continue;
-
 		if (isolate_lru_page(page))
 			continue;
 
@@ -1463,14 +1446,8 @@ cont:
 				page_is_file_cache(page));
 		isolated++;
 		rp->nr_scanned++;
-
-		if (rp->is_task_anon) {
-			if ((isolated >= SWAP_CLUSTER_MAX) || !rp->nr_to_reclaim)
-				break;
-		} else {
-			if (isolated >= SWAP_CLUSTER_MAX)
-				break;
-		}
+		if ((isolated >= SWAP_CLUSTER_MAX) || !rp->nr_to_reclaim)
+			break;
 	}
 	pte_unmap_unlock(pte - 1, ptl);
 	reclaimed = reclaim_pages_from_list(&page_list, vma);
@@ -1479,17 +1456,19 @@ cont:
 	if (rp->nr_to_reclaim < 0)
 		rp->nr_to_reclaim = 0;
 
-	if (rp->is_task_anon) {
-		if (rp->nr_to_reclaim && (addr != end))
-			goto cont;
-	} else {
-		if (addr != end)
-			goto cont;
-	}
+	if (rp->nr_to_reclaim && (addr != end))
+		goto cont;
 
 	cond_resched();
 	return 0;
 }
+
+enum reclaim_type {
+	RECLAIM_FILE,
+	RECLAIM_ANON,
+	RECLAIM_ALL,
+	RECLAIM_RANGE,
+};
 
 struct reclaim_param reclaim_task_anon(struct task_struct *task,
 		int nr_to_reclaim)
@@ -1510,7 +1489,6 @@ struct reclaim_param reclaim_task_anon(struct task_struct *task,
 	reclaim_walk.pmd_entry = reclaim_pte_range;
 
 	rp.nr_to_reclaim = nr_to_reclaim;
-	rp.is_task_anon = true;
 	reclaim_walk.private = &rp;
 
 	down_read(&mm->mmap_sem);
@@ -1552,7 +1530,7 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	struct mm_walk reclaim_walk = {};
 	unsigned long start = 0;
 	unsigned long end = 0;
-	struct reclaim_param rp = {NULL, 0, 0, 0, false, false, RECLAIM_ANON};
+	struct reclaim_param rp;
 
 	memset(buffer, 0, sizeof(buffer));
 	if (count > sizeof(buffer) - 1)
@@ -1562,12 +1540,7 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		return -EFAULT;
 
 	type_buf = strstrip(buffer);
-
-	if (!strcmp(type_buf, "soft"))
-		type = RECLAIM_SOFT;
-	else if (!strcmp(type_buf, "inactive"))
-		type = RECLAIM_INACTIVE;
-	else if (!strcmp(type_buf, "file"))
+	if (!strcmp(type_buf, "file"))
 		type = RECLAIM_FILE;
 	else if (!strcmp(type_buf, "anon"))
 		type = RECLAIM_ANON;
@@ -1577,8 +1550,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		type = RECLAIM_RANGE;
 	else
 		goto out_err;
-
-	rp.type = type;
 
 	if (type == RECLAIM_RANGE) {
 		char *token;
@@ -1617,14 +1588,6 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	mm = get_task_mm(task);
 	if (!mm)
 		goto out;
-	//here we add a soft shrinker for reclaim
-	if (type == RECLAIM_SOFT) {
-		mmput(mm);
-		goto out;
-	}
-
-	if (type == RECLAIM_INACTIVE)
-		rp.inactive_lru = true;
 
 	reclaim_walk.mm = mm;
 	reclaim_walk.pmd_entry = reclaim_pte_range;
@@ -1651,6 +1614,12 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	} else {
 		for (vma = mm->mmap; vma; vma = vma->vm_next) {
 			if (is_vm_hugetlb_page(vma))
+				continue;
+
+			if (type == RECLAIM_ANON && vma->vm_file)
+				continue;
+
+			if (type == RECLAIM_FILE && !vma->vm_file)
 				continue;
 
 			rp.vma = vma;
