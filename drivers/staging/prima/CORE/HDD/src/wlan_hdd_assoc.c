@@ -1210,17 +1210,10 @@ static void hdd_SendAssociationEvent(struct net_device *dev,tCsrRoamInfo *pCsrRo
              }
         }
 #endif
-#ifdef CONFIG_HUAWEI_WIFI
-        hddLog(VOS_TRACE_LEVEL_ERROR, HWMAC_ADDRESS_STR " connected to "
-                MAC_ADDRESS_STR,
-                HWMAC_ADDR_ARRAY(pAdapter->macAddressCurrent.bytes),
-                MAC_ADDR_ARRAY(wrqu.ap_addr.sa_data));
-#else
 	hddLog(VOS_TRACE_LEVEL_ERROR, MAC_ADDRESS_STR " connected to "
 	       MAC_ADDRESS_STR,
 	       MAC_ADDR_ARRAY(pAdapter->macAddressCurrent.bytes),
 	       MAC_ADDR_ARRAY(wrqu.ap_addr.sa_data));
-#endif
         hdd_SendUpdateBeaconIEsEvent(pAdapter, pCsrRoamInfo);
 
         hdd_manage_delack_timer(pHddCtx);

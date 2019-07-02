@@ -157,16 +157,6 @@ static int   enable_dfs_chan_scan = -1;
 static int wlan_hdd_inited;
 #endif
 
-#ifdef CONFIG_HUAWEI_WIFI
-/*for mac set*/
-#define MAC_PARAM_MAX_LEN 50
-char mac_param[MAC_PARAM_MAX_LEN] = {0};
-module_param_string(mac_param, mac_param, MAC_PARAM_MAX_LEN, 0644);
-#define MOD_DEBUG_PARAMLEN 17
-char module_debug_param[MOD_DEBUG_PARAMLEN + 1] = {0};
-module_param_string(module_debug_param, module_debug_param, MOD_DEBUG_PARAMLEN, 0644);
-#endif
-
 /*
  * spinlock for synchronizing asynchronous request/response
  * (full description of use in wlan_hdd_main.h)
@@ -218,11 +208,7 @@ static VOS_STATUS hdd_parse_ese_beacon_req(tANI_U8 *pValue,
 #define NUM_OF_STA_DATA_TO_PRINT 16
 
 #ifdef WLAN_FEATURE_RMC
-#ifdef CONFIG_HUAWEI_WIFI
-#define WLAN_NLINK_CESIUM 28
-#else
 #define WLAN_NLINK_CESIUM 30
-#endif
 #endif
 
 //wait time for beacon miss rate.
@@ -8547,12 +8533,7 @@ VOS_STATUS hdd_request_firmware(char *pfileName,v_VOID_t *pCtx,v_VOID_t **ppfw_d
                  __func__, *pSize);
        }
    }
-#ifdef CONFIG_HUAWEI_WIFI
-   else if(strstr(pfileName,"wlan_nv")) {
-#else
    else if(!strcmp(WLAN_NV_FILE, pfileName)) {
-#endif
-
        status = request_firmware(&pHddCtx->nv, pfileName, pHddCtx->parent_dev);
 
        if(status || !pHddCtx->nv || !pHddCtx->nv->data) {
@@ -9434,9 +9415,6 @@ void hdd_cleanup_adapter( hdd_context_t *pHddCtx, hdd_adapter_t *pAdapter, tANI_
    struct net_device *pWlanDev = NULL;
 
    ENTER();
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_cleanup_adapter: enter\n", WLAN_MODULE_NAME);
-#endif
    if (NULL == pAdapter)
    {
       VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
@@ -9466,32 +9444,17 @@ void hdd_cleanup_adapter( hdd_context_t *pHddCtx, hdd_adapter_t *pAdapter, tANI_
    if(test_bit(NET_DEVICE_REGISTERED, &pAdapter->event_flags)) {
       if( rtnl_held )
       {
-#ifdef CONFIG_HUAWEI_WIFI
-         pr_info("%s:unregister_netdevice: will enter\n", WLAN_MODULE_NAME);
-#endif
          unregister_netdevice(pWlanDev);
-#ifdef CONFIG_HUAWEI_WIFI
-         pr_info("%s:unregister_netdevice: exit\n", WLAN_MODULE_NAME);
-#endif
       }
       else
       {
-#ifdef CONFIG_HUAWEI_WIFI
-         pr_info("%s:unregister_netdev: will enter\n", WLAN_MODULE_NAME);
-#endif
          unregister_netdev(pWlanDev);
-#ifdef CONFIG_HUAWEI_WIFI
-         pr_info("%s:unregister_netdev: exit\n", WLAN_MODULE_NAME);
-#endif
       }
       // note that the pAdapter is no longer valid at this point
       // since the memory has been reclaimed
    }
 
    EXIT();
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_cleanup_adapter: exit\n", WLAN_MODULE_NAME);
-#endif
 }
 
 void hdd_set_pwrparams(hdd_context_t *pHddCtx)
@@ -10149,9 +10112,6 @@ VOS_STATUS hdd_close_all_adapters( hdd_context_t *pHddCtx )
    VOS_STATUS status;
 
    ENTER();
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_close_all_adapters: enter\n", WLAN_MODULE_NAME);
-#endif
    do
    {
       status = hdd_remove_front_adapter( pHddCtx, &pHddAdapterNode );
@@ -10161,9 +10121,6 @@ VOS_STATUS hdd_close_all_adapters( hdd_context_t *pHddCtx )
          vos_mem_free( pHddAdapterNode );
       }
    }while( NULL != pHddAdapterNode && VOS_STATUS_E_EMPTY != status );
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_close_all_adapters: exit\n", WLAN_MODULE_NAME);
-#endif
    EXIT();
 
    return VOS_STATUS_SUCCESS;
@@ -11494,31 +11451,15 @@ void hdd_dump_concurrency_info(hdd_context_t *pHddCtx)
    if (staChannel > 0 && (apChannel > 0 || p2pChannel > 0)) {
        ccMode = (p2pChannel==staChannel||apChannel==staChannel) ? "SCC" : "MCC";
    }
-#ifdef CONFIG_HUAWEI_WIFI
-   hddLog(VOS_TRACE_LEVEL_INFO, "wlan(%d) " HWMAC_ADDRESS_STR " %s",
-                staChannel, HWMAC_ADDR_ARRAY(staBssid), ccMode);
-
-#else
    hddLog(VOS_TRACE_LEVEL_ERROR, "wlan(%d) " MAC_ADDRESS_STR " %s",
 	  staChannel, MAC_ADDR_ARRAY(staBssid), ccMode);
-#endif
    if (p2pChannel > 0) {
-#ifdef CONFIG_HUAWEI_WIFI
-       hddLog(VOS_TRACE_LEVEL_ERROR, "p2p-%s(%d) " HWMAC_ADDRESS_STR,
-                     p2pMode, p2pChannel, HWMAC_ADDR_ARRAY(p2pBssid));
-#else
        hddLog(VOS_TRACE_LEVEL_ERROR, "p2p-%s(%d) " MAC_ADDRESS_STR,
                      p2pMode, p2pChannel, MAC_ADDR_ARRAY(p2pBssid));
-#endif
    }
    if (apChannel > 0) {
-#ifdef CONFIG_HUAWEI_WIFI
-       hddLog(VOS_TRACE_LEVEL_ERROR, "AP(%d) " HWMAC_ADDRESS_STR,
-                     apChannel, HWMAC_ADDR_ARRAY(apBssid));
-#else
        hddLog(VOS_TRACE_LEVEL_ERROR, "AP(%d) " MAC_ADDRESS_STR,
                      apChannel, MAC_ADDR_ARRAY(apBssid));
-#endif
    }
 
    if (p2pChannel > 0 && apChannel > 0) {
@@ -12202,9 +12143,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    hdd_adapter_list_node_t *pAdapterNode = NULL, *pNext = NULL;
 
    ENTER();
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_wlan_exit: enter \n", WLAN_MODULE_NAME);
-#endif
 
    if (VOS_MONITOR_MODE == hdd_get_conparam())
    {
@@ -12214,9 +12152,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    }
    else if (VOS_FTM_MODE != hdd_get_conparam())
    {
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: wlan_hdd_restart_deinit:  will enter\n", WLAN_MODULE_NAME);
-#endif
       // Unloading, restart logic is no more required.
       wlan_hdd_restart_deinit(pHddCtx);
 
@@ -12234,9 +12169,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
       wlan_hdd_tdls_set_mode(pHddCtx, eTDLS_SUPPORT_DISABLED, FALSE,
                              HDD_SET_TDLS_MODE_SOURCE_USER);
 #endif
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: hdd_get_front_adapter: will enter \n", WLAN_MODULE_NAME);
-#endif
       vosStatus = hdd_get_front_adapter ( pHddCtx, &pAdapterNode );
       while (NULL != pAdapterNode && VOS_STATUS_E_EMPTY != vosStatus)
       {
@@ -12247,9 +12179,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
              * not be called on that interface
              */
             hddLog(VOS_TRACE_LEVEL_INFO, FL("Disabling queues"));
-#ifdef CONFIG_HUAWEI_WIFI
-            pr_info("%s: netif_tx_disable : will enter \n", WLAN_MODULE_NAME);
-#endif
             netif_tx_disable(pAdapter->dev);
 
             /* Mark the interface status as "down" for outside world */
@@ -12265,9 +12194,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
 #ifdef FEATURE_WLAN_TDLS
             mutex_unlock(&pHddCtx->tdls_lock);
 #endif
-#ifdef CONFIG_HUAWEI_WIFI
-            pr_info("%s: vos_flush_delayed_work : will enter \n", WLAN_MODULE_NAME);
-#endif
             vos_flush_delayed_work(&pHddCtx->scan_ctxt.scan_work);
 
             wlan_hdd_init_deinit_defer_scan_context(&pHddCtx->scan_ctxt);
@@ -12278,19 +12204,10 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
             {
                 if (WLAN_HDD_INFRA_STATION ==  pAdapter->device_mode ||
                     WLAN_HDD_P2P_CLIENT == pAdapter->device_mode) {
-#ifdef CONFIG_HUAWEI_WIFI
-                pr_info("%s: wlan_hdd_cfg80211_deregister_frames : will enter \n", WLAN_MODULE_NAME);
-#endif
                     wlan_hdd_cfg80211_deregister_frames(pAdapter);
 		}
 
-#ifdef CONFIG_HUAWEI_WIFI
-                pr_info("%s: hdd_UnregisterWext : will enter \n", WLAN_MODULE_NAME);
-#endif
                 hdd_UnregisterWext(pAdapter->dev);
-#ifdef CONFIG_HUAWEI_WIFI
-                pr_info("%s: hdd_UnregisterWext : exit \n", WLAN_MODULE_NAME);
-#endif
             }
 
          }
@@ -12327,11 +12244,7 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    }
    else
    {
-#ifdef CONFIG_HUAWEI_WIFI
-      hddLog(VOS_TRACE_LEVEL_ERROR,"%s: FTM MODE",__func__);
-#else
       hddLog(VOS_TRACE_LEVEL_INFO,"%s: FTM MODE",__func__);
-#endif
       if (pHddCtx->ftm.ftm_state == WLAN_FTM_STARTING)
       {
          INIT_COMPLETION(pHddCtx->ftm.startCmpVar);
@@ -12345,15 +12258,9 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
               "%s: timedout on ftmStartCmpVar fatal error", __func__);
          }
       }
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: wlan_hdd_ftm_close: will enter\n", WLAN_MODULE_NAME);
-#endif
       wlan_hdd_ftm_close(pHddCtx);
       goto free_hdd_ctx;
    }
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hddDeregisterPmOps: will enter\n", WLAN_MODULE_NAME);
-#endif
    /* DeRegister with platform driver as client for Suspend/Resume */
    vosStatus = hddDeregisterPmOps(pHddCtx);
    if ( !VOS_IS_STATUS_SUCCESS( vosStatus ) )
@@ -12361,9 +12268,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
       hddLog(VOS_TRACE_LEVEL_FATAL,"%s: hddDeregisterPmOps failed",__func__);
       VOS_ASSERT(0);
    }
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hddDevTmUnregisterNotifyCallback: will enter\n", WLAN_MODULE_NAME);
-#endif
    vosStatus = hddDevTmUnregisterNotifyCallback(pHddCtx);
    if ( !VOS_IS_STATUS_SUCCESS( vosStatus ) )
    {
@@ -12405,9 +12309,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    vos_set_snoc_high_freq_voting(false);
 
    vos_timer_destroy(&pHddCtx->tdls_source_timer);
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: sme_DisablePowerSave: will enter\n", WLAN_MODULE_NAME);
-#endif
    //Disable IMPS/BMPS as we do not want the device to enter any power
    //save mode during shutdown
    sme_DisablePowerSave(pHddCtx->hHal, ePMC_IDLE_MODE_POWER_SAVE);
@@ -12473,18 +12374,12 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
       sme_PreClose(pHddCtx->hHal);
    }
    hdd_debugfs_exit(pHddCtx);
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: unregister_inet6addr_notifier: will enter\n", WLAN_MODULE_NAME);
-#endif
 #ifdef WLAN_NS_OFFLOAD
    hddLog(LOG1, FL("Unregister IPv6 notifier"));
    unregister_inet6addr_notifier(&pHddCtx->ipv6_notifier);
 #endif
    hddLog(LOG1, FL("Unregister IPv4 notifier"));
    unregister_inetaddr_notifier(&pHddCtx->ipv4_notifier);
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: unregister_netdevice_notifier: will enter\n", WLAN_MODULE_NAME);
-#endif
    // Unregister the Net Device Notifier
    unregister_netdevice_notifier(&hdd_netdev_notifier);
    
@@ -12542,9 +12437,6 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    //Close VOSS
    //This frees pMac(HAL) context. There should not be any call that requires pMac access after this.
    vos_close(pVosContext);
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: vos_watchdog_close: will enter\n", WLAN_MODULE_NAME);
-#endif
    //Close Watchdog
    if(pHddCtx->cfg_ini->fIsLogpEnabled)
       vos_watchdog_close(pVosContext);
@@ -12572,21 +12464,12 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
 #ifdef WLAN_FEATURE_RMC
    hdd_close_cesium_nl_sock();
 #endif /* WLAN_FEATURE_RMC */
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_close_all_adapters: will enter\n", WLAN_MODULE_NAME);
-#endif
    hdd_close_all_adapters( pHddCtx );
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: vos_flush_delayed_work: will enter\n", WLAN_MODULE_NAME);
-#endif
    vos_flush_delayed_work(&pHddCtx->spoof_mac_addr_work);
    vos_flush_delayed_work(&pHddCtx->ecsa_chan_change_work);
    vos_flush_work(&pHddCtx->sap_start_work);
 
 free_hdd_ctx:
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: free_riva_power_on_lock: will enter\n", WLAN_MODULE_NAME);
-#endif
    /* free the power on lock from platform driver */
    if (free_riva_power_on_lock("wlan"))
    {
@@ -12611,14 +12494,8 @@ free_hdd_ctx:
    if (!(VOS_FTM_MODE == hdd_get_conparam() ||
             VOS_MONITOR_MODE == hdd_get_conparam()))
    {
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: wiphy_unregister: will enter\n", WLAN_MODULE_NAME);
-#endif
       wiphy_unregister(wiphy) ;
       hdd_wlan_free_wiphy_channels(wiphy);
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: wiphy_unregister: exit\n", WLAN_MODULE_NAME);
-#endif
    }
    wiphy_free(wiphy) ;
    if (hdd_is_ssr_required())
@@ -12628,139 +12505,7 @@ free_hdd_ctx:
        msleep(5000);
    }
    hdd_set_ssr_required (VOS_FALSE);
-#ifdef CONFIG_HUAWEI_WIFI
-   pr_info("%s: hdd_wlan_exit: exit \n", WLAN_MODULE_NAME);
-#endif
 }
-
-#ifdef CONFIG_HUAWEI_WIFI
-/**---------------------------------------------------------------------------
-
-  \brief wmic_ether_aton() -
-
-   This function convert the mac address
-
-  \param  orig - the original string of mac.
-              eth-  the mac string after convert
-  --------------------------------------------------------------------------*/
-static int wmic_ether_aton(const char *orig, unsigned char *eth)
-{
-    const char *bufp;
-    int i = 0;
-
-    for(bufp = orig; *bufp != '\0'; ++bufp)
-    {
-        unsigned int val;
-        unsigned char c;
-
-        c = *bufp++;
-
-        if (c >= '0' && c <= '9')
-        {
-            val = c - '0';
-        }
-        else if (c >= 'a' && c <= 'f')
-        {
-            val = c - 'a' + 10;
-        }
-        else if (c >= 'A' && c <= 'F')
-        {
-            val = c - 'A' + 10;
-        }
-        else
-        {
-            hddLog(VOS_TRACE_LEVEL_ERROR, "%s: MAC value is invalid\n", __func__);
-            break;
-        }
-
-        val <<= 4;
-        c = *bufp++;
-        if (c >= '0' && c <= '9')
-        {
-            val |= c - '0';
-        }
-        else if (c >= 'a' && c <= 'f')
-        {
-            val |= c - 'a' + 10;
-        }
-        else if (c >= 'A' && c <= 'F')
-        {
-            val |= c - 'A' + 10;
-        }
-        else
-        {
-            hddLog(VOS_TRACE_LEVEL_ERROR, "%s: MAC value is invalid\n", __func__);
-            break;
-        }
-
-        eth[i] = (unsigned char) (val & 0377);
-        if(++i == ETHER_ADDR_LEN)
-        {
-            /* That's it.  Any trailing junk? */
-            c = *bufp;
-            if ((c != '\0') && (c != 0x20) && (c != 0x0a) && (c != 0x0d))
-            {
-                hddLog(VOS_TRACE_LEVEL_ERROR, "wmic_ether_aton end char is not correct [%c:0x%x]\n", c, c);
-                return 0;
-            }
-            return 1;
-        }
-        c = *bufp;
-        if (c != ':')
-        {
-            hddLog(VOS_TRACE_LEVEL_ERROR, "wmic_ether_aton: c[%c:0x%x] is not :\n", c,c);
-            break;
-        }
-    }
-    return 0;
-}
-
-/**---------------------------------------------------------------------------
-
-  \brief wcn_get_mac_address() -
-
-   This function call wmic_ether_aton to convert the mac address
-
-  \param  orig - the original string of mac.
-              eth-  the mac string after convert
-  --------------------------------------------------------------------------*/
-static  VOS_STATUS wcn_get_mac_address(unsigned char * orgstr, unsigned char *mac)
-{
-    unsigned char mac_p[ETHER_ADDR_LEN] = {0};
-    struct ether_addr *mac_addr = NULL;
-
-    mac_addr = (struct ether_addr *)mac_p;
-
-    if (strlen(orgstr))
-    {
-        /* convert mac address */
-        hddLog(VOS_TRACE_LEVEL_INFO, "%s: mac_param is %s\n", __func__, orgstr);
-
-        if (!wmic_ether_aton(orgstr, (unsigned char *)mac_p)) {
-            hddLog(VOS_TRACE_LEVEL_ERROR, "%s: convert mac value fail\n", __func__);
-            return VOS_STATUS_E_FAILURE;
-        }
-
-        /* the converted mac address */
-        hddLog(VOS_TRACE_LEVEL_INFO,
-		  "%s: converted mac value is %02x:%02x:%02x:%02x:%02x:%02x\n",
-          __func__,
-          mac_p[0], mac_p[1], mac_p[2],
-          mac_p[3], mac_p[4], mac_p[5]);
-
-        /* Update MAC address into RAM */
-        //_dhd_set_mac_address(dhd, ifidx, mac_addr);
-        memcpy(mac, mac_addr, ETHER_ADDR_LEN);
-
-        return VOS_STATUS_SUCCESS;
-    }
-    else
-    {
-        hddLog(VOS_TRACE_LEVEL_ERROR, "Warning %s: mac_param is NULL \n", __func__);
-        return VOS_STATUS_E_FAILURE;
-    }
-}
-#endif
 
 /**---------------------------------------------------------------------------
 
@@ -12779,29 +12524,6 @@ static VOS_STATUS hdd_update_config_from_nv(hdd_context_t* pHddCtx)
    v_MACADDR_t macFromNV[VOS_MAX_CONCURRENCY_PERSONA];
    v_U8_t      macLoop;
 
-#ifdef CONFIG_HUAWEI_WIFI
-   memset(macFromNV, 0, sizeof(macFromNV));
-   status = wcn_get_mac_address(mac_param, (v_U8_t *)&macFromNV[0].bytes[0]);
-   if (status == VOS_STATUS_SUCCESS)
-   {
-      /*p2p mac is converted from station mac */
-      memcpy((v_U8_t *)&macFromNV[1].bytes[0],
-         (v_U8_t *)&macFromNV[0].bytes[0],
-         ETHER_ADDR_LEN);
-
-      macFromNV[1].bytes[0] |= (unsigned char)0x02;
-
-      /*set array[2] as array[0], and set array[3] as array[1] */
-      memcpy((v_U8_t *)&macFromNV[2].bytes[0],
-         (v_U8_t *)&macFromNV[0].bytes[0],
-         ETHER_ADDR_LEN);
-      memcpy((v_U8_t *)&macFromNV[3].bytes[0],
-         (v_U8_t *)&macFromNV[1].bytes[0],
-         ETHER_ADDR_LEN);
-   }
-   else
-   {
-#endif
    /*If the NV is valid then get the macaddress from nv else get it from qcom_cfg.ini*/
    status = vos_nv_getValidity(VNV_FIELD_IMAGE, &itemIsValid);
    if(status != VOS_STATUS_SUCCESS)
@@ -12821,15 +12543,6 @@ static VOS_STATUS hdd_update_config_from_nv(hdd_context_t* pHddCtx)
           * INI MAC value will be used for MAC setting */
          hddLog(VOS_TRACE_LEVEL_ERROR," vos_nv_readMacAddress() failed");
             return VOS_STATUS_E_FAILURE;
-#ifdef CONFIG_HUAWEI_WIFI
-        }
-    }
-    else
-    {
-        hddLog(VOS_TRACE_LEVEL_ERROR, "NV ITEM, MAC Not valid");
-        return VOS_STATUS_E_FAILURE;
-    }
-#endif
         }
 
       /* If first MAC is not valid, treat all others are not valid
@@ -12857,15 +12570,12 @@ static VOS_STATUS hdd_update_config_from_nv(hdd_context_t* pHddCtx)
                    VOS_MAC_ADDR_SIZE);
          }
       }
-#ifdef CONFIG_HUAWEI_WIFI
-#else
    }
    else
    {
       hddLog(VOS_TRACE_LEVEL_ERROR, "NV ITEM, MAC Not valid");
       return VOS_STATUS_E_FAILURE;
    }
-#endif
 
    return VOS_STATUS_SUCCESS;
 }
@@ -13747,10 +13457,7 @@ int hdd_wlan_startup(struct device *dev )
 #endif
    int ret;
    struct wiphy *wiphy;
-#ifdef CONFIG_HUAWEI_WIFI
-#else
    v_MACADDR_t mac_addr;
-#endif
 
    ENTER();
    /*
@@ -14096,9 +13803,6 @@ int hdd_wlan_startup(struct device *dev )
       hddLog(VOS_TRACE_LEVEL_FATAL,"%s: config update failed",__func__ );
       goto err_vosclose;
    }
-#ifdef CONFIG_HUAWEI_WIFI
-    if (VOS_STATUS_SUCCESS != hdd_update_config_from_nv(pHddCtx))
-#else
    // Get mac addr from platform driver
    ret = wcnss_get_wlan_mac_address((char*)&mac_addr.bytes);
 
@@ -14124,7 +13828,6 @@ int hdd_wlan_startup(struct device *dev )
       }
    }
    else if (VOS_STATUS_SUCCESS != hdd_update_config_from_nv(pHddCtx))
-#endif
    {
       // Apply the NV to cfg.dat
       /* Prima Update MAC address only at here */
@@ -14786,36 +14489,6 @@ success:
    return 0;
 }
 
-#ifdef CONFIG_HUAWEI_WIFI
-void wcn_set_debug_level(char *param)
-{
-    unsigned int module_level[MOD_DEBUG_PARAMLEN-1] = {255};
-    int i = 0;
-
-    for (i = 0; i<MOD_DEBUG_PARAMLEN-1; i++) {
-        if (('0' <= param[i]) && ('9' >= param[i])) {
-            module_level[i] = param[i] - '0';
-            wlan_log_debug("%s module_level[%d]:%d;param[%d]:%c;\n",__func__,i,module_level[i],i,param[i]);
-            vos_trace_setValue( i, module_level[i], 1);
-        } else if (('a' <= param[i]) && ('f' >= param[i])) {
-            module_level[i] = param[i] - 'a' + 10;
-            wlan_log_debug("%s module_level[%d]:%d;param[%d]:%c;\n",__func__,i,module_level[i],i,param[i]);
-            vos_trace_setValue( i, module_level[i], 1);
-        } else if (('A' <= param[i]) && ('F' >= param[i])) {
-            module_level[i] = param[i] - 'A' + 10;
-            wlan_log_debug("%s module_level[%d]:%d;param[%d]:%c;\n",__func__,i,module_level[i],i,param[i]);
-            vos_trace_setValue( i, module_level[i], 1);
-        } else {
-            wlan_log_debug("%s use the default debug level module_level[%d]:%d;\n",__func__,i,module_level[i]);
-            vos_trace_setValue( i, VOS_TRACE_LEVEL_FATAL, 1);
-            vos_trace_setValue( i, VOS_TRACE_LEVEL_ERROR, 1);
-        }
-    }
-
-    return;
-}
-#endif
-
 /**---------------------------------------------------------------------------
 
   \brief hdd_driver_init() - Core Driver Init Function
@@ -14846,10 +14519,6 @@ static int hdd_driver_init( void)
 #endif
 
    ENTER();
-
-#ifdef CONFIG_HUAWEI_WIFI
-   wcn_set_debug_level(module_debug_param);
-#endif
 
    vos_wake_lock_init(&wlan_wake_lock, "wlan");
 
@@ -15037,20 +14706,11 @@ static void hdd_driver_exit(void)
    }
    else
    {
-#ifdef CONFIG_HUAWEI_WIFI
-       pr_info("%s: hdd_driver_exit: other mode, will rtnl_lock \n", WLAN_MODULE_NAME);
-#endif
       /* We wait for active entry threads to exit from driver
        * by waiting until rtnl_lock is available.
        */
       rtnl_lock();
-#ifdef CONFIG_HUAWEI_WIFI
-       pr_info("%s: rtnl_lock exit\n", WLAN_MODULE_NAME);
-#endif
       rtnl_unlock();
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: INIT_COMPLETION: will enter\n", WLAN_MODULE_NAME);
-#endif
       INIT_COMPLETION(pHddCtx->ssr_comp_var);
       if ((pHddCtx->isLogpInProgress) && (FALSE ==
                   vos_is_wlan_in_badState(VOS_MODULE_ID_HDD, NULL)))
@@ -15066,9 +14726,6 @@ static void hdd_driver_exit(void)
               VOS_BUG(0);
          }
       }
-#ifdef CONFIG_HUAWEI_WIFI
-      pr_info("%s: vos_set_load_unload_in_progress: will enter\n", WLAN_MODULE_NAME);
-#endif
       pHddCtx->isLoadUnloadInProgress = WLAN_HDD_UNLOAD_IN_PROGRESS;
       vos_set_load_unload_in_progress(VOS_MODULE_ID_VOSS, TRUE);
 

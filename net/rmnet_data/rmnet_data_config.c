@@ -1244,16 +1244,9 @@ int rmnet_config_notify_cb(struct notifier_block *nb,
 	case NETDEV_UNREGISTER_FINAL:
 	case NETDEV_UNREGISTER:
 		trace_rmnet_unregister_cb_entry(dev);
-#ifdef CONFIG_HUAWEI_WIFI
-		LOGH("Kernel is trying to unregister %s, event = %lu", dev->name, event);
-#else
 		LOGH("Kernel is trying to unregister %s", dev->name);
-#endif
 		rmnet_force_unassociate_device(dev);
 		trace_rmnet_unregister_cb_exit(dev);
-#ifdef CONFIG_HUAWEI_WIFI
-		LOGH("Kernel is unregistered %s, %lu", dev->name, event);
-#endif
 		break;
 
 	default:

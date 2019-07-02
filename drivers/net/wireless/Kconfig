@@ -295,11 +295,6 @@ config WCNSS_REGISTER_DUMP_ON_BITE
 	  register access failures. So this feature is to enable/disable the
 	  register dump on WCNSS WDOG bite.
 
-config HUAWEI_WIFI
-	tristate "wifi chip driver"
-	help
-	  use huawei feature
-
 config WCNSS_MEM_PRE_ALLOC
 	tristate "WCNSS pre-alloc memory support"
 	---help---

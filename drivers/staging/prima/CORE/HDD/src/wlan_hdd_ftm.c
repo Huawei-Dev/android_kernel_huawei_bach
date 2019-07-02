@@ -108,14 +108,6 @@
 
 #define QWLAN_TXFIR_CFG_DPD_BYPASS_MASK     0x8
 
-#ifdef CONFIG_HUAWEI_WIFI
-#ifdef MODULE
-#define WLAN_MODULE_NAME  module_name(THIS_MODULE)
-#else
-#define WLAN_MODULE_NAME  "wlan"
-#endif
-#endif
-
 typedef struct {
    tANI_U32 tableSize;                      /* Whole NV Table Size */
    tANI_U32 chunkSize;                      /* Current Chunk Size < 2K */
@@ -1616,9 +1608,6 @@ int wlan_hdd_ftm_close(hdd_context_t *pHddCtx)
 
     hdd_adapter_t *pAdapter = hdd_get_adapter(pHddCtx,WLAN_HDD_FTM);
     ENTER();
-#ifdef CONFIG_HUAWEI_WIFI
-    pr_info("%s: wlan_hdd_ftm_close: enter: ftm_state = %d\n", WLAN_MODULE_NAME, (int)pHddCtx->ftm.ftm_state);
-#endif
     if(pAdapter == NULL)
     {
         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL, "%s:pAdapter is NULL",__func__);
@@ -1638,9 +1627,6 @@ int wlan_hdd_ftm_close(hdd_context_t *pHddCtx)
     {
         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
                   "%s: Ftm has been started. stopping ftm", __func__);
-#ifdef CONFIG_HUAWEI_WIFI
-        pr_info("%s: wlan_ftm_stop: will enter\n", WLAN_MODULE_NAME);
-#endif
         wlan_ftm_stop(pHddCtx);
         pHddCtx->ftm.ftm_state = WLAN_FTM_STOPPED;
     }
@@ -1653,9 +1639,6 @@ int wlan_hdd_ftm_close(hdd_context_t *pHddCtx)
 
     //TODO----------
     //Deregister the device with the kernel
-#ifdef CONFIG_HUAWEI_WIFI
-    pr_info("%s: hdd_UnregisterWext: will enter\n", WLAN_MODULE_NAME);
-#endif
     hdd_UnregisterWext(pAdapter->dev);
 
 #if 0
@@ -1675,9 +1658,6 @@ int wlan_hdd_ftm_close(hdd_context_t *pHddCtx)
     }
 
     //Close VOSS
-#ifdef CONFIG_HUAWEI_WIFI
-    pr_info("%s: wlan_ftm_vos_close: will enter\n", WLAN_MODULE_NAME);
-#endif
     wlan_ftm_vos_close(vosContext);
     hdd_close_all_adapters( pHddCtx );
     vosStatus = vos_event_destroy(&pHddCtx->ftm.ftm_vos_event);
@@ -4574,195 +4554,6 @@ static VOS_STATUS wlan_ftm_priv_get_txpower(hdd_adapter_t *pAdapter,v_U16_t *pTx
      return status;
 }
 
-#ifdef CONFIG_HUAWEI_WIFI
-
-static int get_fem_check_threshold(v_U16_t pTxPwr_tmp)
-{
-    int fem_pd_low_threshold_len = -1;
-    int fem_pd_high_threshold_len = -1;
-    struct device_node *dp = NULL;
-    const char *fem_pd_low_threshold = NULL;
-    const char *fem_pd_high_threshold = NULL;
-    static int fem_pd_low_threshold_tmp = -1;
-    static int fem_pd_high_threshold_tmp = -1;
-    static int get_flag = -1;
-
-    if (get_flag == -1) {
-        dp = of_find_node_by_path("/huawei_wifi_info");
-        if (!dp) {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s:device is not available!\n",__func__);
-            return FEM_THRESHOLD_GET_FAIL;
-        }
-
-        fem_pd_low_threshold = of_get_property(dp,"wifi,fem_check_low_pd_threshold", &fem_pd_low_threshold_len);
-        if (fem_pd_low_threshold != NULL) {
-            fem_pd_low_threshold_tmp = (v_U16_t)simple_strtoul(fem_pd_low_threshold, NULL, 10);
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem_pd_low_threshold_tmp = %d",
-			     __func__,fem_pd_low_threshold_tmp);
-        } else {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s get get_fem_check_threshold failed(low);\n", __func__);
-            return FEM_THRESHOLD_GET_FAIL;
-        }
-
-        fem_pd_high_threshold = of_get_property(dp,"wifi,fem_check_high_pd_threshold", &fem_pd_high_threshold_len);
-        if (fem_pd_high_threshold != NULL) {
-              fem_pd_high_threshold_tmp = (v_U16_t)simple_strtoul(fem_pd_high_threshold, NULL, 10);
-              VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem_pd_high_threshold_tmp = %d",
-			      __func__,fem_pd_high_threshold_tmp);
-        } else {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: get get_fem_check_threshold failed(high)", __func__);
-            return FEM_THRESHOLD_GET_FAIL;
-        }
-        get_flag = 0;
-    }
-
-    if (pTxPwr_tmp < fem_pd_low_threshold_tmp) {
-         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem test fail : the fem rawadc value too min ##", __func__);
-         return FEM_PDET_TOO_LOW;
-    } else if (pTxPwr_tmp > fem_pd_high_threshold_tmp) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem test fail : the fem rawadc value too max ##", __func__);
-        return FEM_PDET_TOO_HIGH;
-    } else {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem test ok : the fem rawadc value is normal ##", __func__);
-        return FEM_PDET_IS_VALID;
-    }
-}
-
-static int get_fem_check_5g_threshold(v_U16_t pTxPwr_tmp)
-{
-    int fem_pd_5g_low_threshold_len = -1;
-    int fem_pd_5g_high_threshold_len = -1;
-    struct device_node *dp = NULL;
-    const char *fem_pd_5g_low_threshold = NULL;
-    const char *fem_pd_5g_high_threshold = NULL;
-    static int fem_pd_5g_low_threshold_tmp = -1;
-    static int fem_pd_5g_high_threshold_tmp = -1;
-    static int get_flag = -1;
-
-    if (get_flag == -1)
-    {
-        dp = of_find_node_by_path("/huawei_wifi_info");
-        if (!dp) {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s:device is not available!\n",__func__);
-            return FEM_THRESHOLD_GET_FAIL;
-        }
-
-        fem_pd_5g_low_threshold = of_get_property(dp,"wifi,fem_check_5g_low_pd_threshold", &fem_pd_5g_low_threshold_len);
-        if (fem_pd_5g_low_threshold != NULL) {
-            fem_pd_5g_low_threshold_tmp = (v_U16_t)simple_strtoul(fem_pd_5g_low_threshold, NULL, 10);
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem_check_5g_low_pd_threshold = %d",
-                 __func__,fem_pd_5g_low_threshold_tmp);
-        } else {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s get get_fem_check_5g_threshold failed(low);\n", __func__);
-            return FEM_THRESHOLD_GET_FAIL;
-        }
-
-        fem_pd_5g_high_threshold = of_get_property(dp,"wifi,fem_check_5g_high_pd_threshold", &fem_pd_5g_high_threshold_len);
-        if (fem_pd_5g_high_threshold != NULL) {
-              fem_pd_5g_high_threshold_tmp = (v_U16_t)simple_strtoul(fem_pd_5g_high_threshold, NULL, 10);
-              VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: fem_check_5g_high_pd_threshold = %d",
-                   __func__,fem_pd_5g_high_threshold_tmp);
-        } else {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: get get_fem_check_5g_threshold failed(high)", __func__);
-            return FEM_THRESHOLD_GET_FAIL;
-        }
-        get_flag = 0;
-    }
-    if(pTxPwr_tmp < fem_pd_5g_low_threshold_tmp) {
-         VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: 5G fem test fail : the fem rawadc value too min ##", __func__);
-         return FEM_PDET_TOO_LOW;
-    } else if (pTxPwr_tmp > fem_pd_5g_high_threshold_tmp) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: 5G fem test fail : the fem rawadc value too max ##", __func__);
-        return FEM_PDET_TOO_HIGH;
-    } else {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,"%s: 5G fem test ok : the fem rawadc value is normal ##", __func__);
-        return FEM_PDET_IS_VALID;
-    }
-}
-
-static VOS_STATUS wlan_ftm_priv_get_txpower_raw_adc(hdd_adapter_t *pAdapter,v_U16_t *pTxPwr,int fem_type)
-{
-    uPttMsgs *pMsgBody;
-    VOS_STATUS status;
-    v_U16_t pTxPwr_tmp;
-    long ret;
-    hdd_context_t *pHddCtx = (hdd_context_t *)pAdapter->pHddCtx;
-
-    if (pHddCtx->ftm.ftm_state != WLAN_FTM_STARTED) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                   "%s:Ftm has not started. Please start the ftm. ", __func__);
-        return VOS_STATUS_E_FAILURE;
-    }
-
-    if (NULL == pMsgBuf) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                   "%s:pMsgBuf is NULL", __func__);
-        return VOS_STATUS_E_NOMEM;
-    }
-
-    vos_mem_set(pMsgBuf, sizeof(tPttMsgbuffer), 0);
-    init_completion(&pHddCtx->ftm.ftm_comp_var);
-    pMsgBuf->msgId = PTT_MSG_GET_TX_POWER_REPORT;
-    pMsgBuf->msgBodyLength = sizeof(tMsgPttGetTxPowerReport) + PTT_HEADER_LENGTH;
-
-    pMsgBody = &pMsgBuf->msgBody;
-
-    status = wlan_ftm_postmsg((v_U8_t*)pMsgBuf,pMsgBuf->msgBodyLength);
-
-    if (status != VOS_STATUS_SUCCESS) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                   "%s:wlan_ftm_postmsg failed", __func__);
-        status = VOS_STATUS_E_FAILURE;
-        goto done;
-    }
-
-    ret = wait_for_completion_interruptible_timeout(&pHddCtx->ftm.ftm_comp_var,
-                                 msecs_to_jiffies(WLAN_FTM_COMMAND_TIME_OUT));
-    if (0 >= ret ) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
-                   FL("wait on ftm_comp_var failed %ld"), ret);
-    }
-
-    if (pMsgBuf->msgResponse != PTT_STATUS_SUCCESS) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                   "%s: PTT_MSG_GET_TX_POWER_REPORT failed", __func__);
-        status = VOS_STATUS_E_FAILURE;
-        goto done;
-    }
-    pTxPwr_tmp = pMsgBody->GetTxPowerReport.txChains[0].rawAdc;
-
-    if ((int)fem_check_flag == fem_type) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                       "%s: PTT_MSG_GET_TX_POWER_REPORT, pMsgBody->GetTxPowerReport.txChains[0].gain=%d, pMsgBody->GetTxPowerReport.txChains[0].adc =%d,pMsgBody->GetTxPowerReport.txChains[0].rawAdc =%d\n", 
-                       __func__,
-                       pMsgBody->GetTxPowerReport.txChains[0].gain,
-                       pMsgBody->GetTxPowerReport.txChains[0].adc,
-                       pMsgBody->GetTxPowerReport.txChains[0].rawAdc
-        );
-
-        *pTxPwr= get_fem_check_threshold(pTxPwr_tmp);
-    } else if ((int)fem_check_5g_flag == fem_type) {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                       "%s: PTT_MSG_GET_TX5G_POWER_REPORT, pMsgBody->GetTxPowerReport.txChains[0].gain=%d, pMsgBody->GetTxPowerReport.txChains[0].adc =%d,pMsgBody->GetTxPowerReport.txChains[0].rawAdc =%d\n", 
-                       __func__,
-                       pMsgBody->GetTxPowerReport.txChains[0].gain,
-                       pMsgBody->GetTxPowerReport.txChains[0].adc,
-                       pMsgBody->GetTxPowerReport.txChains[0].rawAdc
-        );
-
-        *pTxPwr = get_fem_check_5g_threshold(pTxPwr_tmp);
-    } else {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                       "%s: invalid fem_type: %d\n", __func__, fem_type);
-        status = VOS_STATUS_E_FAILURE;
-        goto done;
-    }
- done:
-
-     return status;
-}
-#endif
-
 /**---------------------------------------------------------------------------
 
   \brief wlan_ftm_priv_get_txrate() -
@@ -5541,30 +5332,6 @@ static int __iw_ftm_setnone_getint(struct net_device *dev, struct iw_request_inf
            }
            break;
         }
-#ifdef CONFIG_HUAWEI_WIFI
-        case WE_GET_TX_POWER_RAW_ADC:
-        {
-           status = wlan_ftm_priv_get_txpower_raw_adc(pAdapter,(v_U16_t*)value,(int)fem_check_flag);
-
-           if(status != VOS_STATUS_SUCCESS)
-           {
-              hddLog(VOS_TRACE_LEVEL_FATAL,"wlan_ftm_priv_get_txpower_raw_adc Failed =%d",status);
-              ret = -EINVAL;
-           }
-           break;
-        }
-        case WE_GET_5G_TX_POWER_RAW_ADC:
-        {
-           status = wlan_ftm_priv_get_txpower_raw_adc(pAdapter,(v_U16_t*)value,(int)fem_check_5g_flag);
-
-           if(status != VOS_STATUS_SUCCESS)
-           {
-              hddLog(VOS_TRACE_LEVEL_FATAL,"wlan_ftm_priv_get_5g_txpower_raw_adc Failed =%d",status);
-              ret = -EINVAL;
-           }
-           break;
-        }
-#endif
         default:
         {
             hddLog(LOGE, "Invalid IOCTL get_value command %d ",value[0]);
@@ -6050,18 +5817,6 @@ static const struct iw_priv_args we_ftm_private_args[] = {
         0,
         IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
         "get_rxpktcnt" },
-
-#ifdef CONFIG_HUAWEI_WIFI
-    {   WE_GET_TX_POWER_RAW_ADC,
-        0,
-        IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
-        "get_tx_rawadc" },
-
-    {   WE_GET_5G_TX_POWER_RAW_ADC,
-        0,
-        IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
-        "get_5gtx_rawadc" },
-#endif
 
     /* handlers for main ioctl */
     {   WLAN_FTM_PRIV_SET_CHAR_GET_NONE,

@@ -157,10 +157,6 @@ safeChannelType safeChannels[NUM_20MHZ_RF_CHANNELS] =
 };
 #endif /* FEATURE_WLAN_CH_AVOID */
 
-#ifdef CONFIG_HUAWEI_WIFI
-static struct kobj_uevent_env env;
-#endif
-
 /*---------------------------------------------------------------------------
  *   Function definitions
  *-------------------------------------------------------------------------*/
@@ -1204,9 +1200,6 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
     v_CONTEXT_t pVosContext = NULL;
     ptSapContext pSapCtx = NULL;
     hdd_config_t *cfg_param;
-#ifdef CONFIG_HUAWEI_WIFI
-    memset(&env,0,sizeof(env));
-#endif
 
     dev = (struct net_device *)usrDataForCallback;
     pHostapdAdapter = netdev_priv(dev);
@@ -1380,9 +1373,6 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
             wrqu.addr.sa_family = ARPHRD_ETHER;
             memcpy(wrqu.addr.sa_data, &pSapEvent->sapevt.sapStationAssocReassocCompleteEvent.staMac, 
                 sizeof(v_MACADDR_t));
-#ifdef CONFIG_HUAWEI_WIFI
-            add_uevent_var(&env,"SOFTAP=STA_JOIN wlan0 qcom %02x:%02x:%02x:%02x:%02x:%02x",MAC_ADDR_ARRAY(wrqu.addr.sa_data));
-#endif
             hddLog(LOG1, " associated "MAC_ADDRESS_STR, MAC_ADDR_ARRAY(wrqu.addr.sa_data));
             we_event = IWEVREGISTERED;
             
@@ -1506,9 +1496,6 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
         case eSAP_STA_DISASSOC_EVENT:
             memcpy(wrqu.addr.sa_data, &pSapEvent->sapevt.sapStationDisassocCompleteEvent.staMac,
                    sizeof(v_MACADDR_t));
-#ifdef CONFIG_HUAWEI_WIFI
-            add_uevent_var(&env,"SOFTAP=STA_LEAVE wlan0 qcom %02x:%02x:%02x:%02x:%02x:%02x",MAC_ADDR_ARRAY(wrqu.addr.sa_data));
-#endif
             hddLog(LOG1, " disassociated "MAC_ADDRESS_STR, MAC_ADDR_ARRAY(wrqu.addr.sa_data));
             if (pSapEvent->sapevt.sapStationDisassocCompleteEvent.reason == eSAP_USR_INITATED_DISASSOC)
                 hddLog(LOG1," User initiated disassociation");
@@ -1519,9 +1506,6 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
             if (!VOS_IS_STATUS_SUCCESS(vos_status))
             {
                 VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR, FL("ERROR: HDD Failed to find sta id!!"));
-#ifdef CONFIG_HUAWEI_WIFI
-                kobject_uevent_env(&(dev->dev.kobj),KOBJ_CHANGE,env.envp);
-#endif
                 return VOS_STATUS_E_FAILURE;
             }
             hdd_softap_DeregisterSTA(pHostapdAdapter, staId);
@@ -1689,9 +1673,6 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
             goto stopbss;
             return VOS_STATUS_SUCCESS;
     }
-#ifdef CONFIG_HUAWEI_WIFI
-    kobject_uevent_env(&(dev->dev.kobj),KOBJ_CHANGE,env.envp);
-#endif
     wireless_send_event(dev, we_event, &wrqu, (char *)we_custom_event_generic);
     return VOS_STATUS_SUCCESS;
 

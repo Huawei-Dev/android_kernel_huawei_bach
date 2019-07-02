@@ -258,12 +258,7 @@ void vos_trace_msg( VOS_MODULE_ID module, VOS_TRACE_LEVEL level, char *strFormat
 
    // Print the trace message when the desired level bit is set in the module
    // tracel level mask.
-#ifdef CONFIG_HUAWEI_WIFI
-   if ( (gVosTraceInfo[ module ].moduleTraceLevel & VOS_TRACE_LEVEL_TO_MODULE_BITMASK( level ))
-         || (gVosTraceInfo[ module ].moduleTraceLevel & wlan_log_debug_mask ) )
-#else
    if ( gVosTraceInfo[ module ].moduleTraceLevel & VOS_TRACE_LEVEL_TO_MODULE_BITMASK( level ) )
-#endif
    {
       // the trace level strings in an array.  these are ordered in the same order
       // as the trace levels are defined in the enum (see VOS_TRACE_LEVEL) so we

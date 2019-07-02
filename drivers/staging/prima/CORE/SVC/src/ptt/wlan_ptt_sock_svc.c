@@ -125,15 +125,9 @@ int ptt_sock_send_msg_to_app(tAniHdr *wmsg, int radio, int src_mod, int pid, int
        err = nl_srv_bcast(skb);
    }
    if (err) {
-#ifdef CONFIG_HUAWEI_WIFI
-      PTT_TRACE(VOS_TRACE_LEVEL_ERROR,
-         "%s:Failed sending Msg Type [0x%X] to pid[%d], error = %d\n",
-         __func__, be16_to_cpu(wmsg->type), pid, err);
-#else
       PTT_TRACE(VOS_TRACE_LEVEL_INFO,
          "%s:Failed sending Msg Type [0x%X] to pid[%d]\n",
          __func__, be16_to_cpu(wmsg->type), pid);
-#endif
    }
    return err;
 }
@@ -310,13 +304,8 @@ static int ptt_sock_rx_nlink_msg (struct sk_buff * skb)
          ptt_proc_pumac_msg(skb, &wnl->wmsg, radio);
          break;
       case ANI_NL_MSG_PTT: //Message from Quarky GUI
-#ifdef CONFIG_HUAWEI_WIFI
-         PTT_TRACE(VOS_TRACE_LEVEL_ERROR, "%s: Received ANI_NL_MSG_PTT Msg [0x%X]\n",
-            __func__, type);
-#else
          PTT_TRACE(VOS_TRACE_LEVEL_INFO, "%s: Received ANI_NL_MSG_PTT Msg [0x%X]\n",
             __func__, type);
-#endif
          ptt_proc_quarky_msg(wnl, &wnl->wmsg, radio);
          break;
       default:

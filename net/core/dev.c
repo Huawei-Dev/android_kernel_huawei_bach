@@ -6028,9 +6028,6 @@ static void rollback_registered_many(struct list_head *head)
 {
 	struct net_device *dev, *tmp;
 	LIST_HEAD(close_head);
-#ifdef CONFIG_HUAWEI_WIFI
-	pr_err("rollback_registered_many:  enter\n");
-#endif
 	BUG_ON(dev_boot_phase);
 	ASSERT_RTNL();
 
@@ -6074,13 +6071,7 @@ static void rollback_registered_many(struct list_head *head)
 		/* Notify protocols, that we are about to destroy
 		   this device. They should clean all the things.
 		*/
-#ifdef CONFIG_HUAWEI_WIFI
-		pr_err("call_netdevice_notifiers:  will enter\n");
-#endif
 		call_netdevice_notifiers(NETDEV_UNREGISTER, dev);
-#ifdef CONFIG_HUAWEI_WIFI
-		pr_err("call_netdevice_notifiers:  exit\n");
-#endif
 		/*
 		 *	Flush the unicast and multicast chains
 		 */
@@ -6109,9 +6100,6 @@ static void rollback_registered_many(struct list_head *head)
 
 	list_for_each_entry(dev, head, unreg_list)
 		dev_put(dev);
-#ifdef CONFIG_HUAWEI_WIFI
-	pr_err("rollback_registered_many:  exit\n");
-#endif
 }
 
 static void rollback_registered(struct net_device *dev)

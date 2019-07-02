@@ -41,13 +41,8 @@
 #ifdef WLAN_FEATURE_NEIGHBOR_ROAMING
 #include "sme_Api.h"
 
-#ifdef CONFIG_HUAWEI_WIFI
-/* 30 seconds, for WPA, WPA2, CCKM */
-#define CSR_WAIT_FOR_KEY_TIMEOUT_PERIOD     (30 * PAL_TIMER_TO_SEC_UNIT)
-#else
 /* 15 seconds, for WPA, WPA2, CCKM */
 #define CSR_WAIT_FOR_KEY_TIMEOUT_PERIOD     (15 * PAL_TIMER_TO_SEC_UNIT)
-#endif
 /* 120 seconds, for WPS */
 #define CSR_WAIT_FOR_WPS_KEY_TIMEOUT_PERIOD (120 * PAL_TIMER_TO_SEC_UNIT)
 

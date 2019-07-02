@@ -10830,23 +10830,6 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
                                     {
                                        tpSirSetActiveModeSetBncFilterReq pMsg;
                                        pMsg = vos_mem_malloc(sizeof(tSirSetActiveModeSetBncFilterReq));
-#ifdef CONFIG_HUAWEI_WIFI
-                                       if (NULL == pMsg)
-                                            status = eHAL_STATUS_FAILURE;
-                                       else
-                                            status = eHAL_STATUS_SUCCESS;
-                                       if (HAL_STATUS_SUCCESS(status))
-                                       {
-                                            pMsg->messageType = pal_cpu_to_be16((tANI_U16)eWNI_SME_SET_BCN_FILTER_REQ);
-                                            pMsg->length = pal_cpu_to_be16(sizeof(
-                                                 tSirSetActiveModeSetBncFilterReq));
-                                            pMsg->seesionId = sessionId;
-                                            vos_mem_copy(pMsg->bssid,
-                                                 pSession->connectedProfile.bssid,
-                                                 sizeof(tSirMacAddr));
-                                            status = palSendMBMessage(pMac->hHdd, pMsg );
-                                       }
-#else
                                        if (NULL == pMsg)
                                        {
                                            smsLog(pMac, LOGE, FL("vos_mem_malloc failed"));
@@ -10861,7 +10844,6 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
                                            pSession->connectedProfile.bssid,
                                            sizeof(tSirMacAddr));
                                        status = palSendMBMessage(pMac->hHdd, pMsg );
-#endif
                                     }
 #endif
                          /* OBSS SCAN Indication will be sent to Firmware to start OBSS Scan */
@@ -10877,24 +10859,6 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
                                     {
                                          tpSirSmeHT40OBSSScanInd pMsg;
                                          pMsg = vos_mem_malloc(sizeof(tSirSmeHT40OBSSScanInd));
-#ifdef CONFIG_HUAWEI_WIFI
-                                         if (NULL == pMsg)
-                                              status = eHAL_STATUS_FAILURE;
-                                         else
-                                             status = eHAL_STATUS_SUCCESS;
-                                         if (HAL_STATUS_SUCCESS(status))
-                                         {
-                                             pMsg->messageType =
-                                               pal_cpu_to_be16((tANI_U16)eWNI_SME_HT40_OBSS_SCAN_IND);
-                                             pMsg->length =
-                                               pal_cpu_to_be16(sizeof( tSirSmeHT40OBSSScanInd));
-                                             vos_mem_copy(pMsg->peerMacAddr,
-                                                 pSession->connectedProfile.bssid,
-                                                 sizeof(tSirMacAddr));
-                                             status = palSendMBMessage(pMac->hHdd,
-                                                                         pMsg );
-                                         }
-#else
                                          if (NULL == pMsg)
                                          {
                                              smsLog(pMac, LOGE, FL("vos_mem_malloc failed"));
@@ -10910,7 +10874,6 @@ void csrRoamCheckForLinkStatusChange( tpAniSirGlobal pMac, tSirSmeRsp *pSirMsg )
                                                        sizeof(tSirMacAddr));
                                          status = palSendMBMessage(pMac->hHdd,
                                                                      pMsg );
-#endif
                                     }
                                     else
                                     {
