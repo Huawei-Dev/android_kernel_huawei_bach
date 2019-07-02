@@ -280,12 +280,6 @@
 #include <asm/uaccess.h>
 #include <asm/ioctls.h>
 #include <net/busy_poll.h>
-#ifdef CONFIG_HW_WIFIPRO
-#include "wifipro_tcp_monitor.h"
-#endif
-#ifdef CONFIG_HW_WIFI
-#include "wifi_tcp_statistics.h"
-#endif
 
 int sysctl_tcp_fin_timeout __read_mostly = TCP_FIN_TIMEOUT;
 
@@ -430,11 +424,6 @@ void tcp_init_sock(struct sock *sk)
 
 	sk->sk_sndbuf = sysctl_tcp_wmem[1];
 	sk->sk_rcvbuf = sysctl_tcp_rmem[1];
-
-#ifdef CONFIG_HW_WIFI
-	tp->dack_rcv_nxt = 0;
-	tp->dack_seq_num = 0;
-#endif
 
 	local_bh_disable();
 	sock_update_memcg(sk);
@@ -1960,15 +1949,6 @@ EXPORT_SYMBOL(tcp_recvmsg);
 void tcp_set_state(struct sock *sk, int state)
 {
 	int oldstate = sk->sk_state;
-#ifdef CONFIG_HW_WIFIPRO
-    struct inet_sock *inet_temp = inet_sk(sk);
-    unsigned int dest_addr = 0;
-    unsigned int dest_port = 0;
-    if ( NULL != inet_temp) {
-        dest_addr = htonl( inet_temp->inet_daddr );
-        dest_port = htons( inet_temp->inet_dport );
-    }
-#endif
 
 	switch (state) {
 	case TCP_ESTABLISHED:
@@ -1980,10 +1960,6 @@ void tcp_set_state(struct sock *sk, int state)
 		if (oldstate == TCP_CLOSE_WAIT || oldstate == TCP_ESTABLISHED)
 			TCP_INC_STATS(sock_net(sk), TCP_MIB_ESTABRESETS);
 
-#ifdef CONFIG_HW_WIFI
-		if ( oldstate == TCP_ESTABLISHED)
-			wifi_IncrEstabliseRstSegs(sk, 1);
-#endif
 		sk->sk_prot->unhash(sk);
 		if (inet_csk(sk)->icsk_bind_hash &&
 		    !(sk->sk_userlocks & SOCK_BINDPORT_LOCK))
@@ -1998,16 +1974,6 @@ void tcp_set_state(struct sock *sk, int state)
 	 * socket sitting in hash tables.
 	 */
 	sk->sk_state = state;
-#ifdef CONFIG_HW_WIFIPRO
-    if (state == TCP_SYN_SENT) {
-        if (is_wifipro_on && is_mcc_china && wifipro_is_not_local_or_lan_sock(dest_addr)) {
-            if (wifipro_is_google_sock(current, dest_addr)) {
-                sk->wifipro_is_google_sock = 1;
-                WIFIPRO_DEBUG("add a google sock:%s", wifipro_ntoa(dest_addr));
-            }
-        }
-    }
-#endif
 
 #ifdef STATE_TRACE
 	SOCK_DEBUG(sk, "TCP sk=%p, State %s -> %s\n", sk, statename[oldstate], statename[state]);

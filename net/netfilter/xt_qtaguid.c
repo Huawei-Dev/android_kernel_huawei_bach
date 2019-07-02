@@ -37,10 +37,6 @@
 #include "xt_qtaguid_print.h"
 #include "../../fs/proc/internal.h"
 
-#ifdef CONFIG_HW_WIFIPRO
-#include <linux/snmp.h>
-extern void wifipro_update_tcp_statistics(int mib_type, const struct sk_buff *skb, struct sock *from_sk);
-#endif
 /*
  * We only use the xt_socket funcs within a similar context to avoid unexpected
  * return values.
@@ -1229,12 +1225,6 @@ static void iface_stat_update_from_skb(const struct sk_buff *skb,
 		 "type=%d fam=%d proto=%d dir=%d\n",
 		 par->hooknum, __func__, el_dev->name, el_dev->type,
 		 par->family, proto, direction);
-
-#ifdef CONFIG_HW_WIFIPRO
-	if(direction == IFS_TX){
-		wifipro_update_tcp_statistics(WIFIPRO_TCP_MIB_OUTSEGS, skb, NULL);
-	}
-#endif
 
 	spin_lock_bh(&iface_stat_list_lock);
 	entry = get_iface_entry(el_dev->name);

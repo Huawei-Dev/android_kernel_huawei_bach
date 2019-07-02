@@ -320,10 +320,6 @@ struct tcp_sock {
 	 * socket. Used to retransmit SYNACKs etc.
 	 */
 	struct request_sock *fastopen_rsk;
-#ifdef CONFIG_HW_WIFI
-	u32 dack_rcv_nxt; /*client send d-ack with this seq*/
-	u32 dack_seq_num; /*the counts of client send d-ack with this seq continuously*/
-#endif
 #ifdef CONFIG_CHR_NETLINK_MODULE
 	u8 first_data_flag;
 	u8 data_net_flag;
