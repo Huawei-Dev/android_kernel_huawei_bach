@@ -4688,14 +4688,13 @@ static void net_rx_action(struct softirq_action *h)
 		if (unlikely(budget <= 0 || time_after_eq(jiffies, time_limit)))
 			goto softnet_break;
 
-
 		local_irq_enable();
 
 		/* Even though interrupts have been re-enabled, this
-		* access is safe because interrupts can only add new
-		* entries to the tail of this list, and only ->poll()
-		* calls can remove this head entry from the list.
-		*/
+		 * access is safe because interrupts can only add new
+		 * entries to the tail of this list, and only ->poll()
+		 * calls can remove this head entry from the list.
+		 */
 		n = list_first_entry(&sd->poll_list, struct napi_struct, poll_list);
 
 		have = netpoll_poll_lock(n);
