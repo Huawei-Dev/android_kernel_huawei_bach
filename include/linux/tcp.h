@@ -320,10 +320,6 @@ struct tcp_sock {
 	 * socket. Used to retransmit SYNACKs etc.
 	 */
 	struct request_sock *fastopen_rsk;
-#ifdef CONFIG_CHR_NETLINK_MODULE
-	u8 first_data_flag;
-	u8 data_net_flag;
-#endif
 };
 
 enum tsq_flags {
