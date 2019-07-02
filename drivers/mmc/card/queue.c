@@ -22,9 +22,6 @@
 #include <linux/mmc/card.h>
 #include <linux/mmc/host.h>
 #include "queue.h"
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-#include <linux/mmc/dsm_emmc.h>
-#endif
 
 #define MMC_QUEUE_BOUNCESZ	65536
 
@@ -641,14 +638,8 @@ enum blk_eh_timer_return mmc_cmdq_rq_timed_out(struct request *req)
 {
 	struct mmc_queue *mq = req->q->queuedata;
 
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-	DSM_EMMC_LOG(mq->card, DSM_EMMC_HOST_TIMEOUT_ERR,
-		"%s:%s request with tag: %d flags: 0x%llx timed out\n",
-	       __FUNCTION__, mmc_hostname(mq->card->host), req->tag, req->cmd_flags);
-#else
 	pr_err("%s: request with tag: %d flags: 0x%llx timed out\n",
 	       mmc_hostname(mq->card->host), req->tag, req->cmd_flags);
-#endif
 	return mq->cmdq_req_timed_out(req);
 }
 

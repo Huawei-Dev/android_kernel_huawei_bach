@@ -53,27 +53,6 @@
 #endif
 #include "queue.h"
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-#include <linux/mmc/dsm_sdcard.h>
-#endif
-
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-#include <linux/mmc/dsm_emmc.h>
-/*device index, 0: for emmc, 1: for SDcard*/
-u64 device_index = 0;
-char * mmc_dev_name="mmcblk0";
-struct dsm_dev dsm_emmc = {
-	.name = "dsm_emmc",
-	.fops = NULL,
-	.buff_size = EMMC_DSM_BUFFER_SIZE,
-};
-struct dsm_client *emmc_dclient = NULL;
-
-/*the buffer which transffering to device radar*/
-struct emmc_dsm_log g_emmc_dsm_log;
-
-EXPORT_SYMBOL(emmc_dclient);
-#endif
 MODULE_ALIAS("mmc:block");
 #ifdef MODULE_PARAM_PREFIX
 #undef MODULE_PARAM_PREFIX
@@ -2090,39 +2069,11 @@ static int mmc_blk_packed_err_check(struct mmc_card *card,
 				check = MMC_BLK_PARTIAL;
 			}
 
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-			if(mmc_card_mmc(card)){
-				DSM_EMMC_LOG(card, DSM_EMMC_PACKED_FAILURE,
-					"%s: packed cmd failed, nr %u, sectors %u, "
-					"failure index: %d\n",
-					req->rq_disk->disk_name, packed->nr_entries,
-					packed->blocks, packed->idx_failure);
-			}
-#endif
 			pr_err("%s: packed cmd failed, nr %u, sectors %u, "
 			       "failure index: %d\n",
 			       req->rq_disk->disk_name, packed->nr_entries,
 			       packed->blocks, packed->idx_failure);
 		}
-
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-		if(ext_csd[EXT_CSD_EXP_EVENTS_STATUS] &
-			EXT_CSD_DYNCAP_NEEDED) {
-			if(mmc_card_mmc(card)){
-				DSM_EMMC_LOG(card, DSM_EMMC_DYNCAP_NEEDED,
-					"%s: DYNCAP_NEEDED [58]: %d, the device may degrade in performance and eventually become non-functional\n",
-					req->rq_disk->disk_name, ext_csd[58]);
-			}
-		}
-		if(ext_csd[EXT_CSD_EXP_EVENTS_STATUS] &
-			EXT_CSD_SYSPOOL_EXHAUSTED) {
-			if(mmc_card_mmc(card)){
-				DSM_EMMC_LOG(card, DSM_EMMC_SYSPOOL_EXHAUSTED,
-					"%s: SYSPOOL_EXHAUSTED, System resources pool exhausted\n",
-					req->rq_disk->disk_name);
-			}
-		}
-#endif
 
 free:
 		kfree(ext_csd);
@@ -3719,11 +3670,6 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 			if (!mmc_blk_reset(md, card->host, type) &&
 					(retry++ < (MMC_BLK_MAX_RETRIES + 1)))
 					break;
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-			if(!strcmp(mmc_hostname(card->host), "mmc1"))
-				DSM_SDCARD_LOG(DMS_SDCARD_MMC_BLK_ABORT,\
-					"sdcard manufactory id is 0x%x %s:block transfer abort.\n",sd_manfid,__func__);
-#endif
 			goto cmd_abort;
 		case MMC_BLK_DATA_ERR: {
 			int err;
@@ -3783,17 +3729,6 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 	return 1;
 
  cmd_abort:
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-	if(card->host->index == device_index){
-		if(type == MMC_BLK_READ){
-			DSM_EMMC_LOG(card, DSM_EMMC_READ_ERR,
-				"%s: Read error, mmc blk status: %d \n", __FUNCTION__, status);
-		}else{
-			DSM_EMMC_LOG(card, DSM_EMMC_WRITE_ERR,
-				"%s: Write error, mmc blk status: %d \n", __FUNCTION__, status);
-		}
-	}
-#endif
 	if (mmc_packed_cmd(mq_rq->cmd_type)) {
 		mmc_blk_abort_packed_req(mq_rq);
 	} else {
@@ -4321,12 +4256,6 @@ static void mmc_blk_remove_req(struct mmc_blk_data *md)
 					&md->power_ro_lock);
 
 			del_gendisk(md->disk);
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-			if(MMC_TYPE_SD == card->type)
-			{
-				dsm_sdcard_cmd_logs[DSM_SDCARD_REPORT_UEVENT].value = DSM_REPORT_UEVENT_FALSE;
-			}
-#endif
 		}
 		mmc_blk_put(md);
 	}
@@ -4544,10 +4473,6 @@ static int mmc_blk_probe(struct mmc_card *card)
 	struct mmc_blk_data *md, *part_md;
 	char cap_str[10];
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-	int   buff_len;
-	char *log_buff;
-#endif
 	/*
 	 * Check that the card supports the command class(es) we need.
 	 */
@@ -4585,13 +4510,6 @@ static int mmc_blk_probe(struct mmc_card *card)
 			goto out;
 	}
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-	if(MMC_TYPE_SD == card->type)
-	{
-		dsm_sdcard_cmd_logs[DSM_SDCARD_REPORT_UEVENT].value = DSM_REPORT_UEVENT_TRUE;
-	}
-#endif
-
 	pm_runtime_set_autosuspend_delay(&card->dev, MMC_AUTOSUSPEND_DELAY_MS);
 	pm_runtime_use_autosuspend(&card->dev);
 
@@ -4606,17 +4524,7 @@ static int mmc_blk_probe(struct mmc_card *card)
 
 	return 0;
 
- out:
-
- #ifdef CONFIG_HUAWEI_SDCARD_DSM
-	if(MMC_TYPE_SD == card->type && !dsm_client_ocuppy(sdcard_dclient))
-	{
-		log_buff = dsm_sdcard_get_log(DSM_SDCARD_REPORT_UEVENT,0);
-		buff_len = strlen(log_buff);
-		dsm_client_copy(sdcard_dclient,log_buff,buff_len + 1);
-		dsm_client_notify(sdcard_dclient, DSM_SDCARD_NO_UEVENT_REPORT);
-	}
-#endif
+out:
 	mmc_blk_remove_parts(card, md);
 	mmc_blk_remove_req(md);
 	return 0;
@@ -4733,13 +4641,6 @@ static int __init mmc_blk_init(void)
 	res = mmc_register_driver(&mmc_driver);
 	if (res)
 		goto out2;
-
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-	if (!emmc_dclient) {
-		emmc_dclient = dsm_register_client(&dsm_emmc);
-	}
-	spin_lock_init(&g_emmc_dsm_log.lock);
-#endif
 
 	return 0;
  out2:

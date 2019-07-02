@@ -27,26 +27,6 @@ config MMC_PERF_PROFILING
 	  If you say Y here, support will be added for collecting
 	  performance numbers at the MMC Queue and Host layers.
 
-config HUAWEI_SDCARD_DSM
-	bool "Listen sdcard kernel err"
-	depends on HUAWEI_DSM != n && MMC != n
-	default n
-	help
-	    use huawei sdcard log radar
-config HUAWEI_EMMC_DSM
-	bool "Listen eMMC kernel err"
-	depends on HUAWEI_DSM != n && MMC !=n
-	default n
-	help
-	  use huawei eMMC log radar
-
-config HUAWEI_EMMC_DSM_DEBUG
-	bool "Listen eMMC radar err on debug stage"
-	depends on HUAWEI_DSM != n && MMC !=n
-	default n
-	help
-	  use device radar only to record emmc vdet log
-
 if MMC
 
 source "drivers/mmc/core/Kconfig"

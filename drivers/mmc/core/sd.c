@@ -27,27 +27,6 @@
 #include "sd.h"
 #include "sd_ops.h"
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-#include <linux/mmc/dsm_sdcard.h>
-u32 sd_manfid;
-struct dsm_sdcard_cmd_log dsm_sdcard_cmd_logs[] =
-{
-	{"CMD8 : ",				0,		0},
-	{"CMD55 : ",    		0,		0},
-	{"ACMD41: ",			0,		0},
-	{"CMD2_RESP0 : ",		0,		0},
-	{"CMD2_RESP1 : ",		0,		0},
-	{"CMD2_RESP2 : ",		0,		0},
-	{"CMD2_RESP3 : ",		0,		0},
-	{"CMD3 : ",				0,		0},
-	{"CMD9_RESP0 : ",		0,		0},
-	{"CMD9_RESP1 : ",		0,		0},
-	{"CMD9_RESP2 : ",		0,		0},
-	{"CMD9_RESP3 : ",		0,		0},
-	{"CMD7 : ",				0,		0},
-	{"Report Uevent : ",	0,		0},
-};
-#endif
 #define UHS_SDR104_MIN_DTR	(100 * 1000 * 1000)
 #define UHS_DDR50_MIN_DTR	(50 * 1000 * 1000)
 #define UHS_SDR50_MIN_DTR	(50 * 1000 * 1000)
@@ -983,11 +962,6 @@ int mmc_sd_get_csd(struct mmc_host *host, struct mmc_card *card)
 {
 	int err;
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-	int buff_len;
-	char *log_buff;
-#endif
-
 	/*
 	 * Fetch CSD from card.
 	 */
@@ -997,31 +971,8 @@ int mmc_sd_get_csd(struct mmc_host *host, struct mmc_card *card)
 
 	err = mmc_decode_csd(card);
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-	if(!strcmp(mmc_hostname(host), "mmc1"))
-	{
-		 dsm_sdcard_cmd_logs[DSM_SDCARD_CMD9_R0].value = card->raw_csd[0];
-		 dsm_sdcard_cmd_logs[DSM_SDCARD_CMD9_R1].value = card->raw_csd[1];
-		 dsm_sdcard_cmd_logs[DSM_SDCARD_CMD9_R2].value = card->raw_csd[2];
-		 dsm_sdcard_cmd_logs[DSM_SDCARD_CMD9_R3].value = card->raw_csd[3];
-	}
-
-	if (err)
-	{
-		if(-ENOMEDIUM != err && -ETIMEDOUT != err
-		&& !strcmp(mmc_hostname(host), "mmc1") && !dsm_client_ocuppy(sdcard_dclient))
-		{
-			log_buff = dsm_sdcard_get_log(DSM_SDCARD_CMD9_R3,err);
-			buff_len = strlen(log_buff);
-			dsm_client_copy(sdcard_dclient,log_buff,buff_len + 1);
-			dsm_client_notify(sdcard_dclient, DSM_SDCARD_CMD9_RESP_ERR);
-		}
-		return err;
-	}
-#else
 	if (err)
 		return err;
-#endif
 
 	return 0;
 }
@@ -1173,10 +1124,6 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 	u32 cid[4];
 	u32 rocr = 0;
 
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-	int i=0;
-#endif
-
 	BUG_ON(!host);
 	WARN_ON(!host->claimed);
 
@@ -1224,17 +1171,6 @@ static int mmc_sd_init_card(struct mmc_host *host, u32 ocr,
 		card->type = MMC_TYPE_SD;
 		memcpy(card->raw_cid, cid, sizeof(card->raw_cid));
 	}
-
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-	sd_manfid = cid[0]>>24;
-	if(!strcmp(mmc_hostname(host), "mmc1"))
-	{
-		for(i=0; i< DSM_SDCARD_CMD_MAX; i++)
-		{
-			dsm_sdcard_cmd_logs[i].manfid = sd_manfid;
-		}
-	}
-#endif
 
 	/*
 	 * For native busses:  get card RCA and quit open drain mode.
@@ -1807,44 +1743,3 @@ err:
 
 	return err;
 }
-
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-/*
- * get the error cmd logs and previous cmds logs
-*/
-char *dsm_sdcard_get_log(int cmd,int err)
-{
-	int i;
-	int ret = 0;
-	int buff_size = sizeof(g_dsm_log_sum);
-	char *dsm_log_buff = g_dsm_log_sum;
-
-	memset(g_dsm_log_sum,0,buff_size);
-
-	ret = snprintf(dsm_log_buff,buff_size,"Err : %d\n",err);
-	dsm_log_buff += ret;
-	buff_size -= ret;
-
-	for(i = 0; i <= cmd; i++)
-	{
-		ret = snprintf(dsm_log_buff,buff_size,
-		"%s%08x sdcard manufactory id is 0x%x\n",dsm_sdcard_cmd_logs[i].log,\
-		dsm_sdcard_cmd_logs[i].value,dsm_sdcard_cmd_logs[i].manfid);
-		if(ret > buff_size -1)
-		{
-			printk(KERN_ERR "Buff size is not enough\n");
-			printk(KERN_ERR "%s",g_dsm_log_sum);
-			return g_dsm_log_sum;
-		}
-
-		dsm_log_buff += ret;
-		buff_size -= ret;
-	}
-
-	pr_debug("DSM_DEBUG %s",g_dsm_log_sum);
-
-	return g_dsm_log_sum;
-
-}
-EXPORT_SYMBOL(dsm_sdcard_get_log);
-#endif

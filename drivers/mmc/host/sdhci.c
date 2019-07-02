@@ -36,15 +36,6 @@
 #include "sdhci.h"
 #include "cmdq_hci.h"
 
-
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-#include <linux/mmc/dsm_sdcard.h>
-#endif
-
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-#include <linux/mmc/dsm_emmc.h>
-#endif
-
 #define DRIVER_NAME "sdhci"
 
 #define DBG(f, x...) \
@@ -2659,13 +2650,6 @@ out:
 	spin_unlock_irqrestore(&host->lock, flags);
 	sdhci_runtime_pm_put(host);
 
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-	if(err && !strcmp(mmc_hostname(mmc), "mmc0")){
-		DSM_EMMC_LOG(mmc->card, DSM_EMMC_TUNING_ERROR,
-			"%s:eMMC tuning error: %d\n", __FUNCTION__, err);
-	}
-#endif
-
 	return err;
 }
 
@@ -2856,21 +2840,6 @@ static void sdhci_timeout_timer(unsigned long data)
 	spin_lock_irqsave(&host->lock, flags);
 
 	if (host->mrq) {
-#ifdef CONFIG_HUAWEI_SDCARD_DSM
-			if(!strcmp(mmc_hostname(host->mmc), "mmc1"))
-				DSM_SDCARD_LOG(DMS_SDCARD_HARDWARE_TIMEOUT_ERR,
-				"sdcard manufactory id is 0x%x %s:hardware time out.\n",sd_manfid,__func__);
-#endif
-
-
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-			if(host->mmc != NULL && host->mmc->card != NULL){
-				if(mmc_card_mmc(host->mmc->card)){
-					DSM_EMMC_LOG(host->mmc->card, DSM_EMMC_HOST_TIMEOUT_ERR,
-						"%s:eMMC HOST Timeout waiting for hardware interrupt.\n", __FUNCTION__);
-				}
-			}
-#endif
 		pr_err("%s: Timeout waiting for hardware "
 			"interrupt.\n", mmc_hostname(host->mmc));
 		if (host->data)
@@ -3289,11 +3258,6 @@ static irqreturn_t sdhci_cmdq_irq(struct sdhci_host *host, u32 intmask)
 	if (err) {
 		/* Clear the error interrupts */
 		mask = intmask & SDHCI_INT_ERROR_MASK;
-#ifdef CONFIG_HUAWEI_EMMC_DSM
-	DSM_EMMC_LOG(host->mmc->card, DSM_EMMC_HOST_ERR,
-		"%s:%s cmdq interrupt error, status:%x\n",
-		__FUNCTION__, mmc_hostname(host->mmc), mask);
-#endif
 		sdhci_writel(host, mask, SDHCI_INT_STATUS);
 	}
 	return ret;
