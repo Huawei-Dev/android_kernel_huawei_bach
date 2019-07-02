@@ -503,6 +503,7 @@ void tcp_retransmit_timer(struct sock *sk)
 	 */
 	icsk->icsk_backoff++;
 	icsk->icsk_retransmits++;
+
 out_reset_timer:
 	/* If stream is thin, use linear timeouts. Since 'icsk_backoff' is
 	 * used to reset timer, set to 0. Recalculate 'icsk_rto' as this

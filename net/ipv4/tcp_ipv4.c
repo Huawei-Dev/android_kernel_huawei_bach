@@ -1697,7 +1697,6 @@ process:
 
 	bh_lock_sock_nested(sk);
 	ret = 0;
-
 	if (!sock_owned_by_user(sk)) {
 		if (!tcp_prequeue(sk, skb))
 			ret = tcp_v4_do_rcv(sk, skb);
