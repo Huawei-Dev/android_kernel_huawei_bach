@@ -211,7 +211,12 @@ find_appropriate_src(struct net *net, u16 zone,
 	return 0;
 }
 
-
+/* For [FUTURE] fragmentation handling, we want the least-used
+ * src-ip/dst-ip/proto triple.  Fairness doesn't come into it.  Thus
+ * if the range specifies 1.2.3.4 ports 10000-10005 and 1.2.3.5 ports
+ * 1-65535, we don't do pro-rata allocation based on ports; we choose
+ * the ip with the lowest src-ip/dst-ip/proto usage.
+ */
 static void
 find_best_ips_proto(u16 zone, struct nf_conntrack_tuple *tuple,
 		    const struct nf_nat_range *range,

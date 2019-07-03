@@ -2246,10 +2246,7 @@ again:
 			if (UNIXCB(skb).fp)
 				siocb->scm->fp = scm_fp_dup(UNIXCB(skb).fp);
 
-			if (skip) {
-				sk_peek_offset_fwd(sk, chunk);
-				skip -= chunk;
-			}
+			sk_peek_offset_fwd(sk, chunk);
 
 			if (UNIXCB(skb).fp)
 				break;
