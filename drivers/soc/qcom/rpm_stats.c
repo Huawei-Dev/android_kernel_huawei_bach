@@ -538,6 +538,7 @@ static int msm_rpmstats_probe(struct platform_device *pdev)
 			kfree(pdata);
 			return -ENOMEM;
 		}
+
 	} else {
 		kfree(pdata);
 		return -EINVAL;

@@ -12,7 +12,7 @@
 
 #define SERIAL_NUM		(0x000)
 
-static uint32_t sn;
+static uint32_t sn = 0;
 
 struct sn_drvdata {
 	void __iomem		*base;
@@ -55,7 +55,7 @@ static void sn_create_proc(void)
 {
 	struct proc_dir_entry *entry;
 	entry = proc_create("serial_num", 0 /* default mode */,
-		NULL /* parent dir */, &sn_fops);
+			NULL /* parent dir */, &sn_fops);
 }
 
 static int sn_fuse_probe(struct platform_device *pdev)
@@ -99,9 +99,9 @@ static struct platform_driver sn_fuse_driver = {
 	.probe          = sn_fuse_probe,
 	.remove         = sn_fuse_remove,
 	.driver         = {
-	.name   = "msm-sn-fuse",
-	.owner	= THIS_MODULE,
-	.of_match_table = sn_fuse_match,
+		.name   = "msm-sn-fuse",
+		.owner	= THIS_MODULE,
+		.of_match_table = sn_fuse_match,
 	},
 };
 

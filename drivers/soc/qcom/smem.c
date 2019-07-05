@@ -29,6 +29,7 @@
 
 #include <soc/qcom/smem.h>
 
+
 #include "smem_private.h"
 
 #define MODEM_SBL_VERSION_INDEX 7

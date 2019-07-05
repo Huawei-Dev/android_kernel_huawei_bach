@@ -699,7 +699,8 @@ int scm_call2(u32 fn_id, struct scm_desc *desc)
 
 	if (ret < 0)
 		pr_err("scm_call failed: func id %#llx, ret: %d, syscall returns: %#llx, %#llx, %#llx\n",
-			 x0, ret, desc->ret[0], desc->ret[1], desc->ret[2]);
+			x0, ret, desc->ret[0], desc->ret[1], desc->ret[2]);
+
 	if (arglen > N_REGISTER_ARGS)
 		kfree(desc->extra_arg_buf);
 	if (ret < 0)

@@ -129,20 +129,20 @@ static int modem_shutdown(const struct subsys_desc *subsys, bool force_stop)
 
 static int modem_powerup(const struct subsys_desc *subsys)
 {
-    struct modem_data *drv = subsys_to_drv(subsys);
+	struct modem_data *drv = subsys_to_drv(subsys);
 
-    if (subsys->is_not_loadable)
-        return 0;
-    /*
-     * At this time, the modem is shutdown. Therefore this function cannot
-     * run concurrently with the watchdog bite error handler, making it safe
-     * to unset the flag below.
-     */
-    reinit_completion(&drv->stop_ack);
-    drv->subsys_desc.ramdump_disable = 0;
-    drv->ignore_errors = false;
-    drv->q6->desc.fw_name = subsys->fw_name;
-    return pil_boot(&drv->q6->desc);
+	if (subsys->is_not_loadable)
+		return 0;
+	/*
+	 * At this time, the modem is shutdown. Therefore this function cannot
+	 * run concurrently with the watchdog bite error handler, making it safe
+	 * to unset the flag below.
+	 */
+	reinit_completion(&drv->stop_ack);
+	drv->subsys_desc.ramdump_disable = 0;
+	drv->ignore_errors = false;
+	drv->q6->desc.fw_name = subsys->fw_name;
+	return pil_boot(&drv->q6->desc);
 }
 
 static void modem_crash_shutdown(const struct subsys_desc *subsys)

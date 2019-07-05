@@ -460,7 +460,7 @@ static ssize_t voice_svc_write(struct file *file, const char __user *buf,
 		 */
 		if (count >= (sizeof(struct voice_svc_write_msg) +
 			      sizeof(struct voice_svc_cmd_request))) {
-		request_data =
+			request_data =
 				(struct voice_svc_cmd_request *)data->payload;
 			if (request_data == NULL) {
 				pr_err("%s: request data is NULL", __func__);
