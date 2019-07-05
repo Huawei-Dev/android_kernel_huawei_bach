@@ -758,13 +758,6 @@ struct diag_cmd_reg_entry_t *diag_cmd_search(
 				return &item->entry;
 			}
 		} else if (temp_entry->cmd_code == DIAG_CMD_NO_SUBSYS &&
-			   temp_entry->subsys_id == 0xF6 && entry->cmd_code == 0xF6) {
-			if (temp_entry->cmd_code_hi >= entry->subsys_id &&
-			   temp_entry->cmd_code_lo <= entry->subsys_id &&
-			   (proc == item->proc || proc == ALL_PROC)) {
-				return &item->entry;
-			}
-		} else if (temp_entry->cmd_code == DIAG_CMD_NO_SUBSYS &&
 			   temp_entry->subsys_id == DIAG_CMD_NO_SUBSYS) {
 			if ((temp_entry->cmd_code_hi >= entry->cmd_code) &&
 			    (temp_entry->cmd_code_lo <= entry->cmd_code) &&
