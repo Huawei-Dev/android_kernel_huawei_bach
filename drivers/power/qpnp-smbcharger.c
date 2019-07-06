@@ -6480,6 +6480,17 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 		}
 
 		read_usb_type(chip, &usb_type_name, &usb_supply_type);
+		if (usb_supply_type == POWER_SUPPLY_TYPE_USB_DCP) {
+			schedule_delayed_work(&chip->hvdcp_det_work,
+				msecs_to_jiffies(HVDCP_NOTIFY_MS));
+			if (chip->parallel.use_parallel_aicl) {
+				reinit_completion(&chip->hvdcp_det_done);
+				pr_smb(PR_MISC, "init hvdcp_det_done\n");
+			}
+			smbchg_change_usb_supply_type(chip, usb_supply_type);
+		}
+
+		read_usb_type(chip, &usb_type_name, &usb_supply_type);
 		if (usb_supply_type == POWER_SUPPLY_TYPE_USB_DCP)
 			schedule_delayed_work(&chip->hvdcp_det_work,
 				msecs_to_jiffies(HVDCP_NOTIFY_MS));
