@@ -15,4 +15,3 @@
 &i2c_2 {
 	/delete-node/ pericom-type-c@1d;
 };
-
