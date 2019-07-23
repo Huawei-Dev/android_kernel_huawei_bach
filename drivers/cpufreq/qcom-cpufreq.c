@@ -98,7 +98,7 @@ static int msm_cpufreq_target(struct cpufreq_policy *policy,
 	}
 	if (cpufreq_frequency_table_target(policy, table, target_freq, relation,
 			&index)) {
-		pr_err("cpufreq: invalid target_freq: %d\n", target_freq);
+		pr_debug("cpufreq: invalid target_freq: %d\n", target_freq);
 		ret = -EINVAL;
 		goto done;
 	}
