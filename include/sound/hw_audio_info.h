@@ -57,6 +57,7 @@ enum hw_smartpa_num {
 	SMARTPA_NUM_6,
 };
 
+bool smartpa_is_two_tas2560(void);
 bool smartpa_is_four_tas2560(void);
 bool mic1_differential_mode_enable(void);
 

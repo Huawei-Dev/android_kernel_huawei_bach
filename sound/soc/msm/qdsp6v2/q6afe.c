@@ -305,7 +305,7 @@ static int32_t sp_make_afe_callback(uint32_t *payload, uint32_t payload_size)
 #endif
 
 #ifdef CONFIG_SND_SOC_TAS2560
-	if (smartpa_is_four_tas2560() &&
+	if ((smartpa_is_four_tas2560() || smartpa_is_two_tas2560()) &&
 				(resp->pdata.module_id == AFE_SMARTAMP_MODULE)) {
 		memcpy(&(this_afe.smartamp_calib_data),
 			(void *)payload, sizeof(this_afe.smartamp_calib_data));

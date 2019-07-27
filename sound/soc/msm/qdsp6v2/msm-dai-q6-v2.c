@@ -3198,6 +3198,9 @@ static int msm_dai_q6_mi2s_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
 	if (smartpa_is_four_tas2560()) {
 		if (dai->id == MSM_QUIN_MI2S || dai->id == MSM_QUAT_MI2S)
 			goto skip_status_check;
+	} else if (smartpa_is_two_tas2560()) {
+		if (dai->id == MSM_QUIN_MI2S )
+			goto skip_status_check;
 	}
 
 	if (test_bit(STATUS_PORT_STARTED,

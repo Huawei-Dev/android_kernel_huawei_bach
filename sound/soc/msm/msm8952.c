@@ -42,6 +42,12 @@
 #define SAMPLING_RATE_96KHZ     96000
 #define SAMPLING_RATE_192KHZ    192000
 
+#define AW8737_PA_MODE_1  1
+#define AW8737_PA_MODE_2  2
+#define AW8737_PA_MODE_3  3
+#define AW8737_PA_MODE_4  4
+#define AW8737_PA_MODE_5  5
+
 #define PRI_MI2S_ID	(1 << 0)
 #define SEC_MI2S_ID	(1 << 1)
 #define TER_MI2S_ID	(1 << 2)
@@ -77,6 +83,7 @@ static int mi2s_rx_sample_rate = SAMPLING_RATE_48KHZ;
 static int mi2s_tx_bit_format = SNDRV_PCM_FORMAT_S16_LE;
 static int mi2s_tx_bits_per_sample = 16;
 static int mi2s_tx_sample_rate = SAMPLING_RATE_48KHZ;
+static int aw8737_pa_mode = 1;
 
 static int quat_mi2s_rx_bit_format = SNDRV_PCM_FORMAT_S24_LE;
 static int quat_mi2s_tx_bit_format = SNDRV_PCM_FORMAT_S24_LE;
@@ -84,10 +91,21 @@ static int quin_mi2s_rx_bit_format = SNDRV_PCM_FORMAT_S24_LE;
 static int quin_mi2s_tx_bit_format = SNDRV_PCM_FORMAT_S24_LE;
 
 static bool smartamp_is_four_tas2560;
+static bool smartamp_is_two_tas2560;
 
 static atomic_t quat_mi2s_clk_ref;
 static atomic_t quin_mi2s_clk_ref;
 static atomic_t auxpcm_mi2s_clk_ref;
+
+#define DEFAULT_HAC_NONEED       (-1)
+#define DEFUALT_HAC_SWITCH_VALUE 0x0
+#define HAC_ENABLE               1
+#define HAC_DISABLE              0
+#define GPIO_PULL_UP             1
+#define GPIO_PULL_DOWN           0
+static int hac_en_gpio = DEFAULT_HAC_NONEED;
+static int hac_switch = DEFUALT_HAC_SWITCH_VALUE;
+static bool hac_gpio_req_flag = false;
 
 static int msm8952_enable_dig_cdc_clk(struct snd_soc_codec *codec, int enable,
 					bool dapm);
@@ -189,6 +207,8 @@ static const char *const proxy_rx_ch_text[] = {"One", "Two", "Three", "Four",
 static const char *const vi_feed_ch_text[] = {"One", "Two"};
 static char const *mi2s_rx_sample_rate_text[] = {"KHZ_48",
 					"KHZ_96", "KHZ_192"};
+static char const *aw8737_pa_mode_text[] = {"zero","one",
+					"two", "three","four","five"};
 
 bool smartpa_is_four_tas2560(void)
 {
@@ -202,6 +222,19 @@ static bool smartpa_is_four_tas2560_check(struct msm8916_asoc_mach_data *pdata)
 	else
 		return ((!strncmp(pdata->smartpa_name, TAS2560_NAME, strlen(TAS2560_NAME)))
 			&& (SMARTPA_NUM_4 == pdata->smartpa_num));
+}
+
+bool smartpa_is_two_tas2560(void)
+{
+	return smartamp_is_two_tas2560;
+}
+static bool smartpa_is_two_tas2560_check(struct msm8916_asoc_mach_data *pdata)
+{
+	if ((pdata == NULL) || (pdata->smartpa_name == NULL))
+		return false;
+	else
+		return ((!strncmp(pdata->smartpa_name, TAS2560_NAME, strlen(TAS2560_NAME)))
+			&& (SMARTPA_NUM_2 == pdata->smartpa_num));
 }
 
 static inline int param_is_mask(int p)
@@ -292,6 +325,53 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 	return 0;
 }
 
+static void select_spk_ext_pa_mode(int gpio, int mode)
+{
+
+	switch(mode)
+	{
+		case AW8737_PA_MODE_5:
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			break;
+
+		case AW8737_PA_MODE_4:
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			break;
+		case AW8737_PA_MODE_3:
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			break;
+		case AW8737_PA_MODE_2:
+			gpio_set_value_cansleep(gpio, 1);
+			gpio_set_value_cansleep(gpio, 0);
+			gpio_set_value_cansleep(gpio, 1);
+			break;
+		case AW8737_PA_MODE_1:
+			gpio_set_value_cansleep(gpio, 1);
+			break;
+		default:
+			break;
+
+	}
+}
+
 static int enable_spk_ext_pa(struct snd_soc_codec *codec, int enable)
 {
 	struct snd_soc_card *card = codec->component.card;
@@ -315,6 +395,7 @@ static int enable_spk_ext_pa(struct snd_soc_codec *codec, int enable)
 			return ret;
 		}
 		gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
+		select_spk_ext_pa_mode(pdata->spk_ext_pa_gpio,aw8737_pa_mode);
 	} else {
 		gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
 		ret = msm_gpioset_suspend(CLIENT_WCD_INT, "ext_spk_gpio");
@@ -567,7 +648,7 @@ static int msm_mi2s_snd_hw_params(struct snd_pcm_substream *substream,
 		param_set_mask(params, SNDRV_PCM_HW_PARAM_FORMAT,
 			       mi2s_tx_bit_format);
 
-	if (smartpa_is_four_tas2560())
+	if (smartpa_is_four_tas2560() || smartpa_is_two_tas2560())
 		msm_mi2s_snd_hw_params_custom(substream, params);
 
 	return 0;
@@ -712,7 +793,7 @@ static uint32_t get_mi2s_clk_val(int port_id)
 	else
 		clk_val = (mi2s_tx_sample_rate * mi2s_tx_bits_per_sample * 2);
 
-	if (smartpa_is_four_tas2560())
+	if (smartpa_is_four_tas2560() || smartpa_is_two_tas2560())
 		clk_val = get_mi2s_rx_clk_val_custom(port_id);
 
 	pr_debug("%s: MI2S bit clock value: 0x%0x\n", __func__, clk_val);
@@ -753,7 +834,7 @@ static int msm_mi2s_sclk_ctl(struct snd_pcm_substream *substream, bool enable)
 				mi2s_tx_clk_v1.clk_val1 =
 						get_mi2s_clk_val(port_id);
 
-				if (smartpa_is_four_tas2560())
+				if (smartpa_is_four_tas2560() || smartpa_is_two_tas2560())
 					mi2s_tx_clk_v1.clk_val1 =
 							get_mi2s_tx_clk_val_custom(port_id);
 
@@ -766,7 +847,7 @@ static int msm_mi2s_sclk_ctl(struct snd_pcm_substream *substream, bool enable)
 				mi2s_tx_clk.clk_freq_in_hz =
 						get_mi2s_clk_val(port_id);
 
-				if (smartpa_is_four_tas2560())
+				if (smartpa_is_four_tas2560() || smartpa_is_two_tas2560())
 					mi2s_tx_clk.clk_freq_in_hz =
 							get_mi2s_tx_clk_val_custom(port_id);
 
@@ -1125,6 +1206,64 @@ static int msm_pri_mi2s_rx_ch_put(struct snd_kcontrol *kcontrol,
 	return 1;
 }
 
+static int aw8737_pa_mode_get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	int pa_mode = 0;
+
+	switch (aw8737_pa_mode) {
+	case AW8737_PA_MODE_1:
+		pa_mode = 1;
+		break;
+	case AW8737_PA_MODE_2:
+		pa_mode = 2;
+		break;
+	case AW8737_PA_MODE_3:
+		pa_mode = 3;
+		break;
+	case AW8737_PA_MODE_4:
+		pa_mode = 4;
+		break;
+	case AW8737_PA_MODE_5:
+		pa_mode = 5;
+		break;
+	default:
+		pa_mode = 1;
+		break;
+	}
+
+	ucontrol->value.integer.value[0] = pa_mode;
+
+	return 0;
+}
+
+static int aw8737_pa_mode_put(struct snd_kcontrol *kcontrol,
+				    struct snd_ctl_elem_value *ucontrol)
+{
+	switch (ucontrol->value.integer.value[0]) {
+	case 1:
+		aw8737_pa_mode = AW8737_PA_MODE_1;
+		break;
+	case 2:
+		aw8737_pa_mode = AW8737_PA_MODE_2;
+		break;
+	case 3:
+		aw8737_pa_mode = AW8737_PA_MODE_3;
+		break;
+	case 4:
+		aw8737_pa_mode = AW8737_PA_MODE_4;
+		break;
+	case 5:
+		aw8737_pa_mode = AW8737_PA_MODE_5;
+		break;
+	case 0:
+	default:
+		aw8737_pa_mode = AW8737_PA_MODE_1;
+		break;
+	}
+	return 0;
+}
+
 static int mi2s_rx_sample_rate_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
@@ -1207,6 +1346,59 @@ static int msm_vi_feed_tx_ch_put(struct snd_kcontrol *kcontrol,
 	return 1;
 }
 
+static int hac_gpio_switch(int hac_cmd)
+{
+	if ( hac_en_gpio == DEFAULT_HAC_NONEED ) {
+		pr_err("Failed to get the hac gpio");
+		return 0;
+	}
+
+	if (HAC_ENABLE == hac_cmd) {
+		pr_info("Enable hac enable gpio %u\n", hac_en_gpio);
+		gpio_direction_output(hac_en_gpio, GPIO_PULL_UP);
+	} else {
+		pr_info("Disable hac enable gpio %u\n", hac_en_gpio);
+		gpio_direction_output(hac_en_gpio, GPIO_PULL_DOWN);
+	}
+
+	return hac_cmd;
+}
+
+static const char * const hac_switch_text[] = {"OFF", "ON"};
+
+static const struct soc_enum hac_switch_enum[] = {
+	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(hac_switch_text), hac_switch_text),
+};
+
+static int hac_switch_get(struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	if (NULL == kcontrol || NULL == ucontrol) {
+		pr_err("input pointer is null\n");
+		return 0;
+	}
+
+	ucontrol->value.integer.value[0] = hac_switch;
+
+	return 0;
+}
+
+static int hac_switch_put(struct snd_kcontrol *kcontrol,
+					struct snd_ctl_elem_value *ucontrol)
+{
+	int ret = 0;
+
+	if (NULL == kcontrol || NULL == ucontrol) {
+		pr_err("input pointer is null\n");
+		return ret;
+	}
+
+	hac_switch = ucontrol->value.integer.value[0];
+	ret = hac_gpio_switch(hac_switch);
+
+	return ret;
+}
+
 static const struct soc_enum msm_snd_enum[] = {
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(bit_format_text),
 				bit_format_text),
@@ -1222,6 +1414,8 @@ static const struct soc_enum msm_snd_enum[] = {
 				vi_feed_ch_text),
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(mi2s_rx_sample_rate_text),
 				mi2s_rx_sample_rate_text),
+	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(aw8737_pa_mode_text),
+				aw8737_pa_mode_text),
 };
 
 static const struct snd_kcontrol_new msm_snd_controls[] = {
@@ -1243,6 +1437,10 @@ static const struct snd_kcontrol_new msm_snd_controls[] = {
 			msm_vi_feed_tx_ch_get, msm_vi_feed_tx_ch_put),
 	SOC_ENUM_EXT("MI2S_RX SampleRate", msm_snd_enum[6],
 			mi2s_rx_sample_rate_get, mi2s_rx_sample_rate_put),
+	SOC_ENUM_EXT("AW8737 PA Mode", msm_snd_enum[7],
+			aw8737_pa_mode_get, aw8737_pa_mode_put),
+	SOC_ENUM_EXT("HAC",	 hac_switch_enum[0],
+			hac_switch_get, hac_switch_put),
 };
 
 static int msm8952_mclk_event(struct snd_soc_dapm_widget *w,
@@ -3547,6 +3745,75 @@ static void msm8952_dailink_custom_check(struct snd_soc_card *card)
 	}
 }
 
+static void msm8952_dailink_quin_check(struct snd_soc_card *card)
+{
+	struct snd_soc_dai_link *dai_link = NULL;
+	int i;
+
+	for (i = 0; i < card->num_links; i++) {
+		dai_link = card->dai_link + i;
+		if ((dai_link->no_pcm == 0) &&
+			(dai_link->be_id != MSM_BACKEND_DAI_SENARY_MI2S_TX))
+			continue;
+
+		switch (dai_link->be_id) {
+		case MSM_BACKEND_DAI_QUINARY_MI2S_RX:
+			memcpy(dai_link, &msm8952_tas2560_dailink[0],
+					sizeof(struct snd_soc_dai_link));
+			break;
+		case MSM_BACKEND_DAI_QUINARY_MI2S_TX:
+			memcpy(dai_link, &msm8952_tas2560_dailink[1],
+					sizeof(struct snd_soc_dai_link));
+			break;
+		case MSM_BACKEND_DAI_SENARY_MI2S_TX:
+			if (0 == msm8952_tas2560_dailink[4].be_id) {
+				memcpy(dai_link, &msm8952_tas2560_dailink[4],
+						sizeof(struct snd_soc_dai_link));
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+static bool msm8952_hac_init(struct device_node* np) {
+	int ret = 0;
+	hac_gpio_req_flag = false;
+
+	if(NULL == np) {
+		pr_err("%s: np is NULL\n", __func__);
+		goto err;
+	}
+
+	ret = of_get_named_gpio_flags(np, "huawei,hac_gpio", 0, NULL);
+	if (ret < 0){
+		hac_en_gpio = DEFAULT_HAC_NONEED;
+		goto err;
+	} else {
+		hac_en_gpio = ret;
+	}
+
+	ret = gpio_request(hac_en_gpio, "HAC_EN_GPIO");
+	if (ret) {
+		pr_err("%s: Failed to configure hac enable "
+			"gpio %u\n", __func__, hac_en_gpio);
+		goto err;
+	}
+
+	hac_gpio_req_flag = true;
+	if (gpio_direction_output(hac_en_gpio, GPIO_PULL_DOWN)) {
+		pr_err("%s: hac_en_gpio set output failed!\n",__func__);
+		hac_gpio_req_flag = false;
+		gpio_free(hac_en_gpio);
+		goto err;
+	}
+
+	return true;
+err:
+	return false;
+}
+
 static int msm8952_asoc_machine_probe(struct platform_device *pdev)
 {
 	struct snd_soc_card *card;
@@ -3740,6 +4007,7 @@ parse_mclk_freq:
 	} else {
 		pr_info("%s: smartpa_num=%d\n", __func__, pdata->smartpa_num);
 	}
+	smartamp_is_two_tas2560 = smartpa_is_two_tas2560_check(pdata);
 	smartamp_is_four_tas2560 = smartpa_is_four_tas2560_check(pdata);
 
 	card = msm8952_populate_sndcard_dailinks(&pdev->dev);
@@ -3770,6 +4038,8 @@ parse_mclk_freq:
 
 	if (smartpa_is_four_tas2560())
 		msm8952_dailink_custom_check(card);
+	if (smartpa_is_two_tas2560())
+		msm8952_dailink_quin_check(card);
 
 	dev_info(&pdev->dev, "default codec configured\n");
 	num_strings = of_property_count_strings(pdev->dev.of_node,
@@ -3894,6 +4164,12 @@ parse_mclk_freq:
 			ret);
 		goto err;
 	}
+
+	ret = msm8952_hac_init(pdev->dev.of_node);
+	if (!ret) {
+		dev_err(&pdev->dev, "hac init failed, just for North American.\n");
+	}
+
 	return 0;
 err:
 	if (-EPROBE_DEFER != ret) {
@@ -3947,6 +4223,9 @@ static int msm8952_asoc_machine_remove(struct platform_device *pdev)
 	}
 	snd_soc_unregister_card(card);
 	mutex_destroy(&pdata->cdc_mclk_mutex);
+	if (hac_gpio_req_flag) {
+		gpio_free(hac_en_gpio);
+	}
 	return 0;
 }
 
