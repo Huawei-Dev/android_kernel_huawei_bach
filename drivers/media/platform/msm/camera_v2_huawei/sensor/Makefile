@@ -1,9 +1,9 @@
-ccflags-y += -Idrivers/media/platform/msm/camera_v2
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/common
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/msm_vb2
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/camera
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/sensor/io
-ccflags-y += -Idrivers/media/platform/msm/camera_v2/sensor/cci
+ccflags-y += -Idrivers/media/platform/msm/camera_v2_huawei
+ccflags-y += -Idrivers/media/platform/msm/camera_v2_huawei/common
+ccflags-y += -Idrivers/media/platform/msm/camera_v2_huawei/msm_vb2
+ccflags-y += -Idrivers/media/platform/msm/camera_v2_huawei/camera
+ccflags-y += -Idrivers/media/platform/msm/camera_v2_huawei/sensor/io
+ccflags-y += -Idrivers/media/platform/msm/camera_v2_huawei/sensor/cci
 obj-$(CONFIG_MSMB_CAMERA) += cci/ io/ csiphy/ csid/ actuator/ eeprom/ ois/ flash/
 obj-$(CONFIG_MSM_CAMERA_SENSOR) += msm_sensor_init.o msm_sensor_driver.o msm_sensor.o
 obj-$(CONFIG_MSM_CAMERA_SENSOR) += sensor_otp_common_if.o
