@@ -25,6 +25,8 @@
 	qcom,fastchg-current-ma = <2000>;
 	qcom,fastchg-current-comp = <1200>;
 	qcom,charge-unknown-battery;
+	qcom,pad-disable-ibus-detect;
+	qcom,charger-batt-capacity-mah = <4800000>;
 };
 
 &pmi8950_fg {
@@ -35,13 +37,13 @@
 	qcom,cold-bat-decidegc = <0>;
 	qcom,cool-bat-decidegc = <100>;
 	qcom,hot-bat-decidegc = <500>;
-	qcom,warm-bat-decidegc = <480>;
+	qcom,warm-bat-decidegc = <450>;
+	qcom,soc-at-term = <95>;
 	qcom,resume-soc = <99>;
 	qcom,resume-soc-raw = <253>;
 	qcom,fg-cutoff-voltage-mv = <3250>;
 	qcom,bad-battery-detection-enable;
-	qcom,hold-soc-while-full;
-	qcom,fg-vbat-estimate-diff-mv = <100>;
+	qcom,vbat-estimate-diff-mv = <200>;
 	qcom,fg-cc-cv-threshold-mv = <4340>;
 	qcom,fg-therm-delay-us = <3000>;
 	qcom,fg-memif@4400 {

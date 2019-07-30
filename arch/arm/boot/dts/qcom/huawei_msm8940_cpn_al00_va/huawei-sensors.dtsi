@@ -41,6 +41,6 @@
  / {
 	huawei_sensor_info {
 		compatible = "huawei,hw_sensor_info";
-		product_name = "chopin";
+		product_name = "chopin-lte";
 	};
 };

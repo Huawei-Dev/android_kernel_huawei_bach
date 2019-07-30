@@ -7,3 +7,4 @@
 
 #include "cpn_l09_va_inx_nt51021_8p0_1200p_video.dtsi"
 #include "cpn_l09_va_auo_nt51021_8p0_1200p_video.dtsi"
+#include "cpn_l09_va_auo_nt51021b_8p0_1200p_video.dtsi"

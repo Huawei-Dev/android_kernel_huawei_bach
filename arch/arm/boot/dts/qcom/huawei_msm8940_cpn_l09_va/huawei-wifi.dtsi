@@ -16,7 +16,8 @@
 		compatible = "huawei,hw_wifi_info";
 		status = "ok";
 		wifi,chiptype = "WIFI_QUALCOMM_WCN3680";
-		wifi,pubfile_id = "cpn_al00";
+		wifi,pubfile_id = "cpn_l09";
 		wifi,fw_ver = "QCOM_WCN3680_2.0.2";
+		wifi,ini_type = "cpn";
 	};
 };

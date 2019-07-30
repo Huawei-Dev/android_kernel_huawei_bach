@@ -10,6 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+
 /{
 	huawei_audio_info {
 		compatible = "hw,hw_audio_info";
@@ -19,14 +20,58 @@
 		builtin-master-mic-exist;
 		hand_held_master_mic_strategy;
 		loud_speaker_master_mic_strategy;
-		smartpa-algo-paramsize = <8192>;
+		smartpa-algo-paramsize = <14336>;
 		status = "ok";
 		boxID-dev-enabled;		/* if use /dev/deviceboxID configure */
+		audio-ce-param-inside;
 		/* list the all speakers name , if only one, set it to "speaker" */
-		speaker_test_content = "speaker_main_left","speaker_main_right";
+		speaker_test_content = "main_left_speaker,main_right_speaker";
+	};
+	deviceboxID: deviceboxID@0 {
+		compatible = "huawei,deviceboxID";
+		status = "ok";
+		box_num = <2>;
+		check_mode = "gpio";			/* check mode use gpio */
+		enable_boxID = <1 1 0 0>;		/* enable 2 speaker */
+		gpio_num = <1>;				/* each box has one id gpio */
+		speaker_map = <1 8>;			/* AAC :0 ; QS : 1 */
+		receiver_map = <1 8>;
+		box3rd_map = <1 8>;
+		box4th_map = <1 8>;
+		/*speaker ID GPIO configure*/
+		gpio_speakerID = <&tlmm 60 0>;
+		gpio_receiverID = <&tlmm 61 0>;
+		pinctrl-names = "default", "idle";
+		pinctrl-0 = <&box_id_default>;
+		pinctrl-1 = <&box_id_sleep>;
 	};
 };
 &tlmm {
+	/* add spk-box pinctrl */
+	audio_box_id_pin {
+		box_id_default: box_default {
+			mux {
+				pins = "gpio60", "gpio61";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio60", "gpio61";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
+		};
+		box_id_sleep: box_sleep {
+			mux {
+				pins = "gpio60", "gpio61";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio60", "gpio61";
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+	};
 	quin-mi2s-lines {
 		quin_mi2s_act: quin_mi2s_act {
 			mux {
@@ -83,11 +128,11 @@
 
 	tas_reset_active: tas_reset_active {
 		mux {
-			pins = "gpio56";
+			pins = "gpio19";
 			function =  "gpio";
 		};
 		config {
-			pins = "gpio61";
+			pins = "gpio19";
 			num-grp-pins = <1>;
 			drive-strength = <6>;
 			bias-pull-up;
@@ -96,11 +141,11 @@
 
 	tas_reset_sleep: tas_reset_sleep {
 			mux {
-				pins = "gpio61";
+				pins = "gpio19";
 				function =  "gpio";
 			};
 			config {
-				pins = "gpio56";
+				pins = "gpio19";
 				num-grp-pins = <1>;
 				drive-strength = <2>;
 				bias-disable;
@@ -115,7 +160,8 @@
 	tas2560@4c {
 		compatible = "ti,tas2560_pri_l";
 		reg = <0x4c>;
-		ti,load = <0>;   /* 0, 8Ohm; 1, 6Ohm; 2, 4Ohm */
+		ti,load = <1>;   /* 0, 8Ohm; 1, 6Ohm; 2, 4Ohm */
+		ti,smartpa_num = <2>;
 		i2c-pull-up;
 		vdd-supply = <&pm8937_l6>;
 		vcc_i2c-supply = <&pm8937_l6>;
@@ -128,7 +174,8 @@
 	tas2560@4f {
 		compatible = "ti,tas2560_pri_r";
 		reg = <0x4f>;
-		ti,load = <0>;   /* 0, 8Ohm; 1, 6Ohm; 2, 4Ohm */
+		ti,load = <1>;   /* 0, 8Ohm; 1, 6Ohm; 2, 4Ohm */
+		ti,smartpa_num = <2>;
 		i2c-pull-up;
 		vdd-supply = <&pm8937_l6>;
 		vcc_i2c-supply = <&pm8937_l6>;
@@ -160,9 +207,9 @@
 	qcom,msm-mbhc-gnd-swh = <1>;
 	qcom,msm-hs-micbias-type = "internal";
 	qcom,msm-micbias1-ext-cap;
-	qcom,msm-micbias2-ext-cap;
 	qcom,smartpa-name = "tas2560";
 	qcom,smartpa-num = <2>;
+	qcom,force-gnd-mic-swap-to-headphone;
 	qcom,audio-routing =
 		"RX_BIAS", "MCLK",
 		"SPK_RX_BIAS", "MCLK",
@@ -246,4 +293,12 @@
 		"msm-dai-q6-dev.241", "msm-dai-q6-dev.240",
 		"msm-dai-q6-dev.32771", "msm-dai-q6-dev.32772",
 		"msm-dai-q6-dev.32773", "msm-dai-q6-dev.32770";
+};
+
+&adsp_fw_mem {
+	reg = <0x0 0x8d200000 0x0 0x1500000>;
+};
+
+&wcnss_fw_mem {
+	reg = <0x0 0x8e700000 0x0 0x700000>;
 };

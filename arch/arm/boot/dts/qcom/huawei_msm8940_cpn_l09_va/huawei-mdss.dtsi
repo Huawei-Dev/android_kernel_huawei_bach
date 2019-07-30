@@ -30,3 +30,8 @@
 &mdss_dsi0 {
 	/delete-property/ qcom,platform-reset-gpio;
 };
+
+&mdss_dsi0_pll {
+	/delete-property/ qcom,dsi-pll-ssc-en;
+	/delete-property/ qcom,dsi-pll-ssc-mode;
+};

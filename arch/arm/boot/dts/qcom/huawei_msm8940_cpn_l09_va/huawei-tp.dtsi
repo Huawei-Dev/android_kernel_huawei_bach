@@ -72,7 +72,7 @@
 			compatible = "himax";
 			chip_name = "hx8529f";
 			reg = <0x48>;
-			ic_type = <0>;
+			ic_type = <1>;
 			interrupt-parent = <&tlmm>;
 			interrupts = <65 0x2008>;
 			himax,reset_gpio = <&tlmm 64 0x00>;
@@ -90,11 +90,12 @@
 			project_id = "CHOP41170";
 			module = "auo";
 			himax,rawdata_timeout = <20>;
+			support_get_tp_color = <1>;/*0 - no need, 1 - need */
 		};
 		novatek_hybrid: touchscreen@62 {
 			status = "ok";
 			compatible = "novatek_hybrid";
-			ic_type = <0>;
+			ic_type = <1>;
 			roi_supported = <0>;
 			glove_supported = <0>;
 			holster_supported = <0>;
@@ -126,6 +127,7 @@
 			irq_config = <2>;
 			algo_id = <1>;
 			producer = "cmi";
+			support_get_tp_color = <1>;/*0 - no need, 1 - need */
 			};
 		};
 	};

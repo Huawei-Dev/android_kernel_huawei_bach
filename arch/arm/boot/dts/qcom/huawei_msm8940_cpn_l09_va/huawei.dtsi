@@ -33,3 +33,4 @@
 #include "huawei-usb.dtsi"
 #include "huawei-sdcard.dtsi"
 /*belong to the OS group, according to the order of battery memery end*/
+#include "huawei-gpu.dtsi"

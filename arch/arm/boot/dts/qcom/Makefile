@@ -228,8 +228,11 @@ dtb-$(CONFIG_MSM8940_SUPPORTED_PRODUCT) += huawei_msm8940_bah_al00_va.dtb \
 	huawei_msm8940_bah_l01_va.dtb \
 	huawei_msm8940_bah_w09_va.dtb \
 	huawei_msm8940_cpn_al00_va.dtb \
+	huawei_msm8940_cpn_l01_va.dtb \
+	huawei_msm8940_cpn_l03_va.dtb \
 	huawei_msm8940_cpn_l09_va.dtb \
-	huawei_msm8940_cpn_w09_va.dtb
+	huawei_msm8940_cpn_w09_va.dtb \
+	huawei_msm8940_cpn_l0j_va.dtb
 
 dtb-$(CONFIG_ARCH_MSM8953) += msm8953-sim.dtb \
 	msm8953-rumi.dtb \

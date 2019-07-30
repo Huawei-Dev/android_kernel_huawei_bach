@@ -32,6 +32,7 @@
 				pins = "gpio2", "gpio3";
 				drive-strength = <2>;
 				bias-disable;
+				output-high;
 			};
 		};
     };

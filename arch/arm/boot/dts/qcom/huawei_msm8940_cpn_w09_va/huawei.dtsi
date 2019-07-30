@@ -20,6 +20,7 @@
 
 /*belong to the wireless component group, according to the order of wifi bt fm audio begin*/
 #include "huawei-wifi.dtsi"
+#include "huawei-wifionly.dtsi"
 #include "huawei-bt.dtsi"
 #include "huawei-audio.dtsi"
 /*belong to the wireless component group, according to the order of wifi bt fm audio end*/
@@ -33,3 +34,4 @@
 #include "huawei-usb.dtsi"
 #include "huawei-sdcard.dtsi"
 /*belong to the OS group, according to the order of battery memery end*/
+#include "huawei-gpu.dtsi"
