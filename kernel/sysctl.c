@@ -99,7 +99,8 @@ extern int huawei_pon_regs[MAX_REG_TYPE];
 
 /* External variables not in a header file. */
 #ifdef CONFIG_USB
-extern int deny_new_usb;
+int deny_new_usb __read_mostly = 0;
+EXPORT_SYMBOL(deny_new_usb);
 #endif
 extern int max_threads;
 extern int suid_dumpable;
