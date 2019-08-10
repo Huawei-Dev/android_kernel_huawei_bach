@@ -608,6 +608,13 @@ config MEMORY_STATE_TIME
 	help
 	  Memory time statistics exported to /sys/kernel/memory_state_time
 
+config SM5106
+	tristate "V-bias for lcd"
+	depends on I2C
+	help
+	  This option enables support for the LCD V-bias connected
+	  through I2C. Say Y to enable support for the LCD V-bias.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
