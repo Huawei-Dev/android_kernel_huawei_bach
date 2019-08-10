@@ -1,0 +1,10 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "Kobe-W09CHN";
+		fac,hardware_ver = "SH1KOBW09CHNM";
+		fac,software_ver = "Kobe_W09CHN_VA";
+		fac,simcard_adapt = "support";
+		status = "ok";
+	};
+};

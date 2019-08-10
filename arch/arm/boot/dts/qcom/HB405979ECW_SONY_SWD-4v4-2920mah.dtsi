@@ -1,0 +1,48 @@
+qcom,qrd-4v4-2920mAh-swd-data {
+	/* #2501996_Huawei_Cannes_xinwangda_2920mAh_Master_Jun15th2016 */
+	qcom,max-voltage-uv = <4400000>;
+	qcom,nom-batt-capacity-mah = <2920>;
+	qcom,batt-id-kohm = <110>;
+	qcom,battery-beta = <3435>;
+	qcom,battery-type = "HB405979ECW_SONY_SWD";
+	qcom,chg-rslow-comp-c1 = <1582894>;
+	qcom,chg-rslow-comp-c2 = <674664>;
+	qcom,chg-rs-to-rslow = <954727>;
+	qcom,chg-rslow-comp-thr = <0x99>;
+	qcom,checksum = <0xA0D8>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 19 83 D5 69
+		 5F 6B 47 2B
+		 22 83 BF 78
+		 C7 84 9D 80
+		 05 82 C6 99
+		 90 BC 12 C9
+		 83 0F A1 88
+		 01 87 25 89
+		 7F 7F 1F 83
+		 7F 7A FE 87
+		 F0 83 41 82
+		 87 98 59 B6
+		 16 C2 A1 17
+		 1C 0C BA 5A
+		 14 70 71 FD
+		 10 38 A9 4C
+		 C6 3A 00 00
+		 1F 4D 44 41
+		 E6 39 00 00
+		 00 00 00 00
+		 00 00 00 00
+		 D4 70 DC 6B
+		 A9 7E 5E 73
+		 19 77 48 70
+		 E1 77 72 79
+		 C9 76 04 70
+		 D2 6B A5 B3
+		 1A B3 62 7E
+		 5E A0 71 0C
+		 28 00 FF 36
+		 F0 11 30 03
+		 00 00 00 0C
+	];
+};

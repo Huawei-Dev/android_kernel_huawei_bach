@@ -1,0 +1,9 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "TRT-A1";
+		fac,hardware_ver = "HL3TRTM-A1";
+		fac,software_ver = "TRT_A1_VX";
+		status = "ok";
+	};
+};

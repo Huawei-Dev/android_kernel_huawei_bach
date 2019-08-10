@@ -1,0 +1,82 @@
+&mtp_batterydata {
+	qcom,batt-id-range-pct = <15>;
+
+	qcom,itech-3000mah {
+		qcom,batt-id-kohm = <1000>;
+	};
+	/* < QL2020-1 lichuangchuang 20161115 begin */
+	#include "../HB3080G1EBC_GY_SWD-4v35-4650mah.dtsi"
+	#include "../HB3080G1EBW_SCUD_SWD-4v35-4650mah.dtsi"
+	/* QL2020-1 lichuangchuang 20161115 end > */
+};
+
+&pmi8950_charger {
+	/* jeita parameters */
+	qcom,float-voltage-mv = <4350>;
+	qcom,jeita-temp-hard-limit = <1>;
+	qcom,fastchg-current-batt-warm = <1022>;
+	qcom,fastchg-current-batt-cool = <876>;
+	qcom,fastchg-current-customize-cool = <300>;
+	qcom,customize-cool-lower-limit = <0>;
+	qcom,customize-cool-upper-limit = <50>;
+	qcom,vfloat-batt-warm = <4100>;
+	qcom,device-not-support-hvdcp;
+	qcom,float-voltage-comp = <16>;
+	qcom,fastchg-current-ma = <2000>;
+	qcom,fastchg-current-comp = <1200>;
+	qcom,charge-unknown-battery;
+};
+
+&pmi8950_fg {
+	/* Using external sense */
+	qcom,ext-sense-type;
+	/* set Beta value */
+	qcom,thermal-coefficients = [c2 86 bb 50 cf 37];
+	qcom,cold-bat-decidegc = <0>;
+	qcom,cool-bat-decidegc = <100>;
+	qcom,hot-bat-decidegc = <500>;
+	qcom,warm-bat-decidegc = <480>;
+	qcom,resume-soc = <99>;
+	qcom,resume-soc-raw = <253>;
+	qcom,fg-cutoff-voltage-mv = <3250>;
+	qcom,bad-battery-detection-enable;
+	qcom,hold-soc-while-full;
+	qcom,fg-vbat-estimate-diff-mv = <100>;
+	qcom,fg-cc-cv-threshold-mv = <4340>;
+	qcom,fg-therm-delay-us = <3000>;
+	qcom,fg-memif@4400 {
+		qcom,cold-hot-jeita-hysteresis = <20 20>;
+	};
+};
+
+/{
+	huawei_charger: qcom,huawei_charger{
+		compatible = "huawei,charger";
+		status = "okay";
+	};
+};
+
+/{
+	huawei_dsm_charger: huawei_dsm_charger{
+		compatible = "huawei,dsm_charger";
+		status = "ok";
+	};
+};
+
+&pm8937_vadc {
+	chg_mpp_number = <17>;
+	cpu_mpp_number = <19>;
+	pa_mpp_number = <54>;
+
+	chan@11 {
+		label = "chg_therm";
+		qcom,scale-function = <17>;
+	};
+	chan@13 {
+		label = "msm_therm";
+		qcom,scale-function = <17>;
+	};
+	chan@36 {
+		qcom,scale-function = <17>;
+	};
+};

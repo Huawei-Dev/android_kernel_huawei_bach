@@ -1,0 +1,28 @@
+config HUAWEI_HALL_SENSORS
+        bool "huawei hall sensors"
+		default y
+        help
+          Say Y here if you want to build the huawei hall sensor drivers.
+		  If unsure, say N here.
+
+source "drivers/huawei_platform/sensor/hallsensor/Kconfig"
+config HUAWEI_LP_SENSORS
+        bool "huawei als and proximity sensors"
+		default y
+        help
+          Say Y here if you want to build the huawei als and proximity sensor drivers.
+		  If unsure, say N here.
+
+source "drivers/huawei_platform/sensor/lpsensor/Kconfig"
+config SENSOR_DEVELOP_TEST
+        bool "Support for sensor develop selftest"
+		default n
+        help
+          Say Y here if you want to build develop test sensor connected with ap side.
+		  If unsure, say N here.
+config HUAWEI_SENSOR_INFO
+        tristate "Support for sensor self_adapt"
+        depends on HUAWEI_KERNEL
+        default n
+        help
+          Say Y to enable support self-adapt

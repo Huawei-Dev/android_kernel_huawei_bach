@@ -1,0 +1,5 @@
+config HUAWEI_CPU_INFO
+       default n
+	   bool "huawei cpu info"
+       help
+			set beta or commercial version to kernel.

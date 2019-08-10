@@ -1,0 +1,13 @@
+ / {
+	huawei_wifi_info {
+		compatible = "huawei,hw_wifi_info";
+		status = "ok";
+		wifi,chiptype = "WIFI_QUALCOMM_WCN3660B";
+		wifi,pubfile_id = "mla_l01";
+		wifi,fw_ver = "QCOM_WCN3660B_2.0.2";
+		wifi,no-autodetect-xo;
+		wifi,fem_check_flag = "enable";
+		wifi,fem_check_low_pd_threshold = "700";
+		wifi,fem_check_high_pd_threshold = "1300";
+	};
+};

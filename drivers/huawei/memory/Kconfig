@@ -1,0 +1,10 @@
+menu HUAWEI_VIRT_TO_PHYS
+
+config  HUAWEI_VIRT_TO_PHYS
+        default y
+	bool "huawei virt address to phys address"
+	help
+          huawei virt address to phys address
+
+endmenu
+

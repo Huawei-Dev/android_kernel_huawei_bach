@@ -1,0 +1,10 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "AGS-W09HN";
+		fac,hardware_ver = "SH1AGSW09HNM";
+		fac,software_ver = "AGS_W09HN_VA";
+		fac,simcard_adapt = "support";
+		status = "ok";
+	};
+};

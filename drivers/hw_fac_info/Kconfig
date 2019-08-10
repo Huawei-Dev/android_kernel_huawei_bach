@@ -1,0 +1,6 @@
+config HUAWEI_FACTORY_INFO
+	default y
+	bool "HUAWEI Factory INFO"
+	help
+		Say yes if you want enable factory info driver.
+		This is for distinguish the different product . If unsure, say Y here.

@@ -1,0 +1,12 @@
+/*modify gpu default pwrlevel to 2 level*/
+&msm_gpu {
+    qcom,gpu-pwrlevel-bins {
+        qcom,gpu-pwrlevels-0 {
+            qcom,initial-pwrlevel = <2>;
+        };
+
+        qcom,gpu-pwrlevels-1 {
+            qcom,initial-pwrlevel = <2>;
+        };
+    };
+};

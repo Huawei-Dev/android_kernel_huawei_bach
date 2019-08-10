@@ -1,0 +1,9 @@
+ / {
+	huawei_bt_info {
+		compatible = "huawei,hw_bt_info";
+		status = "ok";
+		bt,fw_ver = "QCOM_WCN3615_2.0.2";
+		bt,chiptype = "BT_FM_QUALCOMM_WCN3615";
+		bt,power_level = "level9";
+	};
+};

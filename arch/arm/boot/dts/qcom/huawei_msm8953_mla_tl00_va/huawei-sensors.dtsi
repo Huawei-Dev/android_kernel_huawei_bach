@@ -1,0 +1,252 @@
+/*use fromdos convert file format to linux*/
+/* Copyright (c) 2013 The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+&tlmm {
+	ak8789_default: ak8789_default {
+			mux {
+				pins = "gpio43";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio43";
+				num-grp-pins = <1>;
+				drive-strength = <2>;
+				bias-pull-up;
+		};
+	};
+
+
+	pa224_default: pa224_default {
+			mux {
+				pins = "gpio46";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio46";
+				num-grp-pins = <1>;
+				drive-strength = <6>; /* 2 MA */
+				bias-pull-up; /* No PULL */
+			};
+		};
+	apds9110_default: apds9110_default {
+			mux {
+				pins = "gpio46";
+				function = "gpio";
+			};
+			config {
+				pins = "gpio46";
+				num-grp-pins = <1>;
+				drive-strenghth = <6>;
+				bias-pull-up;
+			};
+			
+		};
+};
+
+&i2c_5{
+	txc@1e {
+		compatible = "txc,pa224";
+		reg = <0x1e>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pa224_default>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <46 0x2>;
+		vdd-supply = <&pm8953_l10>;
+		vio-supply = <&pm8953_l5>;
+		txc,irq-gpio = <&tlmm 46 0x2>;
+		/*IR CURRENT 10MA*/
+		txc,ir_current = <6>;
+		txc,oil_effect = <25>;
+		txc,high_threshold = <13>;
+		txc,low_threshold = <5>;
+		txc,middle_threshold = <7>;
+		txc,calibration_threshold = <150>;
+		txc,ps_window = <80>;
+		txc,ps_wave = <40>;
+		txc,power_delay_flag = <0>;
+		txc,ps_defalt_crosstalk = <50>;
+		txc,i2c-scl-gpio = <&tlmm 19 0x0>;
+		txc,i2c-sda-gpio = <&tlmm 18 0x0>;
+	};
+
+	rohm@38 {
+		compatible = "rohm,bh1745";
+		reg = <0x38>;
+		vdd-supply = <&pm8953_l10>;
+		vio-supply = <&pm8953_l5>;
+		bh1745,power_delay_flag = <0>;
+		bh1745,tp_moudle_count = <6>;
+		/*jdi*/
+		/*[module_id] [golden judge] r[0] r[1] g[0] g[1] b[0] b[1] [red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		bh1745,cal_data0 = "8","153","624","448","3788","3310","0","0","857","1153","498","116","591","1000","18000","50",
+		/*[white judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"130","87","67","770","680","0","0","5181","6849","3257","754","3597","1000","18000","50",
+		/*[black judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"300","700","450","4360","3400","0","0","854","727","594","116","414","1000","18000","50",
+		/*[moka judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"211","861","598","4960","2651","0","0","866","857","443","106","1321","1000","9000","100";
+		/*tianma*/
+		/*[module_id] [golden judge] r[0] r[1] g[0] g[1] b[0] b[1] [red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		bh1745,cal_data1 = "11","153","624","448","3788","3310","0","0","857","1153","498","116","591","1000","18000","50",
+		/*[white judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"130","87","67","770","680","0","0","5181","6849","3257","754","3597","1000","18000","50",
+		/*[black judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"300","700","450","4360","3400","0","0","854","727","594","116","414","1000","18000","50",
+		/*[moka judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"211","861","598","4960","2651","0","0","866","857","443","106","1321","1000","9000","100";
+		/*boe*/
+		/*[module_id] [golden judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		bh1745,cal_data2 = "13","160","446","476","2385","2207","0","0","1572","2159","986","221","1124","1000","18000","50",
+		/*[white judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"194","216","113","886","821","0","0","4065","4807","1855","538","7246","1000","9000","100",
+		/*[black judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"396","1317","750","8082","5603","0","0","612","491","119","66","784","1000","9000","100",
+		/*[moka-gold judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"162","513","406","2741","2065","0","0","1069","1358","676","149","2024","1000","9000","100";
+		/*ctc*/
+		/*[module_id] [golden judge] r[0] r[1] g[0] g[1] b[0] b[1] [red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		bh1745,cal_data3 = "14","153","624","448","3788","3310","0","0","857","1153","498","116","591","1000","18000","50",
+		/*[white judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"130","87","67","770","680","0","0","5181","6849","3257","754","3597","1000","18000","50",
+		/*[black judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"300","700","450","4360","3400","0","0","854","727","594","116","414","1000","18000","50",
+		/*[moka judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"211","861","598","4960","2651","0","0","866","857","443","106","1321","1000","9000","100";
+		/*boe f*/
+		/*[module_id] [golden judge] r[0] r[1] g[0] g[1] b[0] b[1] [red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		bh1745,cal_data4 = "17","160","446","476","2385","2207","0","0","1572","2159","986","221","1124","1000","18000","50",
+		/*[white judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"194","216","113","886","821","0","0","4065","4807","1855","538","7246","1000","9000","100",
+		/*[black judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"396","1317","750","8082","5603","0","0","612","491","119","66","784","1000","9000","100",
+		/*[moka-gold judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"162","513","406","2741","2065","0","0","1069","1358","676","149","2024","1000","9000","100";
+		/**/
+		/*[module_id] [golden judge] r[0] r[1] g[0] g[1] b[0] b[1] [red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		bh1745,cal_data5 = "27","280","1191","625","9035","8881","0","0","1000","1000","1000","1000","1000","1000","900000","100",
+		/*[white judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"194","216","113","886","821","0","0","1000","1000","1000","1000","1000","1000","900000","100",
+		/*[black judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"396","2301","547","13243","12687","0","0","1000","1000","1000","1000","1000","1000","900000","100",
+		/*[x-color judge] r[0] r[1] g[0] g[1] b[0] b[1][red_cal][green_cal][blue_cal][clear_cal][lx_cal][cct_cal][cal_max][cal_min]*/
+		"396","2301","547","13243","12687","0","0","1000","1000","1000","1000","1000","1000","900000","100";
+		bh1745,i2c-scl-gpio = <&tlmm 19 0x0>;
+		bh1745,i2c-sda-gpio = <&tlmm 18 0x0>;
+	};
+	avago@52 {
+		compatible = "avago,apds9251";
+		reg = <0x52>;
+		vdd-supply = <&pm8953_l10>;
+		vio-supply = <&pm8953_l5>;
+		apds9251,power_delay_flag = <0>;
+		apds9251,tp_moudle_count = <6>;
+		/*jdi*/
+		/*[module_id] [golden CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		apds9251,cal_data0 = "8","6186","1705","930","997","1067","2846","2833","2420","216","152","60","1445","1689","742","47","498","3891","18000","50",
+		/*[white CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6830","1708","879","997","1134","784","774","676","302","188","77","5338","7058","2882","193","3194","3867","18000","50",
+		/*[balck CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"5601","1786","851","1025","1367","5863","3648","2228","712","494","228","792","706","440","70","336","5524","18000","50",
+		/*[moka gold CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6135","1867","853","987","1149","4027","3883","3104","291","168","68","920","1050","486","33","342","5235","18000","50";
+		/*tianma*/
+		/*[module_id] [golden CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		apds9251,cal_data1 = "11","6186","1705","930","997","1067","2846","2833","2420","216","152","60","1445","1689","742","47","498","3891","18000","50",
+		/*[white CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6830","1708","879","997","1134","784","774","676","302","188","77","5338","7058","2882","193","3194","3867","18000","50",
+		/*[balck CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"5601","1786","851","1025","1367","5863","3648","2228","712","494","228","792","706","440","70","336","5524","18000","50",
+		/*[moka gold CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6135","1867","853","987","1149","4027","3883","3104","291","168","68","920","1050","486","33","342","5235","18000","50";
+		/*boe*/
+		/*[module_id] [golden CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		apds9251,cal_data2 ="13","5935","1817","915","1008","1061","3714","3835","3338","204","134","60","928","1329","497","30","1069","3937","18000","50",
+		/*[white CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"7064","1720","855","1133","990","764","740","644","321","200","83","5112","6647","2619","184","3194","3867","18000","50",
+		/*[black CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"14139","1696","633","804","1058","6363","5340","4041","514","334","143","562","556","121","22","222","3367","18000","50",
+		/*[moka-gold CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6547","1787","926","961","1127","3700","3633","2900","267","190","73","887","1028","439","32","520","5952","18000","50";
+		/*ctc*/
+		/*[module_id] [golden CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		apds9251,cal_data3 = "14","6186","1705","930","997","1067","2846","2833","2420","216","152","60","1445","1689","742","47","498","3891","18000","50",
+		/*[white CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6830","1708","879","997","1134","784","774","676","302","188","77","5338","7058","2882","193","3194","3867","18000","50",
+		/*[balck CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"5601","1786","851","1025","1367","5863","3648","2228","712","494","228","792","706","440","70","336","5524","18000","50",
+		/*[moka gold CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6135","1867","853","987","1149","4027","3883","3104","291","168","68","920","1050","486","33","342","5235","18000","50";
+		/*boe f*/
+		/*[module_id] [golden CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		apds9251,cal_data4 ="17","5935","1817","915","1008","1061","3714","3835","3338","204","134","60","928","1329","497","30","1069","3937","18000","50",
+		/*[white CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"7064","1720","855","1133","990","764","740","644","321","200","83","5112","6647","2619","184","3194","3867","18000","50",
+		/*[black CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"14139","1696","633","804","1058","6363","5340","4041","514","334","143","562","556","121","22","222","3367","18000","50",
+		/*[moka-gold CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"6547","1787","926","961","1127","3700","3633","2900","267","190","73","887","1028","439","32","520","5952","18000","50";
+		/**/
+		/*[module_id] [CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		apds9251,cal_data5 ="27","8132","1904","832","930","1201","4317","3994","3935","180","119","53","1000","1000","1000","1000","1000","1000","900000","100",
+		/*[white CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"7459","1410","976","1049","1139","867","808","787","272","178","79","1000","1000","1000","1000","1000","1000","900000","100",
+		/*[black CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"14588","1008","939","1211","1256","13043","11270","9600","58","25","10","1000","1000","1000","1000","1000","1000","900000","100",
+		/*[x-color CCT_M] [CCT_N] [H] [A] [D] [LUX_P] [LUX_Q] [LUX_R] [cofficient0] [cofficient1] [cofficient2]*/
+		"14588","1008","939","1211","1256","13043","11270","9600","58","25","10","1000","1000","1000","1000","1000","1000","900000","100";
+		apds9251,i2c-scl-gpio = <&tlmm 19 0x0>;
+		apds9251,i2c-sda-gpio = <&tlmm 18 0x0>;
+	};
+	apds9110@53 {
+		compatible = "avago,apds9110";
+		reg = <0x53>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&apds9110_default>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <46 0x2>;
+		vdd-supply = <&pm8953_l10>;
+		vio-supply = <&pm8953_l5>;
+		apds9110,irq-gpio = <&tlmm 46 0x2>;
+		apds9110,ir_current = <6>;
+		apds9110,oil_effect = <25>;
+		apds9110,high_threshold = <15>;
+		apds9110,low_threshold = <5>;
+		apds9110,middle_threshold = <7>;
+		apds9110,calibration_threshold = <150>;
+		apds9110,ps_window = <10>;
+		apds9110,ps_wave = <2>;
+		apds9110,max_noise = <43>;
+		apds9110,threshold_value = <45>;
+		apds9110,ps_defalt_crosstalk = <50>;
+		apds9110,i2c-scl-gpio = <&tlmm 19 0x0>;
+		apds9110,i2c-sda-gpio = <&tlmm 18 0x0>;
+	};
+};
+
+/{
+	huawei_hall_sensor{
+		compatible = "huawei,hall-ak8789";
+		reg = <0x0 0x8789>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ak8789_default>;
+		huawei,hall_gpio_config_cover = <&tlmm 43 0x2>;
+		hall_poles = <0>;
+		status = "ok";
+	};
+};
+
+/{
+	huawei_sensor_info {
+		compatible = "huawei,hw_sensor_info";
+		product_name = "MILAN";
+	};
+};

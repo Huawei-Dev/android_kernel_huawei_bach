@@ -1,0 +1,132 @@
+&tlmm {
+        int_active: int_active{
+                        mux {
+                                pins = "gpio65";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio65";
+                                num-grp-pins = <1>;
+                                drive-strength = <6>;
+                                bias-disable;
+                };
+        };
+        int_sleep: int_sleep {
+                        mux {
+                                pins = "gpio65";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio65";
+                                num-grp-pins = <1>;
+                                drive-strength = <2>;
+                                bias-disable;
+                };
+        };
+        rst_active: rst_active {
+                        mux {
+                                pins = "gpio64";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio64";
+                                num-grp-pins = <1>;
+                                drive-strength = <6>;
+                                bias-disable;
+                        };
+                };
+        rst_sleep: rst_sleep {
+                        mux {
+                                pins = "gpio64";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio64";
+                                num-grp-pins = <1>;
+                                drive-strength = <2>;
+                                bias-disable;
+                };
+        };
+};
+
+&soc {
+	i2c@78b7000{ /* BLSP1 QUP5 */
+		status = "ok";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		qcom,clk-freq-out = <400000>;
+		/delete-node/focaltech@38;
+	};
+	ts_kit {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "huawei,ts_kit";
+		bus_type = "i2c";
+		bus_id = <3>;
+		product = "chopin";
+		reset_gpio = <&tlmm 64 0x00>;
+		irq_gpio = <&tlmm 65 0x2008>;
+		fpga_flag = <0>;
+		himax: touchscreen@48 {
+			status = "ok";
+			compatible = "himax";
+			chip_name = "hx8529f";
+			reg = <0x48>;
+			ic_type = <0>;
+			interrupt-parent = <&tlmm>;
+			interrupts = <65 0x2008>;
+			himax,reset_gpio = <&tlmm 64 0x00>;
+			himax,irq_gpio = <&tlmm 65 0x2008>;
+			himax,irq_config = <0>;/* 0 - LOW LEVEL  1 - HIGH LEVEL  2 - RAISE EDGE  3 - FALL EDGE*/
+			himax,vdd_ana-supply = <&tlmm 62 0x0>;
+			himax,vcc_i2c-supply = <&tlmm 17 0x0>;
+			himax,panel-coords = <0 1200 0 1920>;
+			himax,display-coords = <0 1200 0 1920>;
+			tp_test_type = "Normalize_type:judge_last_result";
+			report_type = <1>;
+			//pinctrl-names = "int_default","int_sleep";
+			//pinctrl-0 = <&himax_int_default>;
+			//pinctrl-1 = <&himax_int_sleep>;
+			project_id = "CHOP41170";
+			module = "auo";
+			himax,rawdata_timeout = <20>;
+		};
+		novatek_hybrid: touchscreen@62 {
+			status = "ok";
+			compatible = "novatek_hybrid";
+			ic_type = <0>;
+			roi_supported = <0>;
+			glove_supported = <0>;
+			holster_supported = <0>;
+			need_wd_check_status = <0>;
+			x_max = <1200>;
+			y_max = <1920>;
+			x_max_mt = <1200>;
+			y_max_mt = <1920>;
+			ain_tx_num = <20>;
+			ain_rx_num = <30>;
+			unite_cap_test_interface = <0>;
+			tp_test_type = "Normalize_type:judge_last_result";
+			vci_gpio_type = <1>;
+			vci_regulator_type = <0>;
+			vddio_gpio_type = <1>;
+			vddio_regulator_type = <0>;
+			projectid_len = <10>;
+			slave_address = <0x62>;
+			mp_selftest_mode = "ctlram";
+			//mp_selftest_mode = "firmware";
+			pinctrl-names = "default","idle";
+			pinctrl-0 = <&int_active &rst_active>;
+			pinctrl-1 = <&int_sleep &rst_sleep>;
+			//novatek-vdd-supply = <&tlmm 62 0>;
+			vci_ctrl_gpio = <&tlmm 62 0>;
+			//novatek-io-supply = <&tlmm 17 0>;
+			vddio_ctrl_gpio = <&tlmm 17 0>;
+			rawdata_timeout = <12>;
+			irq_config = <2>;
+			algo_id = <1>;
+			producer = "cmi";
+			};
+		};
+	};
+

@@ -1,0 +1,9 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "CAN-AL00";
+		fac,hardware_ver = "HL1CANAL10M";
+		fac,software_ver = "CAN_AL00_VA";
+		status = "ok";
+	};
+};

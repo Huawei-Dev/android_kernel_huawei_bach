@@ -1,0 +1,9 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "TRT-AL00";
+		fac,hardware_ver = "HL1TRTM-AL00";
+		fac,software_ver = "TRT_AL00_VD";
+		status = "ok";
+	};
+};

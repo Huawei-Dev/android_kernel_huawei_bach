@@ -1,0 +1,13 @@
+config LOG_JANK
+	bool "log jank feature support"
+	default n
+	---help---
+	  Say Y here to enable log jank feature support. This allows
+	  user to send log to remote server by net.
+
+config HWLOG_KERNEL
+        bool "hwlog feature support"
+        default n
+        ---help---
+          Say Y here to enable hwlog kernel feature support. This allows
+          user to send log to remote server by net.

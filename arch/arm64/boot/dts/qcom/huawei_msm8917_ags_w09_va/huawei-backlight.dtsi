@@ -1,0 +1,47 @@
+/ {
+	aliases {
+		i2c5 = &i2c_5;
+	};
+};
+
+&tlmm {
+	i2c_5 {
+			i2c_5_active: i2c_5_active {
+				/* active state */
+				mux {
+					pins = "gpio18", "gpio19";
+					function = "blsp_i2c5";
+				};
+
+				config {
+					pins = "gpio18", "gpio19";
+					drive-strength = <2>;
+					bias-disable;
+				};
+			};
+
+			i2c_5_sleep: i2c_5_sleep {
+				/* suspended state */
+				mux {
+					pins = "gpio18", "gpio19";
+					function = "gpio";
+				};
+
+				config {
+					pins = "gpio18", "gpio19";
+					drive-strength = <2>;
+					output-high;
+				};
+			};
+		};
+	};
+
+&i2c_5 {
+	  ti@2c { /* ti backlight ic*/
+		status = "ok";
+		compatible = "ti,lp8556";
+		reg = <0x2c>;
+		vdd-supply = <&pm8917_l6>;
+	  };
+};
+

@@ -1,0 +1,35 @@
+&qusb_phy {
+	qcom,qusb-phy-init-seq = <0xF8 0x80
+				0x33 0x84
+				0x83 0x88
+				0xC0 0x8C
+				0x30 0x08
+				0x79 0x0C
+				0x21 0x10
+				0x14 0x9C
+				0x9F 0x1C
+				0x00 0x18>;
+};
+
+&soc {
+	i2c@7af5000{
+		fairchild_fsa9683: fsa9683@4c {
+			compatible = "huawei,fairchild_fsa9683";
+			reg = <0x4c>;
+			fairchild_fsa9685,gpio-intb = <&tlmm 45 0>;
+			status = "ok";
+		};
+		fairchild_fsa9682: fsa9682@26 {
+			compatible = "huawei,fairchild_fsa9682";
+			reg = <0x26>;
+			fairchild_fsa9685,gpio-intb = <&tlmm 45 0>;
+			status = "ok";
+		};
+		nxp_cbtl9689: cbtl9689@2e {
+			compatible = "huawei,nxp_cbtl9689";
+			reg = <0x2e>;
+			fairchild_fsa9685,gpio-intb = <&tlmm 45 0>;
+			status = "ok";
+		};
+	};
+};

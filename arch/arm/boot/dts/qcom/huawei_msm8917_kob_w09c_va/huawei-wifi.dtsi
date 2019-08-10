@@ -1,0 +1,10 @@
+ / {
+        huawei_wifi_info {
+                  compatible = "huawei,hw_wifi_info";
+                  status = "ok";
+                  wifi,chiptype = "WIFI_QUALCOMM_WCN3660B";
+                  wifi,pubfile_id = "kob_w09c";
+                  wifi,fw_ver = "QCOM_WCN3660B_2.0.2";
+                  wifi,ini_type = "kobe";
+        };
+};

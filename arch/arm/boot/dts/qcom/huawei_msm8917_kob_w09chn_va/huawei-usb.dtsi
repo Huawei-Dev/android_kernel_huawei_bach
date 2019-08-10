@@ -1,0 +1,37 @@
+&tlmm {
+    usb_gpio_id_pin {
+        usb_gpio_id_pin_default: usb_gpio_id_pin_default {
+            mux {
+                pins = "gpio48";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio48";
+                drive-strength = <2>;
+                bias-pull-up;
+            };
+        };
+    };
+};
+
+/*remove type-c support*/
+&i2c_2 {
+	/delete-node/ pericom-type-c@1d;
+};
+
+&usb_otg {
+    pinctrl-names = "default";
+    pinctrl-0 = <&usb_gpio_id_pin_default>;
+    qcom,usbid-gpio=<&tlmm 48 0>;
+    qcom,hsusb-otg-mode = <3>; /*OTG Mode*/
+	vbus_otg-supply = <&smb1360_otg_supply>;
+	qcom,support-smb1360;/*add for power off charge*/
+	qcom,floated-charger-enable = <1>;
+    qcom,hsusb-otg-phy-init-seq-host = <0x44 0x80 0x64 0x81 0x3e 0x82 0x13 0x83 0xffffffff>;
+};
+
+&android_usb {
+    /*8917 does not support ipa ports*/
+    qcom,no-support-ipa;
+};

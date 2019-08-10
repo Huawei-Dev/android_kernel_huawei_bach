@@ -1,0 +1,7 @@
+
+config TOUCHSCREEN_ITS
+	tristate "Enable Ilitek for 2120 Driver"
+	depends on ILITEK_2120
+	default y
+	help
+	  enable the 2120_tp of ilitek.

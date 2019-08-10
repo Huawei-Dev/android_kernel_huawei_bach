@@ -1,0 +1,11 @@
+menu "huawei linux device driver for qcom"
+
+config HUAWEI_CC_DRV
+	bool "Use huawei cc code"
+	default n
+	help
+		use huawei chipsetcommon driver code
+
+source "drivers/huawei_cc/cpuinfo/Kconfig"
+
+endmenu

@@ -1,0 +1,200 @@
+/* touch panel config */
+
+&tlmm {
+	synaptics_int_active: synaptics_int_active{
+			mux {
+				pins = "gpio65";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio65";
+				num-grp-pins = <1>;
+				drive-strength = <6>;
+				bias-pull-up;
+		};
+	};
+	synaptics_int_sleep: synaptics_int_sleep {
+			mux {
+				pins = "gpio65";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio65";
+				num-grp-pins = <1>;
+				drive-strength = <2>;
+				bias-disable;
+		};
+	};
+	synaptics_rst_active: synaptics_rst_active {
+			mux {
+				pins = "gpio64";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio64";
+				num-grp-pins = <1>;
+				drive-strength = <6>;
+				bias-pull-up;
+			};
+		};
+	synaptics_rst_sleep: synaptics_rst_sleep {
+			mux {
+				pins = "gpio64";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio64";
+				num-grp-pins = <1>;
+				drive-strength = <2>;
+				bias-disable;
+		};
+	};
+};
+
+&soc {
+	i2c@78b7000{
+		status = "ok";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		qcom,clk-freq-out = <400000>;
+	};
+	ts_kit {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "huawei,ts_kit";
+		bus_type = "i2c";
+		bus_id = <3>;
+		product = "tor-a1";
+		reset_gpio = <&tlmm 64 0x00>;
+		irq_gpio = <&tlmm 65 0x2008>;
+		fpga_flag = <0>;
+		synaptics@70 {
+			compatible = "synaptics";
+			algo_id = <2>;
+			raw_data_limit = "9999", /*rawdata-max*/
+				"1", /*rawdata-min*/
+				"998", /*deltadata-max*/
+				"-998", /*deltadata-min*/
+				"9999", /*rx-to-rx-diff-max*/
+				"-9999", /*rx-to-rx-diff-min*/
+				"9999", /*tx-to-tx-diff-max*/
+				"-9999";/*tx-to-tx-diff-min*/
+			need_wd_check_status = <0>;
+			x_max = <720>;
+			y_max = <1280>;
+			x_max_mt = <720>;
+			y_max_mt = <1280>;
+			irq_config = <0>;
+			ic_type = <2>;
+			delay_for_fw_update = <1>;
+			delay_for_erase_fw = <11600>;
+			vci_gpio_type = <0>;
+			vci_regulator_type = <0>;
+			vddio_gpio_type = <0>;
+			vddio_regulator_type = <0>;
+			slave_address = <0x70>;
+			unite_cap_test_interface =<1>;
+			pinctrl-names = "default","idle";
+			pinctrl-0 = <&synaptics_int_active &synaptics_rst_active>;
+			pinctrl-1 = <&synaptics_int_sleep &synaptics_rst_sleep>;
+			//synaptics-vdd-supply = <&ldo17>;
+			//synaptics-io-supply = <&ldo4>;
+			TRTO34130{
+				producer = "boe";
+				compatible = "synaptics-TRTO34130";
+				holster_switch_addr = <0x0419>;
+				holster_switch_bit = <1>;
+				glove_switch_addr = <0x001b>;
+				glove_switch_bit = <5>;
+				roi_supported = <0>;
+				raw_data_limit = "3380", "650", "999", "-999", "850", "-850", "850", "-850";
+				ic_type = <4>;
+			};
+			TRTO34110{
+				producer = "tianma";
+				compatible = "synaptics-TRTO34110";
+				holster_switch_addr = <0x0419>;
+				holster_switch_bit = <1>;
+				glove_switch_addr = <0x001b>;
+				glove_switch_bit = <5>;
+				roi_supported = <0>;
+				raw_data_limit = "3100", "500", "999", "-999", "1100", "-1100", "1100", "-1100";
+				ic_type = <4>;
+			};
+			TRTO34131{
+				producer = "boe";
+				compatible = "synaptics-TRTO34131";
+				holster_switch_addr = <0x0419>;
+				holster_switch_bit = <1>;
+				glove_switch_addr = <0x001b>;
+				glove_switch_bit = <5>;
+				roi_supported = <0>;
+				raw_data_limit = "3380", "650", "999", "-999", "850", "-850", "850", "-850";
+				ic_type = <4>;
+			};
+		};
+		focaltech@38 {
+			compatible = "fts";
+			ic_type = <0>;
+			slave_address = <0x38>;
+			pram_projectid_addr = <0x7a0>;
+			need_wd_check_status = <0>;
+			x_max = <720>;
+			y_max = <1280>;
+			x_max_mt = <720>;
+			y_max_mt = <1280>;
+			unite_cap_test_interface =<1>;
+			report_rate_test =<0>;
+			vci_gpio_type = <0>;
+			vci_regulator_type = <1>;
+			vddio_gpio_type = <0>;
+			vddio_regulator_type = <1>;
+			chip_id = <0x87>;
+			hard_reset_delay = <200>;
+			erase_min_delay = <1350>;
+			calc_crc_delay = <300>;
+			reboot_delay = <300>;
+			erase_query_delay = <50>;
+			write_flash_query_times = <30>;
+			read_ecc_query_times = <100>;
+			erase_flash_query_times = <15>;
+			upgrade_loop_times = <5>;
+			glove_switch_addr = <0xC0>;
+			//pinctrl-names = "default", "idle";
+			//pinctrl-0 = <&gpio055_pmx_func
+			//			&gpio055_cfg_func
+			//			&gpio198_cfg_func>;
+			//pinctrl-1 = <&gpio055_pmx_idle
+			//			&gpio055_cfg_idle
+			//			&gpio198_cfg_idle>;
+			//fts-vdd-supply = <&ldo17>;
+			//fts-io-supply = <&ldo4>;
+			irq_config = <0>;
+			algo_id = <1>;
+			TRTO37120 {
+				producer = "cmi";
+				ic_type = <1>;
+				compatible = "fts-TRTO37120";
+				threshold,raw_data_min = <5500>;
+				threshold,raw_data_max = <11000>;
+				threshold,cb_test_min = <1>;
+				threshold,cb_test_max = <70>;
+				threshold,short_circuit_min = <1000>;
+				//threshold,open_test_cb_min = <100>;
+				threshold,lcd_noise_max = <60>;
+			};
+		};
+	};
+
+	/*To disable gen-vkeys.c probe,avoid generate kobject*/
+	gen-vkeys {
+		compatible = "huawei,gen-vkeys";
+		label = "synaptics_rmi4_i2c";
+		qcom,disp-maxx = <720>;
+		qcom,disp-maxy = <1280>;
+		qcom,panel-maxx = <720>;
+		qcom,panel-maxy = <1369>;
+		qcom,key-codes = <158 172 139>;
+	};
+};
+

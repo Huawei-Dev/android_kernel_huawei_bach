@@ -1,0 +1,139 @@
+&tlmm {
+        cyttsp5_int_active: cyttsp5_int_active{
+                        mux {
+                                pins = "gpio65";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio65";
+                                num-grp-pins = <1>;
+                                drive-strength = <6>;
+                                bias-disable;
+                };
+        };
+        cyttsp5_int_sleep: cyttsp5_int_sleep {
+                        mux {
+                                pins = "gpio65";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio65";
+                                num-grp-pins = <1>;
+                                drive-strength = <2>;
+                                bias-disable;
+                };
+        };
+        cyttsp5_rst_active: cyttsp5_rst_active {
+                        mux {
+                                pins = "gpio64";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio64";
+                                num-grp-pins = <1>;
+                                drive-strength = <6>;
+                                bias-disable;
+                        };
+                };
+        cyttsp5_rst_sleep: cyttsp5_rst_sleep {
+                        mux {
+                                pins = "gpio64";
+                                function =  "gpio";
+                        };
+                        config {
+                                pins = "gpio64";
+                                num-grp-pins = <1>;
+                                drive-strength = <2>;
+                                bias-disable;
+                };
+        };
+};
+
+&soc {
+	i2c@78b7000{
+		status = "ok";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		qcom,clk-freq-out = <400000>;
+		/delete-node/focaltech@38;
+	};
+	ts_kit {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "huawei,ts_kit";
+		bus_type = "i2c";
+		bus_id = <3>;
+		product = "agassi";
+		reset_gpio = <&tlmm 64 0x00>;
+		irq_gpio = <&tlmm 65 0x2008>;
+		fpga_flag = <0>;
+		parade: touchscreen@24 {
+			status = "ok";
+			compatible = "parade";
+			reg = <0x24>;
+			slave_address = <0x24>;
+			parade,adapter_id = "cyttsp5_i2c_adapter";
+			/*project related info*/
+			project_id = "AGAS39050"; /* 39: cs448, 050: junda, 030: mutto*/
+			chip_vendor = "parade";
+			chip_name = "cs448";
+			module_vendor = "original"; /* first vendor, will rewirte from panel id*/
+			parade,pinctrl_set = <1>; /* 0-no set, 1-set by self */
+			/*power region*/
+			power_self_ctrl=<1>; /*0-Power is controlled by LCD, 1-Power is self controlled*/
+			/*VCI Power*/
+			vci_power_type   = <0>; /*0 - gpio control  1 - ldo  2 - boost & gpio*/
+			//parade_vci-supply;
+			//vci_ldo_value;
+			vci_gpio_enable  = <&tlmm 47 0>;
+			//vci_boost_enable;
+			vddio_ldo_need_set = <0>;
+			touch_switch_flag = <0>;
+			vddio_gpio_type = <0>;
+			get_brightness_info_flag = <0>; /* 0 - no need 1 - need */
+			create_project_id_flag = <1>;
+			need_wd_check_status = <1>;
+			/*VDDIO Power*/
+			vddio_power_type   = <0>; /*0 - gpio control  1 - ldo  2 - not used*/
+			vddio_gpio_enable  = <&tlmm 0 0>;
+			//parade_vddio-supply;
+			//vddio_ldo_value;
+			/*end power region*/
+			roi_supported = <0>;
+			glove_mode_supported = <0>;
+			holster_mode_supported = <0>;
+			parade,is_parade_solution = <1>;
+			parade,direct_proc_cmd = <1>;
+			parade,check_irq_state = <1>;
+
+			parade,sleep_in_mode = <0>;/*0-use sleep command, 1-power down, 2-easy wake*/
+			parade,put_cmd_thread = <1>;
+			parade,i2c_one_byte = <1>;
+			parade,use_new_oem_structure = <0>;
+
+			parade,i2c_read_length = <100>;
+			pinctrl-names = "default", "idle";
+			pinctrl-0 = <&cyttsp5_int_active &cyttsp5_rst_active>;
+			pinctrl-1 = <&cyttsp5_int_sleep &cyttsp5_rst_sleep>;
+			parade,hid_desc_register = <1>;
+			parade,irq_config = <0>;/* 0 - LOW LEVEL  1 - HIGH LEVEL  2 - RAISE EDGE  3 - FALL EDGE*/
+			parade,core_flags = <0>;/* CY_CORE_FLAG_WAKE_ON_GESTURE */
+			parade,mt_flags = <0x00>;/* CY_MT_FLAG_FLIP | CY_MT_FLAG_INV_X | CY_MT_FLAG_INV_Y */
+			parade,slots_max = <32>;
+			parade,easy_wakeup_supported_gestures = <0>;
+			parade,upgrade_ttconfig = <0>;
+			parade,need_upgrade_again = <1>;
+			parade,need_distinguish_lcd = <1>;/*only Agassi need use*/
+			parade,cy_hid_output_timeout = <2000>;
+
+			parade,abs_min_x = <0>;		parade,abs_max_x = <800>;	/* ABS_MT_POSITION_X, CY_ABS_MIN_X, CY_ABS_MAX_X, 0, 0 */
+			parade,abs_min_y = <0>;		parade,abs_max_y = <1280>;	/* ABS_MT_POSITION_Y, CY_ABS_MIN_Y, CY_ABS_MAX_Y, 0, 0 */
+			parade,abs_min_p = <0>;		parade,abs_max_p = <800>;	/* ABS_MT_PRESSURE,   CY_ABS_MIN_P, CY_ABS_MAX_P, 0, 0 */
+			parade,abs_min_w = <0>;		parade,abs_max_w = <30>; 	/* CY_IGNORE_VALUE,   CY_ABS_MIN_W, CY_ABS_MAX_W, 0, 0 */
+			parade,abs_min_t = <0>;		parade,abs_max_t = <15>;	/* ABS_MT_TRACKING_ID,CY_ABS_MIN_T, CY_ABS_MAX_T, 0, 0 */
+			parade,abs_min_mj = <0>;	parade,abs_max_mj = <255>;	/* ABS_MT_TOUCH_MAJOR,0, 255, 0, 0 */
+			parade,abs_min_mn = <0>;	parade,abs_max_mn = <255>;	/* ABS_MT_TOUCH_MINOR,0, 255, 0, 0 */
+			parade,abs_min_or = <0>;	parade,abs_max_or = <127>;	/* ABS_MT_ORIENTATION,-128, 127, 0, 0 */
+		};
+	};
+};

@@ -1,0 +1,48 @@
+qcom,qrd-4v4-2920mAh-scud-data {
+	/* #2468565_Huawei_Cannes_2920mAh_Master_May20th2016 */
+	qcom,max-voltage-uv = <4400000>;
+	qcom,nom-batt-capacity-mah = <2920>;
+	qcom,batt-id-kohm = <200>;
+	qcom,battery-beta = <3435>;
+	qcom,battery-type = "HB405979ECW_LG_SCUD";
+	qcom,chg-rslow-comp-c1 = <3067955>;
+	qcom,chg-rslow-comp-c2 = <3797410>;
+	qcom,chg-rs-to-rslow = <1693695>;
+	qcom,chg-rslow-comp-thr = <0x99>;
+	qcom,checksum = <0x0D30>;
+	qcom,gui-version = "PMI8950GUI - 2.0.0.16";
+	qcom,fg-profile-data = [
+		 D9 82 BE 72
+		 64 5F 55 63
+		 3E 83 8F 71
+		 22 77 A7 72
+		 F7 81 48 9A
+		 EC BC 6D C9
+		 83 0E 0C 88
+		 70 7E 2F 82
+		 94 7C 42 83
+		 7F 72 3B 6E
+		 EA 7C 93 82
+		 DC 92 C0 B4
+		 64 C0 58 17
+		 FB 0B 89 58
+		 14 70 71 FD
+		 5B 3E B6 4C
+		 CF 48 00 00
+		 54 4C 5D 30
+		 FE 3A 00 00
+		 00 00 00 00
+		 00 00 00 00
+		 D6 72 5D 71
+		 10 56 7F 82
+		 32 75 04 62
+		 9D 5E A4 72
+		 84 6E 94 4C
+		 03 76 BF AA
+		 1B 16 68 89
+		 66 A0 71 0C
+		 28 00 FF 36
+		 F0 11 30 03
+		 00 00 00 0C
+	];
+};

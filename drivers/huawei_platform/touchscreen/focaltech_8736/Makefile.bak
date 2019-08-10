@@ -1,0 +1,16 @@
+#
+# Makefile for the input core drivers.
+#
+
+# Each configuration option enables a list of files.
+obj-$(CONFIG_TOUCHSCREEN_FTS) += fts_ts.o 
+fts_ts-y += focaltech_core.o
+fts_ts-y += focaltech_ex_fun.o
+fts_ts-y += focaltech_flash.o
+fts_ts-y += Config_FT5822.o Config_FT5X46.o Config_FT8606.o Config_FT6X36.o Config_FT3C47.o Config_FT8716.o
+fts_ts-y += Test_FT5822.o Test_FT5X46.o Test_FT8606.o Test_FT6X36.o Test_FT3C47.o Test_FT8716.o 
+fts_ts-y += DetailThreshold.o Global.o ini.o 
+fts_ts-y += test_lib.o	
+fts_ts-y += Config_FT8736.o
+fts_ts-y += Test_FT8736.o
+fts_ts-y += focaltech_test.o

@@ -1,0 +1,116 @@
+&mtp_batterydata {
+	qcom,batt-id-range-pct = <15>;
+
+	qcom,itech-3000mah {
+		qcom,batt-id-kohm = <1000>;
+	};
+
+	#include "../HB386483ECW_ATL_SWD-4v4-3270mah.dtsi"
+	#include "../HB386483ECW_GY_GY-4v4-3270mah.dtsi"
+	#include "../HB386483ECW_SONY_DS-4v4-3270mah.dtsi"
+	#include "../HB386483ECW_ATL_SCUD-4v4-3270mah.dtsi"
+	#include "../HB386483ECW_LG_SWD-4v4-3270mah.dtsi"
+};
+
+&pmi8950_charger {
+	/* jeita parameters */
+	qcom,jeita-temp-hard-limit = <1>;
+	qcom,fastchg-current-batt-warm = <1100>;
+	qcom,fastchg-current-batt-cool = <950>;
+	qcom,fastchg-current-customize-cool = <300>;
+	qcom,customize-cool-lower-limit = <0>;
+	qcom,customize-cool-upper-limit = <50>;
+	qcom,vfloat-batt-warm = <4100>;
+	qcom,device-not-support-hvdcp;
+	qcom,float-voltage-comp = <16>;
+};
+
+&pmi8950_fg {
+	/* Using external sense */
+	qcom,ext-sense-type;
+	/* set Beta value */
+	qcom,thermal-coefficients = [c2 86 bb 50 cf 37];
+	/* set temp range thershold */
+	qcom,warm-bat-decidegc = <480>;
+	qcom,cool-bat-decidegc = <100>;
+	qcom,hot-bat-decidegc = <500>;
+	qcom,cold-bat-decidegc = <0>;
+	qcom,resume-soc = <99>;
+	qcom,resume-soc-raw = <253>;
+	qcom,fg-cutoff-voltage-mv = <3250>;
+	qcom,fg-memif@4400 {
+		qcom,cold-hot-jeita-hysteresis = <20 20>;
+	};
+};
+
+&i2c_2 {
+	/* disable Parallel-charger */
+	smb1351-charger@1d {
+		compatible = "qcom,smb1351-charger";
+		reg = <0x1d>;
+		status = "disabled";
+	};
+};
+
+
+/{
+	huawei_charger: qcom,huawei_charger{
+		compatible = "huawei,charger";
+		status = "okay";
+	};
+};
+
+/{
+	huawei_dsm_charger: huawei_dsm_charger{
+		compatible = "huawei,dsm_charger";
+		status = "ok";
+	};
+};
+
+&pm8953_mpps {
+	mpp@a100 {
+		qcom,mode = <4>; // QPNP_PIN_MODE_AIN
+		qcom,src-sel = <0>; // QPNP_PIN_SEL_FUNC_CONSTANT
+		qcom,ain-route = <1>; // QPNP_PIN_AIN_AMUX_CH6
+		qcom,master-en = <1>; // Enable features
+	};
+
+	mpp@a300 {
+		qcom,mode = <4>; // QPNP_PIN_MODE_AIN
+		qcom,src-sel = <0>; // QPNP_PIN_SEL_FUNC_CONSTANT
+		qcom,ain-route = <3>; // QPNP_PIN_AIN_AMUX_CH8
+		qcom,master-en = <1>; // Enable features
+	};
+};
+
+&pm8953_vadc {
+	chg_mpp_number = <17>;
+	cpu_mpp_number = <19>;
+	pa_mpp_number = <54>;
+
+	chan@11 {
+		label = "chg_therm";
+		reg = <0x11>;
+		qcom,decimation = <0>; //512 sampling rate
+		qcom,pre-div-channel-scaling = <0>; //1:1 scaling
+		qcom,calibration-type = "ratiometric"; //Use Dvdd & Dgnd reference voltage
+		qcom,scale-function = <17>; //convert raw adc code to voltage
+		qcom,hw-settle-time = <2>; //200us
+		qcom,fast-avg-setup = <0>; //with only one average measurement
+	};
+
+	chan@13 {
+		label = "msm_therm";
+		reg = <0x13>;
+		qcom,decimation = <0>; //512 sampling rate
+		qcom,pre-div-channel-scaling = <0>; //1:1 scaling
+		qcom,calibration-type = "ratiometric"; //Use Dvdd & Dgnd reference voltage
+		qcom,scale-function = <17>; //convert raw adc code to voltage
+		qcom,hw-settle-time = <2>; //200us
+		qcom,fast-avg-setup = <0>; //with only one average measurement
+	};
+
+	chan@36 {
+		qcom,scale-function = <17>; //convert raw adc code to voltage
+	};
+};

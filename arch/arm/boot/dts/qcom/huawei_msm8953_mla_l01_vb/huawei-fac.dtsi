@@ -1,0 +1,10 @@
+/{
+		huawei_fac_info {
+		compatible = "huawei,hw_fac_info";
+		fac,product_name = "MLA-L01";
+		fac,hardware_ver = "HL1MLAL01M";
+		fac,software_ver = "MLA_L01_VB";
+		fac,simcard_adapt = "support";
+		status = "ok";
+	};
+};

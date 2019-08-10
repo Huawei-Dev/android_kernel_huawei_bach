@@ -1,0 +1,4 @@
+source "drivers/huawei_platform/power/hw_kstate/Kconfig"
+source "drivers/huawei_platform/power/msgnotify/Kconfig"
+source "drivers/huawei_platform/power/usb_short_circuit_protect/Kconfig"
+source "drivers/huawei_platform/power/bdat/Kconfig"

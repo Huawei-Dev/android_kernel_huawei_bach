@@ -1,0 +1,10 @@
+/*=============================================================================
+                           Huawei Base Dtsi File
+  GENERAL DESCRIPTION
+    This file is for include the Communal node
+
+  Copyright 2010-2014 by HUAWEI Technologies, Inc.  All Rights Reserved.
+=============================================================================*/
+#include "msm8917.dtsi"
+#include "msm8917-pmi8937-qrd-sku5.dtsi"
+

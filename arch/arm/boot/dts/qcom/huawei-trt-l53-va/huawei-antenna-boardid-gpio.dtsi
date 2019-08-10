@@ -1,0 +1,52 @@
+/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+&tlmm {
+
+	ant_boardid_gpio_det_default:ant_boardid_gpio_det_default {
+			mux {
+				pins = "gpio44", "gpio25";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio44", "gpio25";
+				num-grp-pins = <2>;
+				drive-strength = <2>;
+				bias-disable;
+			};
+	};
+
+	ant_boardid_gpio_det_idle:ant_boardid_gpio_det_idle {
+			mux {
+				pins = "gpio44", "gpio25";
+				function =  "gpio";
+			};
+			config {
+				pins = "gpio44", "gpio25";
+				num-grp-pins = <2>;
+				drive-strength = <2>;
+				bias-disable;
+			};
+	};
+
+};
+
+&soc {
+	ant_boardid_gpio_det {
+		compatible = "huawei,antenna_boardid_detect";
+		pinctrl-names = "default", "idle";
+		pinctrl-0 = <&ant_boardid_gpio_det_default>;
+		pinctrl-1 = <&ant_boardid_gpio_det_idle>;
+		gpio_count = <2>;
+		board_version = <5>;
+		gpios = <&tlmm 25 0>,<&tlmm 44 0>;
+	};
+};

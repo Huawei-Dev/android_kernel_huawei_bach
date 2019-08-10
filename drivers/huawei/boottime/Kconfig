@@ -1,0 +1,5 @@
+config HUAWEI_BOOT_TIME
+       default n
+	   bool "huawei boot time"
+       help
+			set beta or commercial version to kernel.
