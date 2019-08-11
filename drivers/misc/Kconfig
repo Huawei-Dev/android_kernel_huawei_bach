@@ -590,11 +590,6 @@ config QPNP_MISC
 	  and the driver provides an API to check if this interrupt
 	  is available on the current PMIC chip.
 
-config DEVICEBOXID
-	bool "Speaker box ID support"
-	help
-	  Speaker box ID support.
-
 config UID_SYS_STATS_DEBUG
 	bool "Per-TASK statistics"
 	depends on UID_SYS_STATS

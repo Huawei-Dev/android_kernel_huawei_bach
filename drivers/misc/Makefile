@@ -69,7 +69,6 @@ obj-$(CONFIG_HUAWEI_RESET_DETECT) += huawei_reset_detect/
 obj-$(CONFIG_USB_EXT_TYPE_C_PERICOM)	+= type-c-pericom.o
 obj-$(CONFIG_USB_EXT_TYPE_C_TI)		+= type-c-ti.o
 obj-$(CONFIG_QPNP_MISC) 	+= qpnp-misc.o
-obj-$(CONFIG_DEVICEBOXID)	+= deviceboxID/deviceboxID.o
 obj-$(CONFIG_UID_SYS_STATS) += uid_sys_stats.o
 obj-$(CONFIG_MEMORY_STATE_TIME) += memory_state_time.o
 obj-$(CONFIG_SM5106)  	+= sm5106.o
