@@ -13,6 +13,8 @@
 
 /dts-v1/;
 #include "huawei_msm8940_base.dtsi"
+#include "lcdkit/bah_l09_va/devkit_lcd.dtsi"
+#include "lcdkit/default/devkit_lcd.dtsi"
 #include "huawei_msm8940_bah_l09_va/huawei.dtsi"
 / {
 	model = "Huawei Technologies, Inc. BAH-L09";

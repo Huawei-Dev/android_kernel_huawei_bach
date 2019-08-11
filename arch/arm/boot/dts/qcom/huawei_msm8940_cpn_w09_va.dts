@@ -14,8 +14,8 @@
 /dts-v1/;
 
 #include "huawei_msm8940_base.dtsi"
-#include "lcdkit/default/devkit_lcd.dtsi"
 #include "lcdkit/cpn_w09_va/devkit_lcd.dtsi"
+#include "lcdkit/default/devkit_lcd.dtsi"
 #include "huawei_msm8940_cpn_w09_va/huawei.dtsi"
 
 / {
