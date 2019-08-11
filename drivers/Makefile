@@ -178,10 +178,12 @@ obj-$(CONFIG_HUAWEI_CC_DRV)		+= huawei_cc/
 obj-$(CONFIG_HUAWEI_HW_DEV_DCT) += devdetect/
 # <t-base drivers
 obj-y     += dsm/
-obj-$(CONFIG_HUAWEI_DRIVERS)	+=huawei_platform/
+obj-$(CONFIG_HUAWEI_DRIVERS)	+= huawei_platform/
 
 obj-$(CONFIG_HW_GADGET)     += hwusb/
 
 obj-$(CONFIG_HUAWEI_FACTORY_INFO)	+= hw_fac_info/
 
 obj-$(CONFIG_HUAWEI_TS_KIT) += devkit/tpkit/
+
+obj-$(CONFIG_AUDIOKIT)	+= devkit/audiokit/

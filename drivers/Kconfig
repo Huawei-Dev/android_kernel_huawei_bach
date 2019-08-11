@@ -214,4 +214,5 @@ source "drivers/devkit/lcdkit/Kconfig"
 
 source "drivers/devkit/tpkit/Kconfig"
 
+source "drivers/devkit/audiokit/Kconfig"
 endmenu
