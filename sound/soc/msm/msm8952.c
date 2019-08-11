@@ -228,6 +228,7 @@ bool smartpa_is_two_tas2560(void)
 {
 	return smartamp_is_two_tas2560;
 }
+
 static bool smartpa_is_two_tas2560_check(struct msm8916_asoc_mach_data *pdata)
 {
 	if ((pdata == NULL) || (pdata->smartpa_name == NULL))
@@ -3539,6 +3540,20 @@ static struct snd_soc_dai_link max98925_dai_link[] = {
 #ifdef CONFIG_SND_SOC_TFA98XX
 extern bool get_nxp_smartpa_drv_state(void);
 static struct snd_soc_dai_link msm8952_tfa9895_dai_link[] = {
+ 	{
+		.name = LPASS_BE_QUIN_MI2S_TX,
+		.stream_name = "Quinary MI2S Capture",
+		.cpu_dai_name = "msm-dai-q6-mi2s.5",
+		.platform_name = "msm-pcm-routing",
+		.codec_dai_name = "tfa98xx-aif-8-34",
+		.codec_name = "tfa98xx.8-0034",
+		.no_pcm = 1,
+		.dpcm_capture = 1,
+		.be_id = MSM_BACKEND_DAI_QUINARY_MI2S_TX,
+		.be_hw_params_fixup = msm_be_hw_params_fixup,
+		.ops = &msm8952_quin_mi2s_be_ops,
+		.ignore_suspend = 1,
+	},
 	{
 		.name = LPASS_BE_QUIN_MI2S_RX,
 		.stream_name = "Quinary MI2S Playback",
@@ -3553,6 +3568,27 @@ static struct snd_soc_dai_link msm8952_tfa9895_dai_link[] = {
 		.ops = &msm8952_quin_mi2s_be_ops,
 		.ignore_pmdown_time = 1, /* dai link has playback support */
 		.ignore_suspend = 1,
+	},
+};
+
+static struct snd_soc_dai_link quin_hostless_tfa9895_dai_link[] = {
+	/*this dai link is used for AT test*/
+	{ /* hw:x,25 */
+		.name = "QUIN_MI2S Hostless",
+		.stream_name = "QUIN_MI2S Hostless",
+		.cpu_dai_name = "QUIN_MI2S_RX_HOSTLESS",
+		.platform_name = "msm-pcm-hostless",
+		.dynamic = 1,
+		.dpcm_playback = 1,
+		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+			SND_SOC_DPCM_TRIGGER_POST},
+		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
+		.ignore_suspend = 1,
+		/* this dainlink has playback support */
+		.ignore_pmdown_time = 1,
+		.codec_dai_name = "snd-soc-dummy-dai",
+		.codec_name = "snd-soc-dummy",
+		.be_id = 0,
 	},
 };
 #endif
@@ -3625,6 +3661,37 @@ void check_dai_link_for_smartpa(struct snd_soc_dai_link *dailink, int daicount,
 		if (smart_dai_count == len)
 			break;
 	}
+}
+#endif
+
+#ifdef CONFIG_SND_SOC_TFA98XX
+void check_dai_link_for_quin_hostless(struct snd_soc_dai_link *dailink, int daicount)
+{
+	int j = 0;
+
+	if (NULL == dailink) {
+		pr_err("%s: input null dai params \n", __func__);
+		return;
+	}
+
+	if (get_nxp_smartpa_drv_state()) {
+		pr_info("%s: get_nxp_smartpa_drv_state is true \n", __func__);
+	} else {
+		dailink += (daicount - 1);
+		for (j = daicount; j > 0; dailink--, j--) {
+			if ((dailink == NULL) || (dailink->cpu_dai_name == NULL)) {
+				continue;
+			}
+			if (0 != strcmp(dailink->cpu_dai_name,"QUAT_MI2S_RX_HOSTLESS")) {
+				continue;
+			}
+			pr_info("%s: cpu_dai_name original : %s\n", __func__, dailink->cpu_dai_name);
+			memcpy(dailink, &quin_hostless_tfa9895_dai_link[0], sizeof(struct snd_soc_dai_link));
+			pr_info("%s: cpu_dai_name final : %s\n", __func__, dailink->cpu_dai_name);
+		}
+	}
+
+	return;
 }
 #endif
 
@@ -4035,6 +4102,9 @@ parse_mclk_freq:
 
 	/*check whether smartpa driver faild*/
 	check_dai_link_for_smartpa(msm8952_dai_links, ARRAY_SIZE(msm8952_dai_links), pa_link, pa_daicount);
+#ifdef CONFIG_SND_SOC_TFA98XX
+	check_dai_link_for_quin_hostless(msm8952_dai_links, ARRAY_SIZE(msm8952_dai_links));
+#endif
 
 	if (smartpa_is_four_tas2560())
 		msm8952_dailink_custom_check(card);

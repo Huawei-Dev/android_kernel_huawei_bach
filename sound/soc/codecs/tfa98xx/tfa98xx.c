@@ -27,7 +27,7 @@
 #include <linux/debugfs.h>
 #include <linux/version.h>
 #include <linux/input.h>
-
+#include <linux/moduleparam.h>
 #include "config.h"
 
 #define I2C_RETRIES 50
@@ -102,7 +102,7 @@ struct tfa98xx_rate {
 	unsigned int rate;
 	unsigned int fssel;
 };
-struct tfa98xx_calibration_data{
+struct tfa98xx_calibration_data {
 	int spk_count;
 	int impedance[4];	//save speaker/reciever impedance
 	int tcof;			//Temperature coefficient
@@ -1118,7 +1118,7 @@ static int tfa98xx_info_vstep(struct snd_kcontrol *kcontrol,
 static int tfa98xx_get_profile(struct snd_kcontrol *kcontrol,
 			       struct snd_ctl_elem_value *ucontrol)
 {
-    ucontrol->value.integer.value[0] = tfa98xx_mixer_profile;
+	ucontrol->value.integer.value[0] = tfa98xx_mixer_profile;
 	return 0;
 }
 
@@ -1421,7 +1421,7 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 
 	tfa98xx_controls = devm_kzalloc(tfa98xx->codec->dev,
 			nr_controls * sizeof(tfa98xx_controls[0]), GFP_KERNEL);
-	if(!tfa98xx_controls)
+	if (!tfa98xx_controls)
 		return -ENOMEM;
 
 	/* Create a mixer item for selecting the active profile */
@@ -1742,7 +1742,7 @@ retry:
 								subaddress, value,
 								ret<0? "Error!!" : "");
 
-		if(tfa98xx_ftrace_regs)
+		if (tfa98xx_ftrace_regs)
 			tfa98xx_trace_printk("\tWR     reg=0x%02x, val=0x%04x %s\n",
 								subaddress, value,
 								ret<0? "Error!!" : "");
@@ -2137,11 +2137,15 @@ static char *fw_name_milan_aac = "milan_nxp/tfa98xx_aac.cnt";
 static char *fw_name_milan_goer = "milan_nxp/tfa98xx_goer.cnt";
 static char *fw_name_can_aac = "can_nxp/tfa98xx_aac.cnt";
 static char *fw_name_can_goer = "can_nxp/tfa98xx_goer.cnt";
+static char *fw_name_h1711_aac = "h1711/tfa98xx.cnt";/* h1711 need not distinguish boxid */
+static char *fw_name_h1711_goer = "h1711/tfa98xx.cnt";
 
 module_param(fw_name_milan_aac, charp, S_IRUGO | S_IWUSR);
 module_param(fw_name_milan_goer, charp, S_IRUGO | S_IWUSR);
 module_param(fw_name_can_aac, charp, S_IRUGO | S_IWUSR);
 module_param(fw_name_can_goer, charp, S_IRUGO | S_IWUSR);
+module_param(fw_name_h1711_aac, charp, S_IRUGO | S_IWUSR);/*lint !e528*/
+module_param(fw_name_h1711_goer, charp, S_IRUGO | S_IWUSR);/*lint !e528*/
 
 extern ssize_t get_product_identifier(char *buf);
 extern ssize_t get_speaker_box_id(char *buf);
@@ -2261,7 +2265,9 @@ static int tfa98xx_load_container(struct tfa98xx *tfa98xx)
 		fw_name_milan_aac,
 		fw_name_milan_goer,
 		fw_name_can_aac,
-		fw_name_can_goer
+		fw_name_can_goer,
+		fw_name_h1711_aac,
+		fw_name_h1711_goer
 	};
 
 	char **fw = NULL;
@@ -2273,15 +2279,17 @@ static int tfa98xx_load_container(struct tfa98xx *tfa98xx)
 	get_speaker_box_id(box_id);
 	pr_info("[NXP DBG] product_id: %s, box_id: %s\n", product_id, box_id);
 
-	if(!strcmp(product_id, "can_nxp")) {
+	if (!strcmp(product_id, "can_nxp")) {
 		fw = &fw_name_array[2];
+	} else if (!strcmp(product_id, "h1711")) {
+		fw = &fw_name_array[4];
 	} else if (!strcmp(product_id, "milan_nxp")) {
 		fw = &fw_name_array[0];
 	} else {
 		fw = &fw_name_array[0];
 	}
 
-	if(!strcmp(box_id, "GOER")) {
+	if (!strcmp(box_id, "GOER")) {
 		fw++;
 	}
 	fw_name = *fw;
@@ -2430,7 +2438,7 @@ static void tfa98xx_dsp_init(struct tfa98xx *tfa98xx)
 		return;
 	}
 
-	if(tfa98xx->dsp_init == TFA98XX_DSP_INIT_DONE) {
+	if (tfa98xx->dsp_init == TFA98XX_DSP_INIT_DONE) {
 		pr_debug("Stream already started, skipping DSP power-on\n");
 		return;
 	}
@@ -3123,10 +3131,10 @@ static int tfa98xx_calibration_open(struct inode *inode, struct file *file)
 	struct tfa98xx *tfa98xx = container_of(file->private_data, struct tfa98xx, calibrate_device);
 	pr_info("%s entry\n", __func__);
 	
-	if(NULL != tfa98xx){
+	if (NULL != tfa98xx) {
 		file->private_data = tfa98xx;
 		return 0;
-	}else{
+	} else {
 		file->private_data = NULL;
 		return -EINVAL;
 	}
@@ -3141,7 +3149,7 @@ static ssize_t tfa98xx_calibration_show(struct file *file, char __user *buf,
 	struct tfa98xx_calibration_data data;
 	
 	pr_info("%s entry    count=%d\n", __func__, (int)count);
-	if (NULL == tfa98xx){
+	if (NULL == tfa98xx) {
 		pr_err("%s   tfa98xx is NULL.\n", __func__);
 		return -EINVAL;
 	}
@@ -3151,10 +3159,10 @@ static ssize_t tfa98xx_calibration_show(struct file *file, char __user *buf,
 
 	mutex_lock(&tfa98xx->dsp_lock);
 	ret = tfa98xx_open(tfa98xx->handle);
-	if (ret){
+	if (ret) {
 		pr_err("run API tfa98xx_open error(%d)\n", ret);
 		goto err;
-	}else{
+	} else {
 		int calibrationdone = 0;
 		unsigned char buff[TFA2_SPEAKERPARAMETER_LENGTH] = {0};
 		int lsmodel_data[TFA2_SPEAKERPARAMETER_LENGTH/3] = {0};
@@ -3165,7 +3173,7 @@ static ssize_t tfa98xx_calibration_show(struct file *file, char __user *buf,
 			pr_err("run API tfaRunWaitCalibration error(%d)    calibrationdone=%d\n", ret, calibrationdone);
 			goto err;
 		}
-		if (1 != calibrationdone){
+		if (1 != calibrationdone) {
 			pr_err("run API tfaRunWaitCalibration error(%d)    calibrationdone=%d\n", ret, calibrationdone);
 			ret = Tfa98xx_Error_Fail;
 			goto err;
@@ -3173,19 +3181,19 @@ static ssize_t tfa98xx_calibration_show(struct file *file, char __user *buf,
 		
 		/* get speaker count */
 		ret = tfa98xx_supported_speakers(tfa98xx->handle, &data.spk_count);
-		if(ret){
+		if (ret) {
 			pr_err("run API tfa98xx_supported_speakers error(%d)\n", ret);
 			goto err;
 		}
 
 		/* get impedance */
 		ret = tfa_dsp_get_calibration_impedance(tfa98xx->handle);
-		if(ret){
+		if (ret) {
 			pr_err("run API tfa_dsp_get_calibration_impedance error(%d)\n", ret);
 			goto err;
-		}else{
+		} else {
 			int i = 0;
-			for (i=0; i<data.spk_count; i++){
+			for (i=0; i<data.spk_count; i++) {
 				data.impedance[i] = tfa_get_calibration_info(tfa98xx->handle, i);
 			}
 		}
@@ -3193,24 +3201,24 @@ static ssize_t tfa98xx_calibration_show(struct file *file, char __user *buf,
 		/* get tcoef data */
 		memset(buff, 0x00, sizeof(buff));
 		memset(lsmodel_data, 0x00, sizeof(lsmodel_data));
-		if (1 == tfa98xx_dev_family(tfa98xx->handle)){
+		if (1 == tfa98xx_dev_family(tfa98xx->handle)) {
 			ret = tfa_dsp_cmd_id_write_read(tfa98xx->handle, MODULE_SPEAKERBOOST, SB_PARAM_GET_LSMODEL, 
 											TFA1_SPEAKERPARAMETER_LENGTH, buff);
-		}else{
+		} else {
 			ret = tfa_dsp_cmd_id_write_read(tfa98xx->handle, MODULE_SPEAKERBOOST, SB_PARAM_GET_LSMODEL, 
 											TFA2_SPEAKERPARAMETER_LENGTH, buff);
 		}
 		
-		if(ret){
+		if (ret) {
 			pr_err("run API tfa_dsp_cmd_id_write_read error(%d)\n", ret);
 			goto err;
-		}else{
-			if (1 == tfa98xx_dev_family(tfa98xx->handle)){
+		} else {
+			if (1 == tfa98xx_dev_family(tfa98xx->handle)) {
 				tfa98xx_convert_bytes2data(TFA1_SPEAKERPARAMETER_LENGTH, buff, lsmodel_data);
 				data.Fres = 	lsmodel_data[135];
 				data.Qfactory = lsmodel_data[137];
 				data.tcof = 	lsmodel_data[140];
-			}else{
+			} else {
 				tfa98xx_convert_bytes2data(TFA2_SPEAKERPARAMETER_LENGTH, buff, lsmodel_data);
 				/* for family 2, the tcof data location TBD, will update later.*/
 			}
@@ -3221,16 +3229,16 @@ err:
 	tfa98xx_close(tfa98xx->handle);
 
 	/* if we get error, we will clear data buffer. */
-	if (ret){
+	if (ret) {
 		memset(&data, 0x00, sizeof(struct tfa98xx_calibration_data));
 	}
 	
 	ret = copy_to_user(buf, &data, sizeof(struct tfa98xx_calibration_data));
 	mutex_unlock(&tfa98xx->dsp_lock);
 	
-	if (ret){
+	if (ret) {
 		return -ret;
-	}else{
+	} else {
 		return count;
 	}
 }
@@ -3246,7 +3254,7 @@ static ssize_t tfa98xx_do_calibration(struct file *file, const char __user *buf,
 	int ready = 0;
 
 	pr_info("%s entry    count=%d\n", __func__, (int)count);
-	if (NULL == tfa98xx){
+	if (NULL == tfa98xx) {
 		pr_err("%s   tfa98xx is NULL.\n", __func__);
 		return -EINVAL;
 	}
@@ -3255,82 +3263,82 @@ static ssize_t tfa98xx_do_calibration(struct file *file, const char __user *buf,
 	i2c = tfa98xx->i2c;
 	memset(kernelbuf, 0x00, MAX_COMMAND_BUFFER_LENGTH);
 	/* copy params from user space to kernel space. */
-	if (count >= MAX_COMMAND_BUFFER_LENGTH){
+	if (count >= MAX_COMMAND_BUFFER_LENGTH) {
 		ret = copy_from_user(kernelbuf, buf, MAX_COMMAND_BUFFER_LENGTH);
-	}else{
+	} else {
 		ret = copy_from_user(kernelbuf, buf, count);
 	}
-	if(ret){
+	if (ret) {
 		pr_err("run API copy_from_user returned error(%d)\n", ret);
 		goto err;
 	}
 
 	pr_info("input value is %s", kernelbuf);
 	ret = tfa98xx_open(tfa98xx->handle);
-	if(ret){
+	if (ret) {
 		pr_err("run API tfa98xx_open error %d\n", ret);
 		goto err;
-	}else{
+	} else {
 		/* check i2s clock */
 		ret = tfa98xx_dsp_system_stable(tfa98xx->handle, &ready);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfa98xx_dsp_system_stable returned error(%d)\n", ret);
 			goto err;
 		}
 		
-		if (0 == ready){
+		if (0 == ready) {
 			pr_err("run API tfa98xx_dsp_system_stable returned ready=%d\n", ready);
 			ret = Tfa98xx_Error_DSP_not_running;
 			goto err;
 		}
 
 		ret = tfaRunStartup(tfa98xx->handle, tfa98xx_profile);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfaRunStartup() returned error(%d)\n", ret);
 			goto err;
 		}
 
 		ret = tfaRunColdboot(tfa98xx->handle, 1);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfaRunColdboot() returned error(%d)\n", ret);
 			goto err;
 		}
 
 		/* clear calibration done flag. */
 		ret=tfa98xx_set_mtp(tfa98xx->handle, 0, (1<<TFA98XX_KEY2_PROTECTED_MTP0_MTPEX_POS));
-		if (ret){
+		if (ret) {
 			pr_err("run API tfa98xx_set_mtp() clear MTPEX returned error(%d)\n", ret);
 			goto err;
 		}
 
 		/* set calibration mode (once, always)*/
-		if (strncmp(kernelbuf, "once", strlen("once")) == 0){
+		if (strncmp(kernelbuf, "once", strlen("once")) == 0) {
 			isonce = true;
 			ret=tfa98xx_set_mtp(tfa98xx->handle, 1, (1<<TFA98XX_KEY2_PROTECTED_MTP0_MTPOTC_POS));
 			pr_info("%s  run API tfa98xx_set_mtp() set MTPOTC is once\n", __func__);
-		}else{
+		} else {
 			isonce = false;
 			ret=tfa98xx_set_mtp(tfa98xx->handle, 0, (1<<TFA98XX_KEY2_PROTECTED_MTP0_MTPOTC_POS));
 			pr_info("%s  run API tfa98xx_set_mtp() set MTPOTC is always.\n", __func__);
 		}
-		if (ret){
+		if (ret) {
 			pr_err("run API tfa98xx_set_mtp() set MTPOTC returned error(%d)\n", ret);
 			goto err;
 		}
 
 		ret = tfaRunStartDSP(tfa98xx->handle);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfaRunStartDSP() returned error(%d)\n", ret);
 			goto err;
 		}
 		ret = tfaContWriteFiles(tfa98xx->handle);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfaContWriteFiles() returned error(%d)\n", ret);
 			goto err;
 		}
 		
 		ret = tfaContWriteFilesProf(tfa98xx->handle, tfa98xx_profile, 0);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfaContWriteFilesProf() returned error(%d)\n", ret);
 			goto err;
 		}
@@ -3338,19 +3346,19 @@ static ssize_t tfa98xx_do_calibration(struct file *file, const char __user *buf,
 		tfa_set_swprof(tfa98xx->handle, tfa98xx_profile);
 
 		ret = tfaRunSpeakerCalibration(tfa98xx->handle, tfa98xx_profile);
-		if (ret){
+		if (ret) {
 			pr_err("run API tfaRunSpeakerCalibration() returned error(%d)\n", ret);
-		}else{
+		} else {
 			pr_info("Device 0x%x new impedance is %d mohm\n", tfa98xx->i2c->addr, tfa_get_calibration_info(tfa98xx->handle, 0));
 
 			ret = tfa_set_filters(tfa98xx->handle, tfa98xx_profile);
-			if(ret){
+			if (ret) {
 				pr_err("run API tfa_set_filters() returned error(%d)\n", ret);
 			}
 
 			tfa_set_swprof(tfa98xx->handle, tfa98xx_profile);
 			ret = tfa98xx_set_mute(tfa98xx->handle, Tfa98xx_Mute_Off);
-			if(ret){
+			if (ret) {
 				pr_err("run API tfa98xx_set_mute() returned error(%d)\n", ret);
 			}
 		}
@@ -3359,10 +3367,10 @@ static ssize_t tfa98xx_do_calibration(struct file *file, const char __user *buf,
 err:
 	tfa98xx_close(tfa98xx->handle);
 	mutex_unlock(&tfa98xx->dsp_lock);
-	if (ret){
+	if (ret) {
 		pr_err("Device %x calibration failed.\n", tfa98xx->i2c->addr);
 		return -ret;
-	}else{ 
+	} else { 
 		pr_info("Device 0x%x calibration %s completed successfully\n", tfa98xx->i2c->addr, (isonce?"once":"always"));
 		return count;
 	}
@@ -3380,7 +3388,7 @@ int tfa98xx_init_sysfs(struct tfa98xx *tfa98xx)
 	int ret = 0;
 	
 	pr_info("%s\n", __func__);
-	if (NULL == tfa98xx){
+	if (NULL == tfa98xx) {
 		pr_err("%s   tfa98xx is NULL.\n", __func__);
 		return -EINVAL;
 	}
@@ -3389,7 +3397,7 @@ int tfa98xx_init_sysfs(struct tfa98xx *tfa98xx)
 	tfa98xx->calibrate_device.name = CALIBRATION_DEVICE_NAME;
 	tfa98xx->calibrate_device.fops = &calibrate_fops;
 	ret = misc_register(&tfa98xx->calibrate_device);
-	if(ret)
+	if (ret)
 	{		
 		pr_err("tfa98xx_calibrate: register misc device failed\n");		
 		return 0;	
@@ -3401,7 +3409,7 @@ int tfa98xx_init_sysfs(struct tfa98xx *tfa98xx)
 void tfa98xx_remove_sysfs(struct tfa98xx *tfa98xx)
 {
 	pr_info("%s\n", __func__);
-	if (NULL == tfa98xx){
+	if (NULL == tfa98xx) {
 		pr_err("%s   tfa98xx is NULL.\n", __func__);
 		return;
 	}
@@ -3694,6 +3702,3 @@ module_exit(tfa98xx_i2c_exit);
 
 MODULE_DESCRIPTION("ASoC TFA98XX driver");
 MODULE_LICENSE("GPL");
-
-
-
