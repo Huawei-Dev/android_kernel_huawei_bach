@@ -153,8 +153,8 @@ typedef union {
 /*-************************************************************************
  *	SIZE OF STATE
  **************************************************************************/
-#define LZ4_MEM_COMPRESS	(16384)
-#define LZ4HC_MEM_COMPRESS	(262144 + (2 * sizeof(unsigned char *)))
+#define LZ4_MEM_COMPRESS	LZ4_STREAMSIZE
+#define LZ4HC_MEM_COMPRESS	LZ4_STREAMHCSIZE
 
 /*-************************************************************************
  *	Compression Functions
