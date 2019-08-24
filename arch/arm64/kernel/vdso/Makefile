@@ -28,7 +28,6 @@ CFLAGS_vgettimeofday.o += -mcmodel=tiny
 GCOV_PROFILE := n
 KASAN_SANITIZE := n
 UBSAN_SANITIZE := n
-KCOV_INSTRUMENT := n
 
 # Workaround for bare-metal (ELF) toolchains that neglect to pass -shared
 # down to collect2, resulting in silent corruption of the vDSO image.
