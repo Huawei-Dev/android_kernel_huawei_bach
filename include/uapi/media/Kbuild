@@ -1,4 +1,3 @@
-header-y += ais/
 header-y += msm_cam_sensor.h
 header-y += msm_cam_sensor_huawei.h
 header-y += msm_camera.h
