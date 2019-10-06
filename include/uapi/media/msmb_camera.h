@@ -1,10 +1,6 @@
 #ifndef __UAPI_LINUX_MSMB_CAMERA_H
 #define __UAPI_LINUX_MSMB_CAMERA_H
 
-#ifdef CONFIG_HUAWEI_STOCK_CAMERA
-#include <uapi/media/msmb_camera_huawei.h>
-#else
-
 #include <linux/videodev2.h>
 #include <linux/types.h>
 #include <linux/ioctl.h>
@@ -52,9 +48,7 @@
 #define MSM_CAMERA_SUBDEV_SENSOR_INIT  14
 #define MSM_CAMERA_SUBDEV_OIS          15
 #define MSM_CAMERA_SUBDEV_FLASH        16
-#define MSM_CAMERA_SUBDEV_IR_LED       17
-#define MSM_CAMERA_SUBDEV_IR_CUT       18
-#define MSM_CAMERA_SUBDEV_EXT          19
+#define MSM_CAMERA_SUBDEV_EXT          17
 
 #define MSM_MAX_CAMERA_SENSORS  5
 
@@ -221,7 +215,7 @@ struct msm_camera_private_ioctl_arg {
 	__u32 size;
 	__u32 result;
 	__u32 reserved;
-	__u64 ioctl_ptr;
+	__user __u64 ioctl_ptr;
 };
 
 #define VIDIOC_MSM_CAMERA_PRIVATE_IOCTL_CMD \
@@ -229,4 +223,3 @@ struct msm_camera_private_ioctl_arg {
 
 #endif
 
-#endif
