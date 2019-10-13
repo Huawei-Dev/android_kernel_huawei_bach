@@ -261,7 +261,7 @@ kgsl_memdesc_footprint(const struct kgsl_memdesc *memdesc)
  */
 static inline int kgsl_allocate_global(struct kgsl_device *device,
 	struct kgsl_memdesc *memdesc, uint64_t size, uint64_t flags,
-	unsigned int priv, const char *name)
+	unsigned int priv)
 {
 	int ret;
 
@@ -278,7 +278,7 @@ static inline int kgsl_allocate_global(struct kgsl_device *device,
 	}
 
 	if (ret == 0)
-		kgsl_mmu_add_global(device, memdesc, name);
+		kgsl_mmu_add_global(device, memdesc);
 
 	return ret;
 }
@@ -345,31 +345,5 @@ static inline void kgsl_free_sgt(struct sg_table *sgt)
 		kfree(sgt);
 	}
 }
-
-/**
- * kgsl_get_page_size() - Get supported pagesize
- * @size: Size of the page
- * @align: Desired alignment of the size
- *
- * Return supported pagesize
- */
-#ifndef CONFIG_ALLOC_BUFFERS_IN_4K_CHUNKS
-static inline int kgsl_get_page_size(size_t size, unsigned int align)
-{
-	if (align >= ilog2(SZ_1M) && size >= SZ_1M)
-		return SZ_1M;
-	else if (align >= ilog2(SZ_64K) && size >= SZ_64K)
-		return SZ_64K;
-	else if (align >= ilog2(SZ_8K) && size >= SZ_8K)
-		return SZ_8K;
-	else
-		return PAGE_SIZE;
-}
-#else
-static inline int kgsl_get_page_size(size_t size, unsigned int align)
-{
-	return PAGE_SIZE;
-}
-#endif
 
 #endif /* __KGSL_SHAREDMEM_H */

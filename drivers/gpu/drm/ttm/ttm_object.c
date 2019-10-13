@@ -179,7 +179,7 @@ int ttm_base_object_init(struct ttm_object_file *tfile,
 	if (unlikely(ret != 0))
 		goto out_err0;
 
-	ret = ttm_ref_object_add(tfile, base, TTM_REF_USAGE, NULL, false);
+	ret = ttm_ref_object_add(tfile, base, TTM_REF_USAGE, NULL);
 	if (unlikely(ret != 0))
 		goto out_err1;
 
@@ -318,8 +318,7 @@ EXPORT_SYMBOL(ttm_ref_object_exists);
 
 int ttm_ref_object_add(struct ttm_object_file *tfile,
 		       struct ttm_base_object *base,
-		       enum ttm_ref_type ref_type, bool *existed,
-		       bool require_existed)
+		       enum ttm_ref_type ref_type, bool *existed)
 {
 	struct drm_open_hash *ht = &tfile->ref_hash[ref_type];
 	struct ttm_ref_object *ref;
@@ -346,9 +345,6 @@ int ttm_ref_object_add(struct ttm_object_file *tfile,
 		}
 
 		rcu_read_unlock();
-		if (require_existed)
-			return -EPERM;
-
 		ret = ttm_mem_global_alloc(mem_glob, sizeof(*ref),
 					   false, false);
 		if (unlikely(ret != 0))
@@ -639,7 +635,7 @@ int ttm_prime_fd_to_handle(struct ttm_object_file *tfile,
 	prime = (struct ttm_prime_object *) dma_buf->priv;
 	base = &prime->base;
 	*handle = base->hash.key;
-	ret = ttm_ref_object_add(tfile, base, TTM_REF_USAGE, NULL, false);
+	ret = ttm_ref_object_add(tfile, base, TTM_REF_USAGE, NULL);
 
 	dma_buf_put(dma_buf);
 
@@ -687,12 +683,6 @@ int ttm_prime_handle_to_fd(struct ttm_object_file *tfile,
 
 	dma_buf = prime->dma_buf;
 	if (!dma_buf || !get_dma_buf_unless_doomed(dma_buf)) {
-		DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
-
-		exp_info.ops = &tdev->ops;
-		exp_info.size = prime->size;
-		exp_info.flags = flags;
-		exp_info.priv = prime;
 
 		/*
 		 * Need to create a new dma_buf, with memory accounting.
@@ -704,7 +694,8 @@ int ttm_prime_handle_to_fd(struct ttm_object_file *tfile,
 			goto out_unref;
 		}
 
-		dma_buf = dma_buf_export(&exp_info);
+		dma_buf = dma_buf_export(prime, &tdev->ops,
+					 prime->size, flags, NULL);
 		if (IS_ERR(dma_buf)) {
 			ret = PTR_ERR(dma_buf);
 			ttm_mem_global_free(tdev->mem_glob,
