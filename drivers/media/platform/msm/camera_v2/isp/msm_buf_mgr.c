@@ -185,8 +185,8 @@ static int msm_isp_prepare_v4l2_buf(struct msm_isp_buf_mgr *buf_mgr,
 	uint32_t stream_id)
 {
 	int i, rc = -1;
-	int ret;
-	struct msm_isp_buffer_mapped_info *mapped_info;
+	int ret = 0;
+	struct msm_isp_buffer_mapped_info *mapped_info = NULL;
 	uint32_t accu_length = 0;
 
 	if (qbuf_buf->num_planes > MAX_PLANES_PER_STREAM) {
@@ -230,7 +230,7 @@ static void msm_isp_unprepare_v4l2_buf(
 	uint32_t stream_id)
 {
 	int i;
-	struct msm_isp_buffer_mapped_info *mapped_info;
+	struct msm_isp_buffer_mapped_info *mapped_info = NULL;
 	struct msm_isp_bufq *bufq = NULL;
 
 	if (!buf_mgr || !buf_info) {
@@ -312,7 +312,7 @@ static int msm_isp_buf_prepare(struct msm_isp_buf_mgr *buf_mgr,
 	struct msm_isp_qbuf_info *info, struct vb2_buffer *vb2_buf)
 {
 	int rc = -1;
-	unsigned long flags;
+	unsigned long flags = 0;
 	struct msm_isp_bufq *bufq = NULL;
 	struct msm_isp_buffer *buf_info = NULL;
 	struct msm_isp_qbuf_buffer buf;
@@ -405,7 +405,7 @@ static int msm_isp_get_buf_by_index(struct msm_isp_buf_mgr *buf_mgr,
 	struct msm_isp_buffer **buf_info)
 {
 	int rc = -EINVAL;
-	unsigned long flags;
+	unsigned long flags = 0;
 	struct msm_isp_bufq *bufq = NULL;
 	struct msm_isp_buffer *temp_buf_info;
 	uint32_t i = 0;
@@ -477,7 +477,7 @@ static int msm_isp_get_buf(struct msm_isp_buf_mgr *buf_mgr, uint32_t id,
 	uint32_t bufq_handle, struct msm_isp_buffer **buf_info)
 {
 	int rc = -1;
-	unsigned long flags;
+	unsigned long flags = 0;
 	struct msm_isp_buffer *temp_buf_info = NULL;
 	struct msm_isp_bufq *bufq = NULL;
 	struct vb2_buffer *vb2_buf = NULL;
@@ -635,7 +635,7 @@ static int msm_isp_put_buf(struct msm_isp_buf_mgr *buf_mgr,
 	uint32_t bufq_handle, uint32_t buf_index)
 {
 	int rc = -1;
-	unsigned long flags;
+	unsigned long flags = 0;
 	struct msm_isp_bufq *bufq = NULL;
 	struct msm_isp_buffer *buf_info = NULL;
 
@@ -731,7 +731,7 @@ static int msm_isp_update_put_buf_cnt(struct msm_isp_buf_mgr *buf_mgr,
 {
 	int rc = -1;
 	struct msm_isp_bufq *bufq = NULL;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	bufq = msm_isp_get_bufq(buf_mgr, bufq_handle);
 	if (!bufq) {
@@ -756,7 +756,7 @@ static int msm_isp_buf_done(struct msm_isp_buf_mgr *buf_mgr,
 	struct timeval *tv, uint32_t frame_id, uint32_t output_format)
 {
 	int rc = 0;
-	unsigned long flags;
+	unsigned long flags = 0;
 	struct msm_isp_bufq *bufq = NULL;
 	struct msm_isp_buffer *buf_info = NULL;
 	enum msm_isp_buffer_state state;
@@ -813,7 +813,7 @@ static int msm_isp_flush_buf(struct msm_isp_buf_mgr *buf_mgr, uint32_t id,
 	int rc = 0, i;
 	struct msm_isp_bufq *bufq = NULL;
 	struct msm_isp_buffer *buf_info = NULL;
-	unsigned long flags;
+	unsigned long flags = 0;
 
 	bufq = msm_isp_get_bufq(buf_mgr, bufq_handle);
 	if (!bufq) {
@@ -875,7 +875,7 @@ static int msm_isp_flush_buf(struct msm_isp_buf_mgr *buf_mgr, uint32_t id,
 static int msm_isp_buf_enqueue(struct msm_isp_buf_mgr *buf_mgr,
 	struct msm_isp_qbuf_info *info)
 {
-	int rc = 0, buf_state;
+	int rc = 0, buf_state = 0;
 	struct msm_isp_bufq *bufq = NULL;
 	struct msm_isp_buffer *buf_info = NULL;
 
@@ -1065,7 +1065,7 @@ static int msm_isp_release_bufq(struct msm_isp_buf_mgr *buf_mgr,
 	uint32_t bufq_handle)
 {
 	struct msm_isp_bufq *bufq = NULL;
-	unsigned long flags;
+	unsigned long flags = 0;
 	bufq = msm_isp_get_bufq(buf_mgr, bufq_handle);
 	if (!bufq) {
 		pr_err("Invalid bufq release\n");
@@ -1086,7 +1086,7 @@ static void msm_isp_release_all_bufq(
 	struct msm_isp_buf_mgr *buf_mgr)
 {
 	struct msm_isp_bufq *bufq = NULL;
-	unsigned long flags;
+	unsigned long flags = 0;
 	int i;
 	for (i = 0; i < buf_mgr->num_buf_q; i++) {
 		bufq = &buf_mgr->bufq[i];
@@ -1111,7 +1111,7 @@ static void msm_isp_release_all_bufq(
  */
 static int msm_isp_buf_put_scratch(struct msm_isp_buf_mgr *buf_mgr)
 {
-	int rc;
+	int rc = 0;
 
 	if (!buf_mgr->scratch_buf_addr)
 		return 0;
@@ -1332,7 +1332,7 @@ static int msm_isp_buf_mgr_debug(struct msm_isp_buf_mgr *buf_mgr,
 	uint32_t debug_end_addr = 0;
 	uint32_t debug_frame_id = 0;
 	enum msm_isp_buffer_state debug_state = MSM_ISP_BUFFER_STATE_UNUSED;
-	unsigned long flags;
+	unsigned long flags = 0;
 	struct msm_isp_bufq *bufq = NULL;
 
 	if (!buf_mgr) {
