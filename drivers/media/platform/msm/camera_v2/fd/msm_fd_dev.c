@@ -90,7 +90,7 @@ static inline struct fd_ctx *msm_fd_ctx_from_fh(struct v4l2_fh *fh)
  */
 static int msm_fd_get_format_index(struct v4l2_format *f)
 {
-	int index;
+	int index = 0;
 
 	for (index = 0; index < ARRAY_SIZE(fd_size); index++) {
 		if (f->fmt.pix.width <= fd_size[index].width &&
@@ -108,7 +108,7 @@ static int msm_fd_get_format_index(struct v4l2_format *f)
  */
 static int msm_fd_get_idx_from_value(int value, int *array, int array_size)
 {
-	int index;
+	int index = 0;
 	int i;
 
 	index = 0;
@@ -235,7 +235,7 @@ static void msm_fd_buf_queue(struct vb2_buffer *vb)
 static int msm_fd_start_streaming(struct vb2_queue *q, unsigned int count)
 {
 	struct fd_ctx *ctx = vb2_get_drv_priv(q);
-	int ret;
+	int ret = 0;
 
 	if (ctx->work_buf.fd == -1) {
 		dev_err(ctx->fd_device->dev, "Missing working buffer\n");
@@ -291,7 +291,7 @@ static void *msm_fd_get_userptr(void *alloc_ctx,
 {
 	struct msm_fd_mem_pool *pool = alloc_ctx;
 	struct msm_fd_buf_handle *buf;
-	int ret;
+	int ret = 0;
 
 	buf = kzalloc(sizeof(*buf), GFP_KERNEL);
 	if (!buf)
@@ -335,9 +335,9 @@ static struct vb2_mem_ops msm_fd_vb2_mem_ops = {
 static int msm_fd_vbif_error_handler(void *handle, uint32_t error)
 {
 	struct fd_ctx *ctx;
-	struct msm_fd_device *fd;
+	struct msm_fd_device *fd = NULL;
 	struct msm_fd_buffer *active_buf;
-	int ret;
+	int ret = 0;
 
 	if (NULL == handle) {
 		dev_err(fd->dev, "FD Ctx is null, Cannot recover\n");
@@ -399,7 +399,7 @@ static int msm_fd_open(struct file *file)
 	struct msm_fd_device *device = video_drvdata(file);
 	struct video_device *video = video_devdata(file);
 	struct fd_ctx *ctx;
-	int ret;
+	int ret = 0;
 
 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
 	if (!ctx)
@@ -513,7 +513,7 @@ static unsigned int msm_fd_poll(struct file *file,
 	struct poll_table_struct *wait)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(file->private_data);
-	unsigned int ret;
+	unsigned int ret = 0;
 
 	mutex_lock(&ctx->lock);
 	ret = vb2_poll(&ctx->vb2_q, file, wait);
@@ -542,7 +542,7 @@ static long msm_fd_private_ioctl(struct file *file, void *fh,
 	struct msm_fd_result *req_result = arg;
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
 	struct msm_fd_stats *stats;
-	int stats_idx;
+	int stats_idx = 0;
 	int ret = 0;
 	int i;
 
@@ -598,7 +598,7 @@ static long msm_fd_private_ioctl(struct file *file, void *fh,
 static long msm_fd_compat_ioctl32(struct file *file,
 	unsigned int cmd, unsigned long arg)
 {
-	long ret;
+	long ret = 0;
 
 	switch (cmd) {
 	case VIDIOC_MSM_FD_GET_RESULT32:
@@ -706,7 +706,7 @@ static int msm_fd_g_fmt(struct file *file, void *fh, struct v4l2_format *f)
 static int msm_fd_try_fmt_vid_out(struct file *file,
 	void *fh, struct v4l2_format *f)
 {
-	int index;
+	int index = 0;
 
 	index = msm_fd_get_format_index(f);
 
@@ -723,7 +723,7 @@ static int msm_fd_s_fmt_vid_out(struct file *file,
 	void *fh, struct v4l2_format *f)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int index;
+	int index = 0;
 
 	index = msm_fd_get_format_index(f);
 
@@ -752,7 +752,7 @@ static int msm_fd_s_fmt_vid_out(struct file *file,
 static int msm_fd_reqbufs(struct file *file,
 	void *fh, struct v4l2_requestbuffers *req)
 {
-	int ret;
+	int ret = 0;
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
 
 	mutex_lock(&ctx->lock);
@@ -770,7 +770,7 @@ static int msm_fd_reqbufs(struct file *file,
 static int msm_fd_qbuf(struct file *file, void *fh,
 	struct v4l2_buffer *pb)
 {
-	int ret;
+	int ret = 0;
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
 
 	mutex_lock(&ctx->lock);
@@ -788,7 +788,7 @@ static int msm_fd_qbuf(struct file *file, void *fh,
 static int msm_fd_dqbuf(struct file *file,
 	void *fh, struct v4l2_buffer *pb)
 {
-	int ret;
+	int ret = 0;
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
 
 	mutex_lock(&ctx->lock);
@@ -807,7 +807,7 @@ static int msm_fd_streamon(struct file *file,
 	void *fh, enum v4l2_buf_type buf_type)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int ret;
+	int ret = 0;
 
 
 	mutex_lock(&ctx->lock);
@@ -829,7 +829,7 @@ static int msm_fd_streamoff(struct file *file,
 	void *fh, enum v4l2_buf_type buf_type)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int ret;
+	int ret = 0;
 
 	mutex_lock(&ctx->lock);
 	ret = vb2_streamoff(&ctx->vb2_q, buf_type);
@@ -849,7 +849,7 @@ static int msm_fd_subscribe_event(struct v4l2_fh *fh,
 	const struct v4l2_event_subscription *sub)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int ret;
+	int ret = 0;
 
 	if (sub->type != MSM_EVENT_FD)
 		return -EINVAL;
@@ -870,7 +870,7 @@ static int msm_fd_unsubscribe_event(struct v4l2_fh *fh,
 	const struct v4l2_event_subscription *sub)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int ret;
+	int ret = 0;
 
 	ret = v4l2_event_unsubscribe(fh, sub);
 	if (!ret)
@@ -1015,8 +1015,8 @@ static int msm_fd_g_ctrl(struct file *file, void *fh, struct v4l2_control *a)
 static int msm_fd_s_ctrl(struct file *file, void *fh, struct v4l2_control *a)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int idx;
-	int ret;
+	int idx = 0;
+	int ret = 0;
 
 	switch (a->id) {
 	case V4L2_CID_FD_SPEED:
@@ -1142,7 +1142,7 @@ static int msm_fd_s_crop(struct file *file, void *fh,
 	const struct v4l2_crop *crop)
 {
 	struct fd_ctx *ctx = msm_fd_ctx_from_fh(fh);
-	int min_face_size;
+	int min_face_size = 0;
 
 	if (!ctx->format.size) {
 		dev_err(ctx->fd_device->dev, "Get crop, format missing!\n");
@@ -1239,7 +1239,7 @@ static void msm_fd_wq_handler(struct work_struct *work)
 	struct msm_fd_buffer *active_buf;
 	struct msm_fd_stats *stats;
 	struct msm_fd_event *fd_event;
-	struct msm_fd_device *fd;
+	struct msm_fd_device *fd = NULL;
 	struct fd_ctx *ctx;
 	struct v4l2_event event;
 	int i;
@@ -1304,8 +1304,8 @@ static void msm_fd_wq_handler(struct work_struct *work)
  */
 static int fd_probe(struct platform_device *pdev)
 {
-	struct msm_fd_device *fd;
-	int ret;
+	struct msm_fd_device *fd = NULL;
+	int ret = 0;
 
 	/* Face detection device struct */
 	fd = kzalloc(sizeof(struct msm_fd_device), GFP_KERNEL);
@@ -1416,7 +1416,7 @@ error_mem_resources:
  */
 static int fd_device_remove(struct platform_device *pdev)
 {
-	struct msm_fd_device *fd;
+	struct msm_fd_device *fd = NULL;
 
 	fd = platform_get_drvdata(pdev);
 	if (NULL == fd) {
