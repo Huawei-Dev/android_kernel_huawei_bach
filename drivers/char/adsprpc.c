@@ -2040,8 +2040,10 @@ static int fastrpc_file_free(struct fastrpc_file *fl)
 	hlist_del_init(&fl->hn);
 	spin_unlock(&fl->apps->hlock);
 
-	if (!fl->sctx)
-		goto bail;
+	if (!fl->sctx) {
+		kfree(fl);
+		return 0;
+	}
 
 	(void)fastrpc_release_current_dsp_process(fl);
 	if (!IS_ERR_OR_NULL(fl->init_mem))
@@ -2055,7 +2057,6 @@ static int fastrpc_file_free(struct fastrpc_file *fl)
 		kref_put_mutex(&fl->apps->channel[cid].kref,
 				fastrpc_channel_close, &fl->apps->smd_mutex);
 	mutex_destroy(&fl->map_mutex);
-bail:
 	fastrpc_remote_buf_list_free(fl);
 	kfree(fl);
 	return 0;
