@@ -281,7 +281,6 @@ struct qseecom_key_select_ireq {
 	uint8_t hash32[QSEECOM_HASH_SIZE];
 } __attribute__((__packed__));
 
-
 struct qseecom_key_delete_ireq {
 	uint32_t qsee_command_id;
 	uint32_t flags;
