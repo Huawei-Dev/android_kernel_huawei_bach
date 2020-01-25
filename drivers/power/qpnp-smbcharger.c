@@ -4186,22 +4186,6 @@ static void smbchg_detect_ibus_work(struct work_struct* work)
 	}
 }
 
-static void smbchg_input_current_adjust(struct smbchg_chip *chip)
-{
-	int rc = 0;
-	pr_smb(PR_STATUS, "Starting input current adjustments\n");
-
-	/* to do detect ibus work */
-	chip->ibus_detecting = true;
-	rc = vote(chip->usb_icl_votable, IN_THERMAL_ICL_VOTER, true,
-										HOT_DESIGN_MAX_CURRENT);
-	if (rc < 0) {
-		pr_err("Couldn't update in thermal ICL voter, rc=%d\n", rc);
-	}
-	schedule_delayed_work(&chip->ibus_detect_work,
-			msecs_to_jiffies(SMBCHG_IBUS_WORK_STRAT_TIME));
-}
-
 static int smbchg_otg_regulator_enable(struct regulator_dev *rdev)
 {
 	int rc = 0;
@@ -7099,13 +7083,6 @@ static irqreturn_t fastchg_handler(int irq, void *_chip)
 	return IRQ_HANDLED;
 }
 
-static irqreturn_t chg_hot_handler(int irq, void *_chip)
-{
-	pr_warn_ratelimited("chg hot\n");
-	smbchg_wipower_check(_chip);
-	return IRQ_HANDLED;
-}
-
 static irqreturn_t chg_term_handler(int irq, void *_chip)
 {
 	struct smbchg_chip *chip = _chip;
@@ -8964,7 +8941,6 @@ static void rerun_hvdcp_det_if_necessary(struct smbchg_chip *chip)
 static int qpnp_smb_set_in_thermal(int val)
 {
 	struct smbchg_chip *chip = NULL;
-	union power_supply_propval prop = {0,};
 	int rc = 0, current_limit = 0;
 
 	chip = global_chip;

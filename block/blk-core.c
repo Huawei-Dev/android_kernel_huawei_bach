@@ -1554,7 +1554,6 @@ void blk_queue_bio(struct request_queue *q, struct bio *bio)
 	int el_ret, rw_flags, where = ELEVATOR_INSERT_SORT;
 	struct request *req;
 	unsigned int request_count = 0;
-	bool wb_acct;
 
 	/*
 	 * low level driver can indicate that it wants pages above a
@@ -2116,7 +2115,6 @@ int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
 {
 	unsigned long flags;
 	int where = ELEVATOR_INSERT_BACK;
-	bool wb_acct;
 
 	if (blk_rq_check_limits(q, rq))
 		return -EIO;

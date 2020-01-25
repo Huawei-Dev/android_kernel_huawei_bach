@@ -69,8 +69,6 @@ static int32_t NVT_Hybrid_PixelRawCmRatioMax[40 * 40] = {0};
 static int64_t NVT_Hybrid_StatisticsNum[NVT_Hybrid_MaxStatisticsBuf];
 static int64_t NVT_Hybrid_StatisticsSum[NVT_Hybrid_MaxStatisticsBuf];
 
-static struct proc_dir_entry *NVT_HYBRID_proc_selftest_entry = NULL;
-
 extern struct nvt_hybrid_ts_data *nvt_hybrid_ts;
 extern char nvt_hybrid_product_id[];
 extern void nvt_hybrid_hw_reset(void);
@@ -691,7 +689,6 @@ int32_t nvt_hybrid_read_raw_and_diff(int32_t *xdata, int32_t *xdata1)
 	uint8_t y_num = 0;
 	uint32_t x = 0;
 	uint32_t y = 0;
-	int32_t iArrayIndex = 0;
 
 	TS_LOG_INFO("%s:++\n", __func__);
 
@@ -774,7 +771,6 @@ int32_t nvt_hybrid_read_raw(int32_t *xdata)
 	uint8_t y_num = 0;
 	uint32_t x = 0;
 	uint32_t y = 0;
-	int32_t iArrayIndex = 0;
 
 	TS_LOG_INFO("%s:++\n", __func__);
 
@@ -868,25 +864,6 @@ int32_t nvt_hybrid_read_diff(int32_t *xdata)
 	nvt_hybrid_change_mode(NVT_HYBRID_NORMAL_MODE);
 	
 	TS_LOG_INFO("%s:--\n", __func__);
-
-	return 0;
-}
-
-/*******************************************************
-Description:
-	Novatek touchscreen read noise data function.
-
-return:
-	n.a.
-*******************************************************/
-static int32_t nvt_hybrid_read_noise(void)
-{
-	int32_t x = 0;
-	int32_t y = 0;
-
-	if (nvt_hybrid_read_diff(nvt_hybrid_rawdata_diff)) {
-		return 1; // read data failed
-	}
 
 	return 0;
 }

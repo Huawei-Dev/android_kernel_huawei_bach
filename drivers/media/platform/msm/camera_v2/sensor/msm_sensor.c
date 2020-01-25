@@ -549,7 +549,7 @@ static int msm_sensor_get_lsc_otp_info(struct msm_sensor_ctrl_t *s_ctrl,
 			void __user *argp)
 {
 	int rc = 0;
-	int i;
+
 #ifdef CONFIG_COMPAT
 	struct sensorb_cfg_data32 *cdata = (struct sensorb_cfg_data32 *)argp;
 	if (copy_to_user( (void *)compat_ptr(cdata->cfg.setting),

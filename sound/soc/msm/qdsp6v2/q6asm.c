@@ -464,7 +464,6 @@ static void q6asm_session_free(struct audio_client *ac)
 {
 	struct list_head		*ptr, *next;
 	struct asm_no_wait_node		*node;
-	unsigned long			flags;
 	unsigned long			session_flags;
 	int session_id;
 

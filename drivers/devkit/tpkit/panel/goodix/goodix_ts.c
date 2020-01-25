@@ -362,44 +362,6 @@ static int goodix_cache_roidata(struct goodix_ts_roi *roi)
 }
 #endif
 
-/**
- * goodix_request_event_handler - firmware request 
- * Return    <0: failed, 0: succeed
- */
-static int goodix_request_event_handler(struct goodix_ts_data *ts)
-{
-	u8 rqst_data = 0;
-	int ret;
-
-	ret = goodix_i2c_read(GTP_REG_RQST, &rqst_data, 1);
-	if (ret)
-		return ret;
-
-	GTP_DEBUG("Request state:0x%02x", rqst_data);
-	switch (rqst_data & 0x0F) {
-	case GTP_RQST_CONFIG:
-		GTP_INFO("Request Config.");
-		ret = goodix_send_cfg(&ts->normal_config);
-		if (ret) {
-			GTP_ERROR("Send config error");
-		} else {
-			GTP_INFO("Send config success");
-			rqst_data = GTP_RQST_RESPONDED;
-			goodix_i2c_write(GTP_REG_RQST, &rqst_data, 1);
-		}
-		break;
-	case GTP_RQST_RESET:
-		GTP_INFO("Request Reset.");
-		goodix_chip_reset();
-		rqst_data = GTP_RQST_RESPONDED;
-		goodix_i2c_write(GTP_REG_RQST, &rqst_data, 1);
-		break;
-	default:
-		break;
-	}
-	return 0;
-}
-
 static int goodix_check_key_gesture_report(struct ts_fingers *info,
 					     struct ts_easy_wakeup_info *gesture_report_info,
 					     unsigned char get_gesture_wakeup_data)
@@ -1118,40 +1080,6 @@ static int goodix_put_device_into_easy_wakeup(void)
 	}
 
 	return ret;
-}
-
-/**
- * goodix_switch_wrokmode - Switch working mode.
- * @workmode: GTP_CMD_SLEEP - Sleep mode
- *			  GESTURE_MODE - gesture mode
- * Returns  0--success,non-0--fail.
- */
-static int goodix_switch_wrokmode(int wrokmode)
-{
-	s32 retry = 0;
-	u8 cmd;
-	switch (wrokmode) {
-	case SLEEP_MODE:
-		cmd = GTP_CMD_SLEEP;
-		goodix_pinctr_int_ouput_low();//gpio_direction_output(irq_gpio, 0);
-		msleep(5);
-		break;
-	case GESTURE_MODE:
-		cmd = GTP_CMD_GESTURE_WAKEUP;
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	GTP_INFO("Switch working mode[%02X]", cmd);
-	while (retry++ < 3) {
-		if (!goodix_send_cmd(cmd, 0))
-			return 0;
-		msleep(20);
-	}
-
-	GTP_ERROR("Failed to switch working mode");
-	return -1;
 }
 
 static int goodix_sleep_mode_out(void)

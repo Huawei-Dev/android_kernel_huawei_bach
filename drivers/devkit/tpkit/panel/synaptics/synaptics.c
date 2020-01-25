@@ -390,106 +390,13 @@ struct synaptics_rmi4_data *rmi4_data;
 extern struct dsm_client *ts_dclient;
 #endif
 
-/* when add/remove support TP module need to modify here */
-
-
-#if 0
-static struct touch_settings synaptics_sett_param_regs_map[] = {
-	/*ic_type = 0-S3207, 1 = S3350, 2 = S3320, 3 = S3718 */
-	[0] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '0',
-	       .build_id[2] = '0',
-	       .module_name = "oflim",
-	       .ic_type = 0,
-	       },
-	[1] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '0',
-	       .build_id[2] = '2',
-	       /*.id = TRULY,*/
-	       .module_name = "truly",
-	       .ic_type = 0,
-	       },
-	[2] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '0',
-	       .build_id[2] = '4',
-	       /*.id = TRULY,*/
-	       .module_name = "GIS",
-	       .ic_type = 0,
-	       },
-	[3] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '0',
-	       .build_id[2] = '7',
-	       /*.id = TRULY,*/
-	       .module_name = "YASSY",
-	       .ic_type = 0,
-	       },
-	[4] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '0',
-	       .build_id[2] = '6',
-	       .module_name = "lensone",
-	       .ic_type = 0,
-	       },
-	[5] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '1',
-	       .build_id[2] = '0',
-	       /*.id = 0xff,*/
-	       .module_name = "jdi",
-	       .ic_type = 1,
-	       },
-	[6] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '0',
-	       .build_id[2] = '0',
-	       /*.id = 0xff,*/
-	       .module_name = "jdi",
-	       .ic_type = 2,
-	       },
-	[7] = {
-	       .build_id[0] = '3',
-	       .build_id[1] = '2',
-	       .build_id[2] = 'U',
-	       .ic_name[0] = '1',
-	       .ic_name[1] = '7',
-	       /*.id = 0xff,*/
-	       .module_name = "lg",
-	       .ic_type = 3,
-	       },
-	[8] = {
-	       .build_id[0] = '1',
-	       .build_id[1] = '1',
-	       .build_id[2] = '1',
-	       /*.id = 0xff,*/
-	       .module_name = "null",
-	       },
-	[9] = {
-	       .build_id[0] = '0',
-	       .build_id[1] = '9',
-	       .build_id[2] = '0',
-	       .ic_name[0] = '1',
-	       .ic_name[1] = '7',
-	       /*.id = 0xff,*/
-	       .module_name = "samsung",
-	       .ic_type = 3,
-	       },
-};
-#endif
-//static struct touch_settings *synaptics_sett_param_regs =
-//    &synaptics_sett_param_regs_map[10];
 static struct touch_settings *synaptics_sett_param_regs;
 static int synaptics_interrupt_num;
 
 static void synaptics_gpio_reset(void);
 static void synaptics_power_on(void);
-static void synatpics_regulator_enable(void);
 static void synaptics_power_on_gpio_set(void);
 static void synaptics_power_off(void);
-static void synatpics_regulator_disable(void);
 static void synaptics_power_off_gpio_set(void);
 static bool synaptics_rmi4_crc_in_progress(struct synaptics_rmi4_data
 					   *rmi4_data,
@@ -695,44 +602,7 @@ static int synaptics_vddio_disable(void)
 
 	return 0;
 }
-#if 0
-static void synatpics_regulator_enable(void)
-{
-	TS_LOG_INFO("synatpics_regulator_enable is called\n");
-	if (1 == rmi4_data->synaptics_chip_data->vci_regulator_type) {
-		if (!IS_ERR(rmi4_data->tp_vci)) {
-			TS_LOG_INFO("vci enable is called\n");
-			synaptics_vci_enable();
-		}
-	}
-	mdelay(3);
-	if (1 == rmi4_data->synaptics_chip_data->vddio_regulator_type) {
-		if (!IS_ERR(rmi4_data->tp_vddio)) {
-			synaptics_vddio_enable();
-		}
-	}
-	mdelay(1);
-}
 
-static void synatpics_regulator_disable(void)
-{
-	if (1 == rmi4_data->synaptics_chip_data->vddio_regulator_type) {
-		if (!IS_ERR(rmi4_data->tp_vddio)) {
-			synaptics_vddio_disable();
-		}
-	}
-
-	mdelay(12);
-
-	if (1 == rmi4_data->synaptics_chip_data->vci_regulator_type) {
-		if (!IS_ERR(rmi4_data->tp_vci)) {
-			synaptics_vci_disable();
-		}
-	}
-
-	mdelay(30);
-}
-#endif
 /* dts */
 static int synaptics_pinctrl_get_init(void)
 {
@@ -1805,7 +1675,6 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 	int index =0;
 	int latest_index = 0;
 	int i;
-	int count = 0;
 	
 	TS_LOG_INFO("%s called\n", __func__);
 	memset(info->data, 0x0, TS_CHIP_TYPE_MAX_SIZE);
@@ -2955,8 +2824,6 @@ ts_vddio_out:
 	gpio_free(rmi4_data->synaptics_chip_data->vci_gpio_ctrl);
 ts_vci_out:
 	//gpio_free(rmi4_data->synaptics_chip_data->irq_gpio);
-ts_irq_out:
-	//gpio_free(rmi4_data->synaptics_chip_data->reset_gpio);
 ts_reset_out:
 	return retval;
 }
@@ -3184,87 +3051,7 @@ static int synaptics_init_chip(void)
 	}
 
 	synap_parse_chip_specific_dts(rmi4_data->synaptics_chip_data);
-#if 0
-	if (SYNAPTICS_S3207 == rmi4_data->synaptics_chip_data->ic_type) {
-		rc = synaptics_rmi4_i2c_read(rmi4_data, EASY_WAKEUP_FASTRATE,
-					     &device_fastrate,
-					     sizeof(device_fastrate));
-		rmi4_data->synaptics_chip_data->easy_wakeup_info.
-		    easy_wakeup_fastrate = device_fastrate;
-		if (rc < 0) {
-			TS_LOG_ERR("Failed to get FASTRATE info\n");
-			return rc;
-		}
-	}
 
-	for (count = 0;
-	     synaptics_sett_param_regs_map[count].module_name != NULL;
-	     count++) {
-		switch (synaptics_sett_param_regs_map[count].ic_type) {
-		case SYNAPTICS_S3207:
-			if (SYNAPTICS_S3207 !=
-			    rmi4_data->synaptics_chip_data->ic_type)
-				break;
-			if ((synaptics_sett_param_regs_map[count].build_id[0] ==
-			     rmi4_data->rmi4_mod_info.synaptics_build_id[0])
-			    && (synaptics_sett_param_regs_map[count].
-				build_id[1] ==
-				rmi4_data->rmi4_mod_info.synaptics_build_id[1])
-			    && (synaptics_sett_param_regs_map[count].
-				build_id[2] ==
-				rmi4_data->rmi4_mod_info.
-				synaptics_build_id[2])) {
-				synaptics_sett_param_regs =
-				    &synaptics_sett_param_regs_map[count];
-				TS_LOG_INFO
-				    ("SYNAPTICS_S3207 synaptics_sett_param_regs_map count is %d\n",
-				     count);
-				goto out;
-			}
-			break;
-		case SYNAPTICS_S3350:
-			if (SYNAPTICS_S3350 !=
-			    rmi4_data->synaptics_chip_data->ic_type)
-				break;
-			synaptics_sett_param_regs =
-			    &synaptics_sett_param_regs_map[count];
-			TS_LOG_INFO
-			    ("SYNAPTICS_S3350 synaptics_sett_param_regs_map count is %d\n",
-			     count);
-			goto out;
-			break;
-		case SYNAPTICS_S3320:
-			if (SYNAPTICS_S3320 !=
-			    rmi4_data->synaptics_chip_data->ic_type)
-				break;
-			synaptics_sett_param_regs =
-			    &synaptics_sett_param_regs_map[count];
-			TS_LOG_INFO
-			    (" SYNAPTICS_S3320 synaptics_sett_param_regs_map count is %d\n",
-			     count);
-			goto out;
-			break;
-		case SYNAPTICS_S3718:
-		case SYNAPTICS_TD4322:
-			if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
-				&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type)
-				break;
-			synaptics_sett_param_regs =
-			    &synaptics_sett_param_regs_map[count];
-			TS_LOG_INFO
-			    ("SYNAPTICS_S3718 synaptics_sett_param_regs_map count is %d\n",
-			     count);
-			goto out;
-			break;
-		}
-	}
-	synaptics_sett_param_regs = NULL;
-	if (NULL == synaptics_sett_param_regs) {
-		TS_LOG_ERR("no ic_type or module name is found\n");
-		rc = -EINVAL;
-	}
-out:
-#endif
 	if (NULL != rmi4_data->module_name) {
 		synaptics_sett_param_regs->module_name = rmi4_data->module_name;
 		TS_LOG_INFO("module name is %s\n",synaptics_sett_param_regs->module_name);
@@ -3607,86 +3394,7 @@ static int synaptics_regs_operate(struct ts_regs_info *info)
 out:
 	return retval;
 }
-#if 0
-/*
- * This effective window zone is defined in f51_ctrl x/y region reg,
- * from F51_CUSTOM_CTRL19 to 26 ,that is:
- * <x0_LSB>,<x0_MSB>,<y0_LSB>,<y0_MSB>,<x1_LSB>,<x1_MSB>,<y1_LSB>,<y1_MSB>;
- * We should change it when holster mode is enabled.
- */
-static int s3320_set_effective_window(struct synaptics_rmi4_data *rmi4_data)
-{
-	int ret = 0;
-	unsigned char f51_ctrl_19[S3320_HOLSTER_WINDOW_REG_BYTES] = { 0 };	/*record the zone read from/write to TP register*/
-	unsigned char effective_window[S3320_HOLSTER_WINDOW_REG_BYTES] = { 0 };	/*new zone to be written to x/y region reg*/
-	unsigned char f51_ctrl_15[4] = { 0 };	/*record the rx/tx cut of TP eage*/
-	int i = 0;
-	int x0 = rmi4_data->synaptics_chip_data->ts_platform_data->feature_info.window_info.top_left_x0;
-	int y0 = rmi4_data->synaptics_chip_data->ts_platform_data->feature_info.window_info.top_left_y0;
-	int x1 = rmi4_data->synaptics_chip_data->ts_platform_data->feature_info.window_info.bottom_right_x1;
-	int y1 = rmi4_data->synaptics_chip_data->ts_platform_data->feature_info.window_info.bottom_right_y1;
-	int x_lcd = rmi4_data->synaptics_chip_data->x_max_mt;
-	int y_lcd_all = rmi4_data->synaptics_chip_data->y_max_mt;
-	int max_x = rmi4_data->sensor_max_x;
-	int max_y = rmi4_data->sensor_max_y;
 
-	TS_LOG_DEBUG("%s:in! x_lcd=%d, y_lcd_all=%d,max_x=%d, max_y=%d \n",
-		     __func__, rmi4_data->synaptics_chip_data->x_max_mt,
-		     rmi4_data->synaptics_chip_data->y_max_mt, rmi4_data->sensor_max_x,
-		     rmi4_data->sensor_max_y);
-
-	TS_LOG_INFO("Holster window_info is (%d,%d)(%d,%d)\n", x0, y0, x1, y1);
-
-	/* Transform LCD resolution to TP resolution */
-	effective_window[0] = (char)(x0 * max_x / x_lcd);
-	effective_window[1] =
-	    (char)(((u16) (x0 * max_x / x_lcd) & ~MASK_8BIT) >> 8);
-	effective_window[2] = (char)(y0 * max_y / y_lcd_all);
-	effective_window[3] =
-	    (char)(((u16) (y0 * max_y / y_lcd_all) & ~MASK_8BIT) >> 8);
-	effective_window[4] = (char)(x1 * max_x / x_lcd);
-	effective_window[5] =
-	    (char)(((u16) (x1 * max_x / x_lcd) & ~MASK_8BIT) >> 8);
-	effective_window[6] = (char)(y1 * max_y / y_lcd_all);
-	effective_window[7] =
-	    (char)(((u16) (y1 * max_y / y_lcd_all) & ~MASK_8BIT) >> 8);
-
-	for (i = 0; i < S3320_HOLSTER_WINDOW_REG_BYTES; i++) {
-		f51_ctrl_19[i] = effective_window[i];
-		TS_LOG_INFO("New effective_window[%d] = %d\n", i,
-			    effective_window[i]);
-	}
-
-	/* This window will only effect when HOLSTER_SWITCH was enabled */
-	ret = synaptics_rmi4_i2c_write(rmi4_data,
-				       rmi4_data->rmi4_feature.
-				       f51_ctrl_base_addr +
-				       S3320_F51_CUSTOM_CTRL19_OFFSET,
-				       &f51_ctrl_19[0], sizeof(f51_ctrl_19));
-	if (ret < 0) {
-		TS_LOG_ERR("%s:new effective_window write error!ret = %d\n",
-			   __func__, ret);
-		return ret;
-	} else {
-		TS_LOG_INFO("%s: new effective_window is written success!\n",
-			    __func__);
-	}
-
-	/* Effective window will firstly determined by tx/rx cut reg ,so we need to clear it */
-	/* here to Make sure that this window will only be determined by x/y region reg */
-	ret = synaptics_rmi4_i2c_write(rmi4_data,
-				       rmi4_data->rmi4_feature.
-				       f51_ctrl_base_addr +
-				       S3320_F51_CUSTOM_CTRL15_OFFSET,
-				       &f51_ctrl_15[0], sizeof(f51_ctrl_15));
-	if (ret < 0) {
-		TS_LOG_ERR("%s:erase effective_window cut error!ret = %d\n",
-			   __func__, ret);
-	}
-
-	return ret;
-}
-#endif
 static int synaptics_set_wakeup_gesture_enable_switch(u8 enable)
 {
 	int retval = NO_ERR;
@@ -5116,7 +4824,6 @@ static int synaptics_rmi4_set_page_f35(struct synaptics_rmi4_data *rmi4_data,uns
 	unsigned char retry;
 	unsigned char buf[PAGE_SELECT_LEN];
 	unsigned char page;
-	struct i2c_client *i2c = to_i2c_client(rmi4_data->synaptics_dev->dev.parent);
 	struct i2c_msg msg[1];
 
 	msg[0].addr = FORCE_TOUCH_I2C;
@@ -5150,7 +4857,6 @@ static int synaptics_rmi4_i2c_read_f35(struct synaptics_rmi4_data *rmi4_data,uns
 	unsigned char remaining_msgs;
 	unsigned short data_offset = 0;
 	unsigned short remaining_length = length;
-	struct i2c_client *i2c = rmi4_data->synaptics_chip_data->ts_platform_data->client;
 	struct i2c_adapter *adap = rmi4_data->synaptics_chip_data->ts_platform_data->client->adapter;
 	struct i2c_msg msg[rd_msgs + 1];
 
@@ -5210,8 +4916,6 @@ static int synaptics_rmi4_i2c_write_f35(struct synaptics_rmi4_data *rmi4_data,un
 	int retval;
 	unsigned char retry;
 	unsigned char *buf;
-	unsigned char page;
-	struct i2c_client *i2c = to_i2c_client(rmi4_data->synaptics_dev->dev.parent);
 	struct i2c_msg msg[1];
 
 	if (length >= F35_WRITE_LENGTH_MAX) {
@@ -6303,36 +6007,7 @@ static int synaptics_rmi4_f1a_alloc_mem(struct synaptics_rmi4_data *rmi4_data,
 static int synaptics_rmi4_cap_button_map(struct synaptics_rmi4_data *rmi4_data,
 					 struct synaptics_rmi4_fn *fhandler)
 {
-#if 0
-	unsigned char ii;
-	struct synaptics_rmi4_f1a_handle *f1a = fhandler->data;
-	const struct synaptics_dsx_platform_data *pdata = rmi4_data->board;
-
-	if (!pdata->cap_button_map) {
-		TS_LOG_ERR("%s: cap_button_map is"
-			   "NULL in board file\n", __func__);
-		return -ENODEV;
-	} else if (!pdata->cap_button_map->map) {
-		TS_LOG_ERR("%s: Button map is missing in board file\n",
-			   __func__);
-		return -ENODEV;
-	} else {
-		if (pdata->cap_button_map->nbuttons != f1a->button_count) {
-			f1a->valid_button_count = min(f1a->button_count,
-						      pdata->cap_button_map->
-						      nbuttons);
-		} else {
-			f1a->valid_button_count = f1a->button_count;
-		}
-
-		for (ii = 0; ii < f1a->valid_button_count; ii++)
-			f1a->button_map[ii] = pdata->cap_button_map->map[ii];
-	}
-
 	return 0;
-#else
-	return 0;
-#endif
 }
 
 static void synaptics_rmi4_f1a_kfree(struct synaptics_rmi4_fn *fhandler)
@@ -7080,7 +6755,6 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	unsigned char size_of_2d_data = 0;
 	unsigned short data_addr = 0;
 	unsigned short temp_finger_status = 0;
-	unsigned short roi_data_addr = 0;
 	int x = 0;
 	int y = 0;
 	int wx = 0;

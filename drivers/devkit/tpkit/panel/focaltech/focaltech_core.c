@@ -1365,37 +1365,6 @@ static int focal_param_init(struct focal_platform_data *focal_pdata)
 
 	return 0;
 }
-static int focal_pinctrl_init(void)
-{
-	int ret = 0;
-
-	g_focal_pdata->pctrl= devm_pinctrl_get(&g_focal_dev_data->ts_platform_data->ts_dev->dev);
-	if (IS_ERR(g_focal_pdata->pctrl)) {
-		TS_LOG_ERR("failed to devm pinctrl get\n");
-		ret = -EINVAL;
-		return ret;
-	}
-
-	g_focal_pdata->pins_default =
-	    pinctrl_lookup_state(g_focal_pdata->pctrl, "default");
-	if (IS_ERR(g_focal_pdata->pins_default)) {
-		TS_LOG_ERR("failed to pinctrl lookup state default\n");
-		ret = -EINVAL;
-		goto err_pinctrl_put;
-	}
-
-	g_focal_pdata->pins_idle = pinctrl_lookup_state(g_focal_pdata->pctrl, "idle");
-	if (IS_ERR(g_focal_pdata->pins_idle)) {
-		TS_LOG_ERR("failed to pinctrl lookup state idle\n");
-		ret = -EINVAL;
-		goto err_pinctrl_put;
-	}
-	return 0;
-
-err_pinctrl_put:
-	devm_pinctrl_put(g_focal_pdata->pctrl);
-	return ret;
-}
 
 static int focal_init_chip(void)
 {
@@ -1460,19 +1429,7 @@ static int focal_init_chip(void)
 		TS_LOG_ERR("%s:init param fail, ret=%d\n", __func__, ret);
 		goto apk_node_exit;
 	}
-/*
-       ret = focal_pinctrl_init();
-	if (ret) {
-		TS_LOG_ERR("%s:focal_pinctrl_init fail, ret=%d\n", __func__, ret);
-		goto apk_node_exit;
-	}
-       ret = pinctrl_select_state(g_focal_pdata->pctrl, g_focal_pdata->pins_default);
-	if (ret < 0) {
-		TS_LOG_ERR("set iomux normal error, %d\n", ret);
-		goto apk_node_exit;
-	}
-	gpio_direction_input(g_focal_dev_data->ts_platform_data->irq_gpio);
-*/
+
 	TS_LOG_INFO("%s:init chip success.\n", __func__);
 	return NO_ERR;
 

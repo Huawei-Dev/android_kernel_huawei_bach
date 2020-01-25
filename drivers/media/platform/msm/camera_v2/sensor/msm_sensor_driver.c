@@ -571,7 +571,6 @@ static int32_t msm_sensor_create_pd_settings(void *setting,
 
 #ifdef CONFIG_COMPAT
 	if (is_compat_task()) {
-		int i = 0;
 		rc = msm_sensor_get_pw_settings_compat(
 			pd, pu, size_down);
 		if (rc < 0) {

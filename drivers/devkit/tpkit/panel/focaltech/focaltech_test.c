@@ -1077,7 +1077,6 @@ static int focal_get_short_circuit_data(int *data, size_t size,unsigned int chl_
 
 static int focal_set_lcd_noise_data_type(void)
 {
-	int i = 0;
 	int ret = 0;
 	int iLCDNoiseTestFrame = 50;//ft8607 lcd noise frame defauit num = 100
 

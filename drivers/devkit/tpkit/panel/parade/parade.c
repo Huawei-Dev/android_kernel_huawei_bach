@@ -56,7 +56,6 @@ static int parade_exec_panel_scan_cmd_(struct device *dev);
 static int parade_ret_scan_data_cmd_(struct device *dev, u16 read_offset,
 		u16 read_count, u8 data_id, u8 *response, u8 *config,
 		u16 *actual_read_len, u8 *return_buf);
-static int parade_core_poweroff_device_(struct parade_core_data *cd);
 static int parade_put_device_into_deep_sleep_(struct parade_core_data *cd);
 static int parade_hid_cmd_set_power_(struct parade_core_data *cd,
 				      u8 power_state);
@@ -78,7 +77,6 @@ static int parade_input_config(struct input_dev *input_dev);
 static int parade_irq_bottom_half(struct ts_cmd_node *in_cmd, struct ts_cmd_node *out_cmd);
 static int parade_irq_top_half(struct ts_cmd_node *cmd);
 static int parade_register_algo(struct ts_kit_device_data *chip_data);
-static int parade_reset_chip(void);
 static void parade_hw_reset(void);
 static int parade_fw_update_boot(char *file_name);
 static int parade_get_rawdata(struct ts_rawdata_info *info, struct ts_cmd_node *out_cmd);
@@ -154,7 +152,9 @@ static DECLARE_DELAYED_WORK(parade_status_resume_work, parade_status_resume_work
 #ifdef PARADE_ROI_ENABLE
 static unsigned char roi_data[PARADE_ROI_DATA_READ_LENGTH] = { 0 };
 #endif
+#ifndef PARADE_DOZE_ENABLE
 static char* parade_global_pchar_for_doze;
+#endif
 static u32 parade_csv_line_count = 1;
 
 #define PARADE_MMI_RESULT_BUF_LEN 80
@@ -522,29 +522,10 @@ static int parade_oem_write_nv_one_block_(struct parade_oem_data *parade_oem_dat
       return rc;
 }
 
-/*
-* each row is 16 bytes
-* this function will write 16 bytes to the specific offset
-* buf is the head of the 16 bytes array
-* need first call suspend before use this funciton
-*/
-static int parade_oem_write_nv_one_row_(struct parade_oem_data *parade_oem_data, u8 buf[], int row_num)
-{
-	  int rc;
-	  rc = parade_oem_write_nv_any_data_(parade_oem_data, buf, PARADE_OEM_FLASH_ONE_ROW_SIZE * row_num , PARADE_OEM_FLASH_ONE_ROW_SIZE);
-         return rc;
-}
-
 static int parade_oem_write_nv_data(struct parade_oem_data *parade_oem_data, u8 buf[], int offset,int length)
 {
-	u8 flash_size;
-	u8 row_setting;
-	u8 write_buf[1024];
-	int cmd_offset = 0;
-	u16 crc;
 	int row_index, column_index;
 	int i;
-	u8 *response = NULL;
 	int start_row;
 	int end_row;
 	u8 uLastRowChanged = 0;
@@ -554,11 +535,6 @@ static int parade_oem_write_nv_data(struct parade_oem_data *parade_oem_data, u8 
 	int rc;
 
 	parade_oem_data->stored_flash_data = NULL;
-	struct parade_hid_output hid_output = {
-		HID_OUTPUT_APP_COMMAND(HID_OUTPUT_WRITE_NV_DATA),
-		.write_length = length + 5 + 8 + 2,
-		.write_buf = write_buf,
-	};
        TS_LOG_INFO("%s enter\n", __func__);
        if(parade_check_oem_parameter(parade_oem_data, offset, length)) {
                  TS_LOG_ERR("%s parameter invalid\n", __func__);
@@ -622,7 +598,6 @@ static int parade_oem_write_nv_data(struct parade_oem_data *parade_oem_data, u8 
                                      //if(uLastRowChanged)
                                      uThisRowChanged = 1;
                                      TS_LOG_INFO("%s row=%d, data changed\n", __func__, row_index);
-                                     //parade_oem_write_nv_one_row_(parade_oem_data, &buf[(row_index -start_row) * PARADE_OEM_FLASH_ONE_ROW_SIZE], row_index);
                                      break;
                    }
 			if((uLastRowChanged == 0) && (uThisRowChanged == 1))
@@ -676,9 +651,7 @@ exit:
 static int parade_oem_read_nv_data(struct parade_oem_data *parade_oem_data, u8 buf[], int offset, int length)
 {
          u8 status = 0;
-         u8 flash_size;
          u8 *response = NULL;
-         u8 row_setting;
          u8 cmd_buf[512];
          u8 actual_read_len = 0;
 		 int rc = 0;
@@ -756,7 +729,6 @@ static int parade_get_nv_info(struct parade_oem_data *parade_oem_data){
 		 };
 
          u8 status = 0;
-         u8 flash_size;
          u8 *response = NULL;
          u8 row_setting;
 		 int rc = 0;
@@ -1270,97 +1242,6 @@ static int parade_combine2byte(u8 *pbuf)
 	return iReturn;
 }
 
-static int parade_get_scan_data(enum scan_data_type_list scan_data_type)
-{
-	struct parade_device_access_data *dad = &tskit_parade_data->dad;
-	struct parade_sysinfo *si = &tskit_parade_data->sysinfo;
-	struct device *dev = dad->dev;
-	struct parade_core_data *cd = tskit_parade_data;
-	struct cmcp_data *cmcp_info = cd->dad.cmcp_info;
-	u8 config;
-	u16 actual_read_len;
-	u16 length = 0;
-	u8 element_size = 0;
-	u8 *buf_offset;
-	int elem;
-	int elem_offset = 0;
-	int rc;
-	int i;
-	const int max_read_len = 100;
-
-	TS_LOG_INFO("%s enter\n", __func__);
-	//No suspend, the caller should maintain the suspend scan
-
-	mutex_lock(&dad->debugfs_lock);
-
-	if(si == NULL) {
-		TS_LOG_ERR("%s si is null\n", __func__);
-		rc = -1;
-		goto release_mutex;
-	}
-	buf_offset = dad->ic_buf;
-
-	/* Start scan */
-	rc = parade_exec_panel_scan_cmd_(dev);
-	if (rc < 0) {
-		TS_LOG_ERR("%s parade_exec_panel_scan_cmd_ failed\n", __func__);
-		goto release_mutex;
-	}
-
-	/*start get mutual raw data*/
-	dad->heatmap.data_type = scan_data_type;
-	elem = si->sensing_conf_data.electrodes_x * si->sensing_conf_data.electrodes_y;
-
-	if (elem > max_read_len) {
-		rc = parade_ret_scan_data_cmd_(dev, elem_offset,
-		max_read_len, dad->heatmap.data_type, NULL,
-		&config, &actual_read_len, buf_offset);
-	} else {
-		rc = parade_ret_scan_data_cmd_(dev, elem_offset, elem,
-			dad->heatmap.data_type, NULL, &config,
-			&actual_read_len, buf_offset);
-	}
-
-	if (rc < 0) {
-		TS_LOG_ERR("%s parade_ret_scan_data_cmd_ failed\n", __func__);
-		goto release_mutex;
-	}
-
-	element_size = config & CY_CMD_RET_PANEL_ELMNT_SZ_MASK;
-	length += actual_read_len * element_size;
-	buf_offset = dad->ic_buf + length;
-
-	elem -= actual_read_len;
-	elem_offset = actual_read_len;
-	while (elem > 0) {
-		if (elem > max_read_len) {
-			rc = parade_ret_scan_data_cmd_(dev, elem_offset,
-			max_read_len, dad->heatmap.data_type, NULL, &config,
-			&actual_read_len, buf_offset);
-		} else{
-			rc = parade_ret_scan_data_cmd_(dev, elem_offset, elem,
-				dad->heatmap.data_type, NULL, &config,
-				&actual_read_len, buf_offset);
-		}
-
-		if (rc < 0) {
-			TS_LOG_ERR("%s parade_ret_scan_data_cmd_ failed\n", __func__);
-			goto release_mutex;
-		}
-
-		if (!actual_read_len)
-			break;
-
-		length += actual_read_len * element_size;
-		buf_offset = dad->ic_buf + length;
-		elem -= actual_read_len;
-		elem_offset += actual_read_len;
-	}
-release_mutex:
-	mutex_unlock(&dad->debugfs_lock);
-	return 0;
- }
-
 static int validate_diff_result(int diff_threshold)
 {
 	struct parade_core_data *cd = tskit_parade_data;
@@ -1523,8 +1404,7 @@ release_mutex:
 static int parade_oem_info_switch(struct ts_oem_info_param *info)
 {
 	int retval = NO_ERR;
-	int t = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
+
 	TS_LOG_INFO("%s: info[0]=0x%2x, info[1]=0x%2x\n", __func__,info->data[0], info->data[1]);
 	retval = parade_check_cmd_status();
 	if(retval)
@@ -1760,7 +1640,6 @@ static int parade_get_hid_descriptor_(struct parade_core_data *cd,
 {
 	int rc;
 	u8 cmd[2];
-	int size;
 	TS_LOG_INFO("%s enter\n", __func__);
 	int t;
 
@@ -2378,7 +2257,6 @@ static int parade_get_report_descriptor_(struct parade_core_data *cd)
 	u8 cmd[2];
 	int rc;
 	int t;
-	int size;
 
 	/* Read report descriptor length and version */
 	mutex_lock(&cd->system_lock);
@@ -2966,67 +2844,6 @@ exit_unlock:
 	return 0;
 }
 
-static void parade_check_set_parameter(struct parade_core_data *cd,
-		struct parade_hid_output *hid_output, bool raw)
-{
-	u8 *param_buf;
-	u32 param_value = 0;
-	u8 param_size;
-	u8 param_id;
-	int i = 0;
-
-	if (!(cd->core_pdata->flags & CY_CORE_FLAG_RESTORE_PARAMETERS))
-		return;
-
-	/* Check command input for Set Parameter command */
-	if (raw && hid_output->length >= 10 && hid_output->length <= 13
-			&& !memcmp(&hid_output->write_buf[0],
-					&cd->hid_desc.output_register,
-					sizeof(cd->hid_desc.output_register))
-			&& hid_output->write_buf[4] ==
-					HID_APP_OUTPUT_REPORT_ID
-			&& hid_output->write_buf[6] ==
-					HID_OUTPUT_SET_PARAM)
-		param_buf = &hid_output->write_buf[7];
-	else if (!raw && hid_output->cmd_type == HID_OUTPUT_CMD_APP
-			&& hid_output->command_code == HID_OUTPUT_SET_PARAM
-			&& hid_output->write_length >= 3
-			&& hid_output->write_length <= 6)
-		param_buf = &hid_output->write_buf[0];
-	else
-		return;
-
-	/* Get parameter ID, size and value */
-	param_id = param_buf[0];
-	param_size = param_buf[1];
-	if (param_size > 4) {
-		TS_LOG_DEBUG("%s: Invalid parameter size\n", __func__);
-		return;
-	}
-
-	param_buf = &param_buf[2];
-	while (i < param_size)
-		param_value += *(param_buf++) << (8 * i++);
-
-	/* Check command response for Set Parameter command */
-	if (cd->response_buf[2] != HID_APP_RESPONSE_REPORT_ID
-			|| (cd->response_buf[4] & HID_OUTPUT_CMD_MASK) !=
-				HID_OUTPUT_SET_PARAM
-			|| cd->response_buf[5] != param_id
-			|| cd->response_buf[6] != param_size) {
-		TS_LOG_DEBUG("%s: Set Parameter command not successful\n",
-			__func__);
-		return;
-	}
-	parade_add_parameter(cd, param_id, param_value, param_size);
-}
-
-static void parade_check_command(struct parade_core_data *cd,
-		struct parade_hid_output *hid_output, bool raw)
-{
-	parade_check_set_parameter(cd, hid_output, raw);
-}
-
 static int parade_hid_send_output_and_wait_(struct parade_core_data *cd, struct parade_hid_output *hid_output)
 {
 	int rc = 0;
@@ -3340,23 +3157,6 @@ static int parade_before_suspend(void)
 	return rc;
 }
 
-static int parade_core_poweroff_device_(struct parade_core_data *cd)
-{
-	int rc = 0;
-	TS_LOG_ERR("%s: Not Implemented Yet\n", __func__);
-	if (rc < 0)
-		TS_LOG_ERR("%s: HW Power down fails r=%d\n", __func__, rc);
-	return rc;
-}
-
-static int parade_core_poweron_device_(struct parade_core_data *cd)
-{
-	int rc = 0;
-	TS_LOG_ERR("%s: Not Implemented Yet\n", __func__);
-	return rc;
-
-}
-
 static int parade_hid_cmd_set_power_(struct parade_core_data *cd,
 				      u8 power_state)
 {
@@ -3603,7 +3403,6 @@ static int parade_get_ram_parameter(struct parade_core_data *cd, u8 id, int* par
 	int write_length = 1;
 	int rcsize = 0;
 	u8 param[1];
-	u8 ret;
 	struct parade_hid_output hid_output = {
 		HID_OUTPUT_APP_COMMAND(HID_OUTPUT_GET_PARAM),
 		.write_length = write_length,
@@ -4020,8 +3819,6 @@ static int parade_read_roi_switch(void) {
 static int parade_roi_switch (struct ts_roi_info *info)
 {
 	int rc = NO_ERR;
-	int t = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
 
 	TS_LOG_INFO("%s enter", __func__);
 #ifdef PARADE_ROI_ENABLE
@@ -4059,11 +3856,7 @@ out:
 
 static void parade_chip_touch_switch(void)
 {
-	unsigned char value = 0;
-	char *ptr_begin = NULL, *ptr_end = NULL;
 	char in_data[MAX_STR_LEN] = {0};
-	int len = 0;
-	int error = 0;
 	unsigned char stype = 0, soper = 0, param = 0, sdatatowrite = 0;
 	char *cur;
 	char *token;
@@ -4161,9 +3954,6 @@ static int parade_calibrate(void)
 	u8 write_buf[1];
 	u8 status;
 
-	int t = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
-
 	rc = parade_check_cmd_status();
 	if(rc)
 		return rc;
@@ -4219,7 +4009,6 @@ exit:
 static int parade_hid_output_get_sysinfo_(struct parade_core_data *cd)
 {
 	int rc;
-	int size;
 	struct parade_hid_output hid_output = {
 		HID_OUTPUT_APP_COMMAND(HID_OUTPUT_GET_SYSINFO),
 		.timeout_ms = CY_HID_OUTPUT_GET_SYSINFO_TIMEOUT,
@@ -4303,25 +4092,6 @@ static int parade_hid_output_suspend_scanning_(struct parade_core_data *cd)
 	return parade_hid_send_output_and_wait_(cd, &hid_output);
 }
 
-static int parade_hid_output_read_conf_ver_(struct parade_core_data *cd,
-		u16 *config_ver)
-{
-	int rc;
-	u8 read_buf[CY_TTCONFIG_VERSION_OFFSET + CY_TTCONFIG_VERSION_SIZE];
-	u16 crc;
-
-	rc = parade_hid_output_read_conf_block_(cd, CY_TTCONFIG_VERSION_ROW,
-			CY_TTCONFIG_VERSION_OFFSET + CY_TTCONFIG_VERSION_SIZE,
-			CY_TCH_PARM_EBID, read_buf, &crc);
-	if (rc)
-		return rc;
-
-	*config_ver = get_unaligned_le16(
-				&read_buf[CY_TTCONFIG_VERSION_OFFSET]);
-
-	return 0;
-}
-
 static int parade_hid_output_resume_scanning_(struct parade_core_data *cd)
 {
 	TS_LOG_INFO("%s Enter\n",__func__);
@@ -4330,29 +4100,6 @@ static int parade_hid_output_resume_scanning_(struct parade_core_data *cd)
 	};
 
 	return parade_hid_send_output_and_wait_(cd, &hid_output);
-}
-
-static int parade_get_config_ver_(struct parade_core_data *cd)
-{
-	struct parade_sysinfo *si = &cd->sysinfo;
-	int rc;
-	u16 config_ver = 0;
-
-	rc = parade_hid_output_suspend_scanning_(cd);
-	if (rc)
-		goto error;
-
-	rc = parade_hid_output_read_conf_ver_(cd, &config_ver);
-	if (rc)
-		goto exit;
-
-	si->cydata.fw_ver_conf = config_ver;
-
-exit:
-	parade_hid_output_resume_scanning_(cd);
-error:
-	TS_LOG_DEBUG("%s: CONFIG_VER:%04X\n", __func__, config_ver);
-	return rc;
 }
 
 /*added tp_color*/
@@ -4407,7 +4154,6 @@ error:
 static ssize_t parade_doze_store(struct device *dev,
 			struct device_attribute *attr, const char *buf, size_t size)
 {
-	struct parade_core_data *cd = tskit_parade_data;
 	TS_LOG_INFO("%s : enter, data: %s \n", __func__, buf);
 #ifdef PARADE_DOZE_ENABLE
 	memcpy(tskit_parade_data->parade_chip_data->touch_switch_info, buf, MAX_STR_LEN);
@@ -4597,58 +4343,6 @@ static int parade_exec_panel_scan_cmd_(struct device *dev)
 	};
 
 	return parade_hid_send_output_and_wait_(cd, &hid_output);
-}
-
-static int cyttsp5_hid_output_retrieve_panel_scan_(
-		struct parade_core_data *cd, u16 read_offset, u16 read_count,
-		u8 data_id, u8 *response, u8 *config, u16 *actual_read_len,
-		u8 *read_buf)
-{
-	int status;
-	u8 read_data_id;
-	int rc;
-	int write_length = 5;
-	u8 write_buf[5];
-	u8 cmd_offset = 0;
-	u8 data_elem_size;
-	int size;
-	int data_size;
-	struct parade_hid_output hid_output = {
-		HID_OUTPUT_APP_COMMAND(HID_OUTPUT_RETRIEVE_PANEL_SCAN),
-		.write_length = write_length,
-		.write_buf = write_buf,
-	};
-
-	write_buf[cmd_offset++] = LOW_BYTE(read_offset);
-	write_buf[cmd_offset++] = HI_BYTE(read_offset);
-	write_buf[cmd_offset++] = LOW_BYTE(read_count);
-	write_buf[cmd_offset++] = HI_BYTE(read_count);
-	write_buf[cmd_offset++] = data_id;
-
-	rc = parade_hid_send_output_and_wait_(cd, &hid_output);
-	if (rc)
-		return rc;
-
-	status = cd->response_buf[5];
-	if (status)
-		return -EINVAL;
-
-	read_data_id = cd->response_buf[6];
-	if (read_data_id != data_id)
-		return -EPROTO;
-
-	size = get_unaligned_le16(&cd->response_buf[0]);
-	*actual_read_len = get_unaligned_le16(&cd->response_buf[7]);
-	*config = cd->response_buf[9];
-
-	data_elem_size = *config & 0x07;
-	data_size = *actual_read_len * data_elem_size;
-
-	if (read_buf)
-		memcpy(read_buf, &cd->response_buf[10], data_size);
-	if (response)
-		memcpy(response, cd->response_buf, size);
-	return rc;
 }
 
 static int parade_ret_scan_data_cmd_(struct device *dev, u16 read_offset,
@@ -4920,25 +4614,6 @@ static const struct file_operations tthe_get_panel_data_fops = {
 };
 #endif
 
-static int parade_dad_setup_sysfs(struct device *dev, struct parade_device_access_data *dad)
-{
-	int rc = 0;
-
-#ifdef TTHE_TUNER_SUPPORT
-	dad->tthe_get_panel_data_debugfs = debugfs_create_file(
-			PARADE_TTHE_TUNER_GET_PANEL_DATA_FILE_NAME,
-			0644, NULL, dad, &tthe_get_panel_data_fops);
-	if (IS_ERR_OR_NULL(dad->tthe_get_panel_data_debugfs)) {
-		TS_LOG_ERR("%s: Error, could not create get_panel_data\n",
-				__func__);
-		dad->tthe_get_panel_data_debugfs = NULL;
-	}
-#endif
-
-	return rc;
-
-}
-
 static int parade_get_mode(struct parade_core_data *cd,
 		struct parade_hid_desc *desc)
 {
@@ -5153,89 +4828,6 @@ static int parade_init_chip(void)
 	TS_LOG_INFO("%s: call parade_init_chip end\n", __func__);
 	return rc;
 }
-
-static s16 *create_and_get_u16_array(struct device_node *dev_node,
-		const char *name, int *size)
-{
-	const __be32 *values;
-	s16 *val_array;
-	int len;
-	int sz;
-	int rc;
-	int i;
-
-	values = of_get_property(dev_node, name, &len);
-	if (values == NULL)
-		return NULL;
-
-	sz = len / sizeof(u32);
-	TS_LOG_INFO("%s: %s size:%d\n", __func__, name, sz);
-
-	val_array = kcalloc(sz, sizeof(s16), GFP_KERNEL);
-	if (!val_array) {
-		rc = -ENOMEM;
-		goto fail;
-	}
-
-	for (i = 0; i < sz; i++)
-		val_array[i] = (s16)be32_to_cpup(values++);
-
-	*size = sz;
-
-	return val_array;
-
-fail:
-	return ERR_PTR(rc);
-}
-
-static struct touch_settings *create_and_get_touch_setting(
-		struct device_node *core_node, const char *name)
-{
-	 struct touch_settings *setting;
-	 char *tag_name;
-	 u32 tag_value;
-	 u16 *data;
-	 int size;
-	 int rc;
-
-	 data = create_and_get_u16_array(core_node, name, &size);
-	 if (IS_ERR_OR_NULL(data))
-		 return (void *)data;
-
-	 TS_LOG_INFO("%s: Touch setting:'%s' size:%d\n", __func__, name, size);
-
-	 setting = kzalloc(sizeof(*setting), GFP_KERNEL);
-	 if (!setting) {
-		 rc = -ENOMEM;
-		 goto fail_free_data;
-	 }
-
-	 setting->data = (u8 *)data;
-	 setting->size = size;
-
-	 tag_name = kzalloc(MAX_NAME_LENGTH, GFP_KERNEL);
-	 if (!tag_name) {
-		 rc = -ENOMEM;
-		 goto fail_free_setting;
-	 }
-
-	 snprintf(tag_name, MAX_NAME_LENGTH, "%s-tag", name);
-
-	 rc = of_property_read_u32(core_node, tag_name, &tag_value);
-	 if (!rc)
-		 setting->tag = tag_value;
-
-	 kfree(tag_name);
-
-	 return setting;
-
- fail_free_setting:
-	 kfree(setting);
- fail_free_data:
-	 kfree(data);
-
-	 return ERR_PTR(rc);
- }
 
 static int parade_get_dts_value(struct device_node *core_node,char *name)
 {
@@ -6265,7 +5857,7 @@ static int parse_touch_input(struct parade_core_data *cd, int size, struct ts_fi
     struct parade_sysinfo *si = &cd->sysinfo;
     int report_id = cd->input_buf[2];
     int rc = -EINVAL;
-	int i,j;
+
 	out_cmd->command = TS_INVAILD_CMD;
     if (!si->ready) {
         TS_LOG_ERR(
@@ -6414,13 +6006,6 @@ static int parade_irq_bottom_half(struct ts_cmd_node *in_cmd, struct ts_cmd_node
 			parade_parse_input(in_cmd, out_cmd,cd);
 	}
 	return NO_ERR;
-}
-
-static int parade_reset_chip(void)
-{
-	int rc = 0;
-	parade_hw_reset();
-	return rc;
 }
 
 static int parade_algo_t1(struct ts_kit_device_data *dev_data, struct ts_fingers *in_info,
@@ -6734,7 +6319,7 @@ static int parade_load_app_(struct device *dev, const u8 *fw, int fw_size)
 			goto _parade_load_app_exit;
 		}
 		TS_LOG_INFO("%s: Chip is in bootloader now\n", __func__);
-		tskit_parade_data->mode == CY_MODE_BOOTLOADER;/*2016.12.22: Bug Fix, if we do not do this, the retry will not take effect*/
+		tskit_parade_data->mode = CY_MODE_BOOTLOADER;/*2016.12.22: Bug Fix, if we do not do this, the retry will not take effect*/
 	}
 	else{
 		TS_LOG_INFO("%s: In Bootloader mode, no need to enter\n", __func__);
@@ -6854,7 +6439,6 @@ static int cyttsp5_upgrade_firmware(struct device *dev, const u8 *fw_img,
 	}
 
 	TS_LOG_INFO("%s successful\n", __func__);
-exit:
 
 	return rc;
 }
@@ -6910,43 +6494,6 @@ cyttsp5_firmware_cont_exit:
 	return rc;
 }
 
-static void parade_fw_update_cont(const struct firmware *fw, void *context)
-{
-	struct device *dev = tskit_parade_data->dev;
-	struct parade_loader_data *ld = &tskit_parade_data->ld;
-	u8 header_size = 0;
-	TS_LOG_INFO("%s enter", __func__);
-
-	if (!fw)
-		goto cyttsp5_firmware_cont_exit;
-	TS_LOG_INFO("%s fw exit", __func__);
-	if (!fw->data || !fw->size) {
-		TS_LOG_INFO( "%s: No firmware received\n", __func__);
-		goto cyttsp5_firmware_cont_release_exit;
-	}
-	TS_LOG_INFO("%s fw_size normal", __func__);
-
-	header_size = fw->data[0];
-	TS_LOG_INFO("%s header_size = %d", __func__, header_size);
-	if (header_size >= (fw->size + 1)) {
-		TS_LOG_INFO( "%s: Firmware format is invalid\n", __func__);
-		goto cyttsp5_firmware_cont_release_exit;
-	}
-	TS_LOG_INFO("%s before cyttsp5_upgrade_firmware", __func__);
-
-	cyttsp5_upgrade_firmware(dev, &(fw->data[header_size + 1]),
-		fw->size - (header_size + 1));
-
-	TS_LOG_INFO("%s after cyttsp5_upgrade_firmware", __func__);
-
-cyttsp5_firmware_cont_release_exit:
-	release_firmware(fw);
-
-cyttsp5_firmware_cont_exit:
-	ld->is_manual_upgrade_enabled = 0;
-}
-
-
 static const struct firmware *fw_entry;
 
 static int upgrade_firmware_from_class(struct device *dev)
@@ -6971,13 +6518,6 @@ static int upgrade_firmware_from_class(struct device *dev)
 	TS_LOG_INFO("%s: Enabling firmware class loader\n", __func__);
 
 	return parade_fw_update(fw_entry);
-
-#if 0
-
-	retval = request_firmware_nowait(THIS_MODULE, FW_ACTION_NOHOTPLUG,
-				CY_FW_MANUAL_UPGRADE_FILE_NAME, dev, GFP_KERNEL, dev,
-				parade_fw_update_cont);
-#endif
 
 	return 0;
 }
@@ -7050,9 +6590,7 @@ static void parade_get_fw_name(char *file_name)
 static int parade_fw_update_boot(char *file_name)
 {
 	int rc = NO_ERR;
-	int t = 0;
 	u8 header_size = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
 	tskit_parade_data->firmware_broken_update_flag = false;
 	tskit_parade_data->is_firmware_restore = false;
 	if(tskit_parade_data->create_project_id_flag == 1){
@@ -9179,8 +8717,7 @@ static int parade_chip_get_info(struct ts_chip_info_param *info)
 	int retval = NO_ERR;
 	struct parade_core_data *cd = tskit_parade_data;
 	struct parade_cydata *cydata = &cd->sysinfo.cydata;
-	int t = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
+
 	TS_LOG_INFO("%s Enter\n", __func__);
 	retval = parade_check_cmd_status();
 
@@ -9225,10 +8762,7 @@ static int parade_get_rawdata(struct ts_rawdata_info *info, struct ts_cmd_node *
 	int self_test_id_supported = 0;
 	uint32_t sensor_num = 0;
 	int32_t *cm_sensor_data = cmcp_info->cm_data_panel;
-	int t = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
 	u8 reg_addr = PAR_REG_BASE;
-	u16 size;
 	u8 buf[2];
 	TS_LOG_INFO("%s Enter\n", __func__);
 
@@ -9839,8 +9373,6 @@ exit:
 static int parade_fw_update_sd(void)
 {
 	int rc  = NO_ERR;
-	int t = 0;
-	int timeout_ms = PARADE_WORK_WAIT_TIMEOUT;
 
 	rc = parade_check_cmd_status();
 	if(rc)

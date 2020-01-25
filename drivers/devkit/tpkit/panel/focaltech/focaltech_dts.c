@@ -76,7 +76,6 @@ static int focal_parse_power_config_dts(
 	struct device_node *np,
 	struct ts_kit_device_data *dev_data)
 {
-	int ret = 0;
 	return 0;
 }
 
@@ -145,23 +144,6 @@ static void focal_of_property_read_u32_default(
 		*out_value = default_value;
 	}
 }
-
-static void focal_of_property_read_u16_default(
-	struct device_node *np,
-	char *prop_name,
-	u16 *out_value,
-	u16 default_value)
-{
-	int ret = 0;
-
-	ret = of_property_read_u16(np, prop_name, out_value);
-	if (ret) {
-		TS_LOG_INFO("%s:%s not set in dts, use default\n",
-			__func__, prop_name);
-		*out_value = default_value;
-	}
-}
-
 
 static void focal_prase_delay_config_dts(
 	struct device_node *np,

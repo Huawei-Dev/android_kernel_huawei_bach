@@ -112,7 +112,6 @@ short synap_get_oem_data_info( void );
 int synap_get_oem_data(unsigned char *oem_data, unsigned short leng);
 int synap_set_oem_data(unsigned char *oem_data, unsigned short leng);
 #endif
-static int set_lockdown_data(unsigned char *lockdown_data, unsigned short leng);
 extern struct synaptics_rmi4_data *rmi4_data;
 extern void synap_parse_chip_specific_dts(struct ts_kit_device_data *chip_data);
 
@@ -1984,21 +1983,6 @@ static int fwu_read_f34_v5v6_queries(void)
 			TS_LOG_DEBUG("!!!!!!!!has_oem_data!!!!!!\n");
 			count += 2;
 		}
-#if 0
-		if (properties_2.has_guest_code || properties_2.has_force_config || properties_2.has_lockdown_data
-				|| properties_2.has_lcm_data || properties_2.has_oem_data) {
-			retval = fwu->fn_ptr->read(rmi4_data,
-					base + fwu->off.properties_2 + 1,
-					buf,
-					count);
-			if (retval < 0) {
-				TS_LOG_ERR
-				    ("%s: Failed to read guest code block count\n",
-				     __func__);
-				return retval;
-			}
-		}
-#endif
 
 		count = 0;
 		if (properties_2.has_guest_code){
@@ -2427,52 +2411,6 @@ static int fwu_read_f34_blocks(unsigned short block_cnt, unsigned char cmd)
 		retval = fwu_read_f34_v5v6_blocks(block_cnt, cmd);
 
 	return retval;
-}
-
-static int fwu_get_image_firmware_id(unsigned int *fw_id)
-{
-	int retval;
-	unsigned char index = 0;
-	char *strptr;
-	char *firmware_id;
-
-	if (fwu->img.contains_firmware_id) {
-		*fw_id = fwu->img.firmware_id;
-	} else {
-		if (!fwu->image_name) {
-			TS_LOG_ERR("fwu->image_name is NULL, return\n");
-			return -EINVAL;
-		}
-		strptr = strnstr(fwu->image_name, "PR", MAX_IMAGE_NAME_LEN);
-		if (!strptr) {
-			TS_LOG_ERR("%s: No valid PR number (PRxxxxxxx) "
-				   "found in image file name (%s)\n", __func__,
-				   fwu->image_name);
-			return -EINVAL;
-		}
-
-		strptr += 2;
-		firmware_id = kzalloc(MAX_FIRMWARE_ID_LEN, GFP_KERNEL);
-		if (!firmware_id) {
-			TS_LOG_ERR("%s: Failed to alloc mem for firmware_id\n",
-				   __func__);
-			return -ENOMEM;
-		}
-		while (strptr[index] >= '0' && strptr[index] <= '9') {
-			firmware_id[index] = strptr[index];
-			index++;
-		}
-
-		retval = sstrtoul(firmware_id, 10, (unsigned long *)fw_id);
-		kfree(firmware_id);
-		if (retval) {
-			TS_LOG_ERR("%s: Failed to obtain image firmware ID\n",
-				   __func__);
-			return -EINVAL;
-		}
-	}
-
-	return 0;
 }
 
 bool GetHexCharValue(char cHex, unsigned char * byValue)
@@ -2939,7 +2877,6 @@ static int fwu_erase_utility_parameter(void)
 static int fwu_erase_guest_code(void)
 {
 	int retval;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
 
 	retval = fwu_write_f34_command(CMD_ERASE_GUEST_CODE);
 	if (retval < 0)
@@ -2955,33 +2892,6 @@ static int fwu_erase_guest_code(void)
 
 	return 0;
 }
-
-static int fwu_erase_lockdown_data(void)
-{
-	int retval;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-
-	retval = fwu_write_f34_command(CMD_ERASE_LOCKDOWN_DATA);
-	if (retval < 0)
-		return retval;
-
-	TS_LOG_DEBUG(
-			"%s: Erase command written\n",
-			__func__);
-
-	msleep(100);
-
-	retval = fwu_wait_for_idle(ERASE_WAIT_MS, true);
-	if (retval < 0)
-		return retval;
-
-	TS_LOG_DEBUG(
-			"%s: Idle status detected\n",
-			__func__);
-
-	return 0;
-}
-
 
 static int fwu_erase_all(void)
 {
@@ -3060,8 +2970,6 @@ static int fwu_read_utility_parameter(void)
 	//unsigned char checksum_array[4];
 	unsigned short utility_param_size;
 	//unsigned long checksum;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-	int i;
 
 	utility_param_size = fwu->blkcount.utility_param * fwu->block_size;
 	retval = fwu_allocate_read_config_buf(utility_param_size);
@@ -3084,7 +2992,6 @@ static int fwu_write_utility_parameter(void)
 	unsigned char checksum_array[4];
 	unsigned short utility_param_size;
 	unsigned long checksum;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
 
 	utility_param_size = fwu->blkcount.utility_param * fwu->block_size;
 	retval = fwu_allocate_read_config_buf(utility_param_size);
@@ -3150,19 +3057,6 @@ static int fwu_write_dp_configuration(void)
 	return fwu_write_configuration();
 }
 
-static int fwu_write_lockdown_data(void)
-{
-	int retval;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-
-	retval = fwu_write_f34_blocks(fwu->read_config_buf,
-			fwu->blkcount.lockdown_data, CMD_WRITE_LOCKDOWN_DATA);
-	if (retval < 0)
-		return retval;
-	rmi4_data->reset_device(rmi4_data);
-	return 0;
-}
-
 static int fwu_write_flash_configuration(void)
 {
 	int retval;
@@ -3216,21 +3110,10 @@ static int fwu_write_guest_code(void)
 	return 0;
 }
 
-static int fwu_write_lockdown(void)
-{
-	unsigned short lockdown_block_count;
-
-	lockdown_block_count = fwu->img.lockdown.size / fwu->block_size;
-
-	return fwu_write_f34_blocks((unsigned char *)fwu->img.lockdown.data,
-				    lockdown_block_count, CMD_WRITE_LOCKDOWN);
-}
-
 static int fwu_write_partition_table(void)
 {
 	int retval;
 	unsigned short block_count;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
 
 	block_count = fwu->blkcount.bl_config;
 	fwu->config_area = BL_CONFIG_AREA;
@@ -3533,203 +3416,6 @@ exit:
 
 }
 
-#if 0
-static int fwu_do_lockdown(void)
-{
-	int retval;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-
-	retval = fwu_enter_flash_prog();
-	if (retval < 0)
-		return retval;
-
-	retval = fwu->fn_ptr->read(rmi4_data,
-				   fwu->f34_fd.query_base_addr +
-				   fwu->off.properties,
-				   fwu->flash_properties.data,
-				   sizeof(fwu->flash_properties.data));
-	if (retval < 0) {
-		TS_LOG_ERR("%s: Failed to read flash properties\n", __func__);
-		return retval;
-	}
-
-	if (fwu->flash_properties.unlocked == 0) {
-		dev_info("%s: Device already locked down\n", __func__);
-		return 0;
-	}
-
-	retval = fwu_write_lockdown();
-	if (retval < 0)
-		return retval;
-
-	pr_notice("%s: Lockdown programmed\n", __func__);
-
-	return retval;
-}
-#endif
-#if 0
-static int fwu_start_write_guest_code(void)
-{
-	int retval;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-
-	retval = fwu_parse_image_info();
-	if (retval < 0)
-		return -EINVAL;
-
-	if (!fwu->has_guest_code) {
-		TS_LOG_ERR("%s: Guest code not supported\n", __func__);
-		return -EINVAL;
-	}
-
-	if (!fwu->img.contains_guest_code) {
-		TS_LOG_ERR("%s: No guest code in firmware image\n", __func__);
-		return -EINVAL;
-	}
-
-	if (rmi4_data->sensor_sleep) {
-		TS_LOG_ERR("%s: Sensor sleeping\n", __func__);
-		return -ENODEV;
-	}
-	/*rmi4_data->stay_awake = true;*/
-
-	/*mutex_lock(&rmi4_data->rmi4_exp_init_mutex);*/
-
-	pr_notice("%s: Start of write guest code process\n", __func__);
-
-	retval = fwu_enter_flash_prog();
-	if (retval < 0)
-		goto exit;
-
-	retval = fwu_check_guest_code_size();
-	if (retval < 0)
-		goto exit;
-
-	retval = fwu_erase_guest_code();
-	if (retval < 0)
-		goto exit;
-
-	retval = fwu_write_guest_code();
-	if (retval < 0)
-		goto exit;
-
-	pr_notice("%s: Guest code programmed\n", __func__);
-
-exit:
-	rmi4_data->reset_device(rmi4_data);
-
-	pr_notice("%s: End of write guest code process\n", __func__);
-
-	/*mutex_unlock(&rmi4_data->rmi4_exp_init_mutex);*/
-
-	/*rmi4_data->stay_awake = false;*/
-
-	return retval;
-}
-#endif
-#if 0
-static int fwu_start_write_config(void)
-{
-	int retval;
-	unsigned int device_fw_id = 0;
-	unsigned int image_fw_id;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-
-	retval = fwu_parse_image_info();
-	if (retval < 0)
-		return -EINVAL;
-
-	switch (fwu->config_area) {
-	case UI_CONFIG_AREA:
-		/*device_fw_id = rmi4_data->firmware_id;*/
-		retval = fwu_get_image_firmware_id(&image_fw_id);
-		if (retval < 0)
-			return retval;
-		if (device_fw_id != image_fw_id) {
-			TS_LOG_ERR
-			    ("%s: Device and image firmware IDs don't match\n",
-			     __func__);
-			return -EINVAL;
-		}
-		retval = fwu_check_ui_configuration_size();
-		if (retval < 0)
-			return retval;
-		break;
-	case DP_CONFIG_AREA:
-		if (!fwu->flash_properties.has_disp_config) {
-			TS_LOG_ERR("%s: Display configuration not supported\n",
-				   __func__);
-			return -EINVAL;
-		}
-		if (!fwu->img.contains_disp_config) {
-			TS_LOG_ERR
-			    ("%s: No display configuration in firmware image\n",
-			     __func__);
-			return -EINVAL;
-		}
-		retval = fwu_check_dp_configuration_size();
-		if (retval < 0)
-			return retval;
-		break;
-	default:
-		TS_LOG_ERR("%s: Configuration not supported\n", __func__);
-		return -EINVAL;
-	}
-
-	if (rmi4_data->sensor_sleep) {
-		TS_LOG_ERR("%s: Sensor sleeping\n", __func__);
-		return -ENODEV;
-	}
-	/*rmi4_data->stay_awake = true;*/
-
-	/*mutex_lock(&rmi4_data->rmi4_exp_init_mutex);*/
-
-	pr_notice("%s: Start of write config process\n", __func__);
-
-	retval = fwu_enter_flash_prog();
-	if (retval < 0)
-		goto exit;
-
-	retval = fwu_erase_configuration();
-	if (retval < 0) {
-		TS_LOG_ERR("%s: Failed to erase config\n", __func__);
-		goto exit;
-	}
-
-	switch (fwu->config_area) {
-	case UI_CONFIG_AREA:
-		retval = fwu_write_ui_configuration();
-		if (retval < 0)
-			goto exit;
-		break;
-	case DP_CONFIG_AREA:
-		retval = fwu_write_dp_configuration();
-		if (retval < 0)
-			goto exit;
-		break;
-	}
-
-	pr_notice("%s: Config written\n", __func__);
-
-exit:
-	switch (fwu->config_area) {
-	case UI_CONFIG_AREA:
-		rmi4_data->reset_device(rmi4_data);
-		break;
-	case DP_CONFIG_AREA:
-		rmi4_data->reset_device(rmi4_data);
-		break;
-	}
-
-	pr_notice("%s: End of write config process\n", __func__);
-
-	/*mutex_unlock(&rmi4_data->rmi4_exp_init_mutex);*/
-
-	/*rmi4_data->stay_awake = false;*/
-
-	return retval;
-}
-#endif
 static int fwu_start_reflash(void)
 {
 	int retval = 0;
@@ -4025,26 +3711,10 @@ static void fwu_startup_fw_update_work(struct work_struct *work)
 	return;
 }
 #endif
-#if 0
-static void synaptics_rmi4_fwu_attn(struct synaptics_rmi4_data *rmi4_data,
-				    unsigned char intr_mask)
-{
-	if (!fwu)
-		return;
-
-	if (fwu->intr_mask & intr_mask)
-		fwu_read_flash_status();
-
-	return;
-}
-#endif
 
 static int synaptics_read_lockdown_data(void)
 {
 	int retval = -EINVAL;
-	int index = 0;
-	unsigned short block_count;
-	unsigned char test[10];
 
 	if (fwu->bl_version != BL_V6) {
 		TS_LOG_ERR("%s: Not support lockdown data in bl v.%d\n", __func__, fwu->bl_version);
@@ -4069,7 +3739,6 @@ out:
 static int fwu_erase_oem_data(void)
 {
 	int retval;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
 
 	retval = fwu_write_f34_command(CMD_ERASE_OEM_DATA);
 	if (retval < 0)
@@ -4095,7 +3764,6 @@ static int fwu_erase_oem_data(void)
 static int synaptics_read_oem_data(void)
 {
 	int retval = -EINVAL;
-	int index = 0;
 	unsigned short block_count;
 
 	if (fwu->bl_version != BL_V6) {
@@ -4106,15 +3774,7 @@ static int synaptics_read_oem_data(void)
 		TS_LOG_ERR("%s: Not support oem data in this firmware\n", __func__);
 		goto out;
 	}
-#if 0
-	fwu->config_area = OEM_DATA_AREA;
 
-	retval = fwu_do_read_config();
-	if (retval < 0){
-		TS_LOG_ERR( "%s: Failed to read config\n",__func__);
-		goto out;
-	}
-#else
 	block_count = fwu->blkcount.oem_data;
 	fwu->config_area = OEM_DATA_AREA;
 	fwu->config_size = fwu->block_size * block_count;
@@ -4130,7 +3790,6 @@ static int synaptics_read_oem_data(void)
 	fwu->read_config_buf_size = fwu->config_size;
 
 	retval = fwu_read_f34_blocks(block_count, CMD_READ_CONFIG);
-#endif
 out:
 	return retval;
 }
@@ -4401,50 +4060,6 @@ exit:
 }
 #endif
 
-#if 0
-static ssize_t fwu_sysfs_do_recovery_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	int retval;
-	unsigned int input;
-	struct synaptics_rmi4_data *rmi4_data = fwu->rmi4_data;
-
-	if (sscanf(buf, "%u", &input) != 1) {
-		retval = -EINVAL;
-		goto exit;
-	}
-
-	if (!fwu->in_ub_mode) {
-		dev_err(rmi4_data->pdev->dev.parent,
-				"%s: Not in microbootloader mode\n",
-				__func__);
-		retval = -EINVAL;
-		goto exit;
-	}
-
-	if (!fwu->ext_data_source)
-		return -EINVAL;
-	else
-		fwu->image = fwu->ext_data_source;
-
-	retval = fwu_start_recovery();
-	if (retval < 0) {
-		dev_err(rmi4_data->pdev->dev.parent,
-				"%s: Failed to do recovery\n",
-				__func__);
-		goto exit;
-	}
-
-	retval = count;
-
-exit:
-	kfree(fwu->ext_data_source);
-	fwu->ext_data_source = NULL;
-	fwu->image = NULL;
-	return retval;
-}
-#endif
-
 static int get_lockdown_data(unsigned char *lockdown_data, unsigned short leng)
 {
 	int retval = -EINVAL;
@@ -4454,29 +4069,6 @@ static int get_lockdown_data(unsigned char *lockdown_data, unsigned short leng)
 	if (retval < 0)
 		return retval;
 	memcpy(lockdown_data, fwu->read_config_buf + 4, leng);
-	return retval;
-}
-
-int set_lockdown_data(unsigned char *lockdown_data, unsigned short leng)
-{
-	int retval = -EINVAL;
-	TS_LOG_INFO( "%s: Start\n",__func__);
-
-	retval = fwu_enter_flash_prog();
-	if (retval < 0)
-		goto exit;
-	retval = fwu_erase_lockdown_data();
-	if (retval < 0)
-		goto exit;
-	retval = fwu_allocate_read_config_buf(fwu->blkcount.lockdown_data * fwu->block_size);
-	if (retval < 0)
-		goto exit;
-	memset(fwu->read_config_buf, 0x00, fwu->blkcount.lockdown_data * fwu->block_size);
-	memcpy(fwu->read_config_buf + 4, lockdown_data, leng);
-	retval = fwu_write_lockdown_data();
-	if (retval < 0)
-		goto exit;
-exit:
 	return retval;
 }
 
@@ -4684,79 +4276,7 @@ exit_free_fwu:
 exit:
 	return retval;
 }
-#if 0
-static int file_open_firmware(u8 **buf)
-{
-	struct inode *inode = NULL;
-	mm_segment_t oldfs;
-	uint32_t length;
-	struct file *filp;
-	const char filename[] = "/sdcard/update/synaptics.img";
-	const char filename_bak[] = "/cache/synaptics.img";
-	/* open file */
-	oldfs = get_fs();
-	set_fs(KERNEL_DS);
-	filp = filp_open(filename, O_RDONLY, S_IRUSR);
-	if (IS_ERR(filp)) {
 
-		printk("%s: file %s filp_open error,try %s\n", __FUNCTION__,
-		       filename, filename_bak);
-		filp = filp_open(filename_bak, O_RDONLY, S_IRUSR);
-		if (IS_ERR(filp)) {
-			printk("%s: file %s filp_open error\n", __FUNCTION__,
-			       filename_bak);
-			set_fs(oldfs);
-			return -1;
-		}
-	}
-
-	if (!(filp)->f_op) {
-		printk("%s: File Operation Method Error\n", __FUNCTION__);
-		filp_close(filp, NULL);
-		set_fs(oldfs);
-		return -1;
-	}
-
-	inode = (filp)->f_path.dentry->d_inode;
-	if (!inode) {
-		printk("%s: Get inode from filp failed\n", __FUNCTION__);
-		filp_close(filp, NULL);
-		set_fs(oldfs);
-		return -1;
-	}
-
-	/* file's size */
-	length = i_size_read(inode->i_mapping->host);
-	if (!(length > 0 && length < FIRMWARE_LEN)) {
-		printk("file size error\n");
-		filp_close((filp), NULL);
-		set_fs(oldfs);
-		return -1;
-	}
-
-	/* allocation buff size */
-	*buf = vmalloc(length + (length % 2));	/* buf size if even */
-	if (!(*buf)) {
-		printk("alloctation memory failed\n");
-		filp_close((filp), NULL);
-		set_fs(oldfs);
-		return -1;
-	}
-
-	/* read data */
-	if ((filp)->f_op->read((filp), (*buf), length, &(filp)->f_pos) !=
-	    length) {
-		printk("%s: file read error\n", __FUNCTION__);
-		filp_close((filp), NULL);
-		set_fs(oldfs);
-		return -1;
-	}
-
-	set_fs(oldfs);
-	filp_close((filp), NULL);
-	return 0;
-}
-#endif
 /*    get the firmware data form boot.img
  */
 int synap_get_fw_data_s3718_boot(char *file_name,

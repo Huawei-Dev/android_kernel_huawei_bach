@@ -1907,7 +1907,6 @@ static int himax_core_resume(void)
 	int t=0;
 #endif
 	struct himax_ts_data *ts;
-	uint8_t data[12] = {0};
 	int retval=0;
 
 	TS_LOG_INFO("%s: enter \n", __func__);

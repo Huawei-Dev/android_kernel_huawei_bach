@@ -26,9 +26,6 @@ static int focal_get_data_check_sum(const u8 *data, size_t data_size,
 	u8 *check_sum);
 static int focal_enter_work_model_from_rom_update(
 	struct focal_platform_data *focal_pdata);
-static int focal_read_check_sum_in_pram(struct focal_platform_data *focal_pdata,
-	u32 start_addr, u32 crc_length,
-	u8 *check_sum);
 
 static int focal_enter_work_model_by_hardware(void);
 #define RIGHT_OFFSET_BIT(m, n)  ((m) >> (n))
@@ -1235,67 +1232,6 @@ static int focal_get_data_check_sum(
 		*check_sum ^= data[i];
 
 	return 0;
-}
-
-static int focal_read_check_sum_in_pram(
-	struct focal_platform_data *focal_pdata,
-	u32 start_addr,
-	u32 crc_length,
-	u8 *check_sum)
-{
-	int ret = 0;
-
-	ret = focal_enter_pram_model(focal_pdata);
-	if (ret) {
-		TS_LOG_ERR("%s:enter pram model fail, ret=%d\n", __func__, ret);
-		goto enter_work_model_from_pram;
-	} else {
-		TS_LOG_INFO("%s:enter pram model success\n", __func__);
-	}
-
-	ret = focal_auto_config_clock();
-	if (ret) {
-		TS_LOG_ERR("%s:config clock fail, ret=%d\n", __func__, ret);
-		goto enter_work_model_from_pram;
-	} else {
-		TS_LOG_INFO("%s:config clock success\n", __func__);
-	}
-
-	ret = focal_enter_pram_update_model_from_pram();
-	if (ret) {
-		TS_LOG_ERR("%s:enter update model fail, ret=%d\n",
-			__func__, ret);
-		goto enter_work_model_from_pram;
-	} else {
-		TS_LOG_INFO("%s:enter update model success\n", __func__);
-	}
-
-	ret = focal_read_check_sum(focal_pdata, FTS_FW_IC_ADDR_START,
-		crc_length, check_sum);
-	if (ret) {
-		TS_LOG_ERR("%s:read check sum in ic fail, ret=%d\n",
-			__func__, ret);
-		goto enter_work_model_from_update_model;
-	}
-
-enter_work_model_from_update_model:
-	if (focal_enter_work_model_form_pram_update(focal_pdata)) {
-		TS_LOG_ERR("%s:enter work model fail, ret=%d\n", __func__, ret);
-	} else {
-		TS_LOG_INFO("%s:enter work model success\n", __func__);
-		return ret;
-	}
-
-enter_work_model_from_pram:
-	/* 6. enter work model */
-	if (focal_enter_work_model_from_pram(focal_pdata)) {
-		TS_LOG_ERR("%s:enter work mode from pram fail, ret=%d\n",
-			__func__, ret);
-	} else {
-		TS_LOG_INFO("%s:enter work mode from pram success\n", __func__);
-	}
-
-	return ret;
 }
 
 /*

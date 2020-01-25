@@ -183,25 +183,6 @@ int mdss_dsi_panel_cmd_read(struct mdss_dsi_ctrl_pdata *ctrl, char cmd0,
 	return mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 }
 
-static void mdss_dsi_panel_apply_settings(struct mdss_dsi_ctrl_pdata *ctrl,
-				struct dsi_panel_cmds *pcmds)
-{
-	struct dcs_cmd_req cmdreq;
-	struct mdss_panel_info *pinfo;
-
-	pinfo = &(ctrl->panel_data.panel_info);
-	if ((pinfo->dcs_cmd_by_left) && (ctrl->ndx != DSI_CTRL_LEFT))
-		return;
-
-	memset(&cmdreq, 0, sizeof(cmdreq));
-	cmdreq.cmds = pcmds->cmds;
-	cmdreq.cmds_cnt = pcmds->cmd_cnt;
-	cmdreq.flags = CMD_REQ_COMMIT;
-	cmdreq.rlen = 0;
-	cmdreq.cb = NULL;
-	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
-}
-
 static void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
 			struct dsi_panel_cmds *pcmds, u32 flags)
 {
@@ -298,20 +279,6 @@ static void mdss_dsi_panel_set_idle_mode(struct mdss_panel_data *pdata,
 			pr_debug("Idle off\n");
 		}
 	}
-}
-
-static bool mdss_dsi_panel_get_idle_mode(struct mdss_panel_data *pdata)
-
-{
-	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
-
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		return 0;
-	}
-	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-						panel_data);
-	return ctrl->idle;
 }
 
 static int mdss_dsi_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
@@ -574,38 +541,6 @@ end:
 	return 0;
 }
 
-static int mdss_dsi_panel_apply_display_setting(struct mdss_panel_data *pdata,
-							u32 mode)
-{
-	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
-	struct dsi_panel_cmds *lp_on_cmds;
-	struct dsi_panel_cmds *lp_off_cmds;
-
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		return -EINVAL;
-	}
-
-	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-				panel_data);
-
-	lp_on_cmds = &ctrl->lp_on_cmds;
-	lp_off_cmds = &ctrl->lp_off_cmds;
-
-	/* Apply display settings for low-persistence mode */
-	if ((mode == MDSS_PANEL_LOW_PERSIST_MODE_ON) &&
-				(lp_on_cmds->cmd_cnt))
-			mdss_dsi_panel_apply_settings(ctrl, lp_on_cmds);
-	else if ((mode == MDSS_PANEL_LOW_PERSIST_MODE_OFF) &&
-			(lp_off_cmds->cmd_cnt))
-		mdss_dsi_panel_apply_settings(ctrl, lp_off_cmds);
-	else
-		return -EINVAL;
-
-	pr_debug("%s: Persistence mode %d applied\n", __func__, mode);
-	return 0;
-}
-
 static void mdss_dsi_panel_switch_mode(struct mdss_panel_data *pdata,
 							int mode)
 {
@@ -735,22 +670,6 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 }
 
 #ifdef TARGET_HW_MDSS_HDMI
-static void mdss_dsi_panel_on_hdmi(struct mdss_dsi_ctrl_pdata *ctrl,
-			struct mdss_panel_info *pinfo)
-{
-	if (ctrl->ds_registered)
-		mdss_dba_utils_video_on(pinfo->dba_data, pinfo);
-}
-#else
-static void mdss_dsi_panel_on_hdmi(struct mdss_dsi_ctrl_pdata *ctrl,
-			struct mdss_panel_info *pinfo)
-{
-	(void)(*ctrl);
-	(void)(*pinfo);
-}
-#endif
-
-#ifdef TARGET_HW_MDSS_HDMI
 static void mdss_dsi_post_panel_on_hdmi(struct mdss_panel_info *pinfo)
 {
 	u32 vsync_period = 0;
@@ -801,24 +720,6 @@ end:
 	pr_debug("%s:-\n", __func__);
 	return 0;
 }
-
-#ifdef TARGET_HW_MDSS_HDMI
-static void mdss_dsi_panel_off_hdmi(struct mdss_dsi_ctrl_pdata *ctrl,
-			struct mdss_panel_info *pinfo)
-{
-	if (ctrl->ds_registered && pinfo->is_pluggable) {
-		mdss_dba_utils_video_off(pinfo->dba_data);
-		mdss_dba_utils_hdcp_enable(pinfo->dba_data, false);
-	}
-}
-#else
-static void mdss_dsi_panel_off_hdmi(struct mdss_dsi_ctrl_pdata *ctrl,
-			struct mdss_panel_info *pinfo)
-{
-	(void)(*ctrl);
-	(void)(*pinfo);
-}
-#endif
 
 static int mdss_dsi_panel_low_power_config(struct mdss_panel_data *pdata,
 	int enable)
@@ -1117,58 +1018,6 @@ void mdss_dsi_panel_dsc_pps_send(struct mdss_dsi_ctrl_pdata *ctrl,
 	pcmds.link_state = DSI_LP_MODE;
 
 	mdss_dsi_panel_cmds_send(ctrl, &pcmds, CMD_REQ_COMMIT);
-}
-
-static int mdss_dsi_parse_hdr_settings(struct device_node *np,
-		struct mdss_panel_info *pinfo)
-{
-	int rc = 0;
-	struct mdss_panel_hdr_properties *hdr_prop;
-
-	if (!np) {
-		pr_err("%s: device node pointer is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	if (!pinfo) {
-		pr_err("%s: panel info is NULL\n", __func__);
-		return -EINVAL;
-	}
-
-	hdr_prop = &pinfo->hdr_properties;
-	hdr_prop->hdr_enabled = of_property_read_bool(np,
-		"qcom,mdss-dsi-panel-hdr-enabled");
-
-	if (hdr_prop->hdr_enabled) {
-		rc = of_property_read_u32_array(np,
-				"qcom,mdss-dsi-panel-hdr-color-primaries",
-				hdr_prop->display_primaries,
-				DISPLAY_PRIMARIES_COUNT);
-		if (rc) {
-			pr_info("%s:%d, Unable to read color primaries,rc:%u",
-					__func__, __LINE__,
-					hdr_prop->hdr_enabled = false);
-		}
-
-		rc = of_property_read_u32(np,
-			"qcom,mdss-dsi-panel-peak-brightness",
-			&(hdr_prop->peak_brightness));
-		if (rc) {
-			pr_info("%s:%d, Unable to read hdr brightness, rc:%u",
-				__func__, __LINE__, rc);
-			hdr_prop->hdr_enabled = false;
-		}
-
-		rc = of_property_read_u32(np,
-			"qcom,mdss-dsi-panel-blackness-level",
-			&(hdr_prop->blackness_level));
-		if (rc) {
-			pr_info("%s:%d, Unable to read hdr brightness, rc:%u",
-				__func__, __LINE__, rc);
-			hdr_prop->hdr_enabled = false;
-		}
-	}
-	return 0;
 }
 
 static int mdss_dsi_parse_dsc_version(struct device_node *np,

@@ -2448,7 +2448,6 @@ exit:
 static int synaptics_rmi4_f54_attention_cust(void)
 {
 	int retval;
-	int l;
 	unsigned char report_index[2];
 	int i = 0;
 	unsigned int report_times_max = 0;
