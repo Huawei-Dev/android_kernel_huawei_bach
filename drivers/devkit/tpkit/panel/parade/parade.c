@@ -3629,17 +3629,17 @@ static int parade_holster_switch(struct ts_holster_info *info)
 		retval = parade_set_holster_switch(info->holster_switch);
 		if (retval < 0) {
 			TS_LOG_ERR("%s, set holster switch(%d), failed: %d\n",
-				   __func__,info->holster_switch, retval);
+				   __func__, info->holster_switch, retval);
 		}
 		break;
 	case TS_ACTION_READ:
 		retval = parade_get_holster_switch(&uTmp);
 		if (retval < 0){
 			TS_LOG_ERR("%s, get holster switch failed: %d\n",
-				   __func__,retval);
+				   __func__, retval);
 		}
 		info->holster_switch = uTmp;
-		TS_LOG_INFO("%s, get holster switch: %d\n",info->holster_switch);
+		TS_LOG_INFO("%s, get holster switch: %d\n", __func__, info->holster_switch);
 		break;
 	default:
 		TS_LOG_INFO("invalid holster switch(%d) action: %d\n",

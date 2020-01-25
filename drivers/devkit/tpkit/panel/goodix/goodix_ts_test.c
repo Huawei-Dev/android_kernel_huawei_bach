@@ -742,7 +742,8 @@ begin_test:
 	}
 
 end_test:
-	if (!test_result0) {
+	if (!test_result0) {
+
 		/* test OK*/
 		strcat(ts_test->test_result, "-1P");
 		
@@ -751,7 +752,8 @@ end_test:
 		GTP_ERROR("RawCap test:NG");
 	}
 
-	if (!test_result1) {
+	if (!test_result1) {
+
 		/* test OK*/
 		strcat(ts_test->test_result, "-2P");
 	} else {
@@ -883,8 +885,8 @@ static int goodix_get_short_firmware(struct goodix_ts_fw_data *fw_data)
 		TS_LOG_INFO("No shortcircut firmware\n");
 		return ret;
 	}
-	TS_LOG_INFO("Firmware size: %d,dsp_short[0]: 0x%02x dsp_short[1]: 0x%02x dsp_short[2]:\n",
-				fw_data->short_fw_size,fw_data->short_fw_data[0], fw_data->short_fw_data[1], fw_data->short_fw_data[2]);
+	TS_LOG_INFO("Firmware size: %d, 0x%02x dsp_short[0]: 0x%02x dsp_short[1]: 0x%02x dsp_short[2]:\n",
+				fw_data->short_fw_size, fw_data->short_fw_data[0], fw_data->short_fw_data[1], fw_data->short_fw_data[2]);
 	return 0;
 }
 

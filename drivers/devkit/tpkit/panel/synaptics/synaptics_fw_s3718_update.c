@@ -1208,14 +1208,14 @@ static int fwu_parse_image_info(void)
 	switch (header->major_header_version) {
 	case IMAGE_HEADER_VERSION_10:
 		if(fwu_parse_image_header_10() < 0){
-			TS_LOG_ERR("%s: parse image header error\n");
+			TS_LOG_ERR("%s: parse image header error\n", __func__);
 			return -EINVAL;
 		}
 		break;
 	case IMAGE_HEADER_VERSION_05:
 	case IMAGE_HEADER_VERSION_06:
 		if(fwu_parse_image_header_05_06() < 0){
-			TS_LOG_ERR("%s: parse image header error\n");
+			TS_LOG_ERR("%s: parse image header error\n", __func__);
 			return -EINVAL;
 		}
 		break;
@@ -4150,7 +4150,7 @@ static int synaptics_read_project_id(void)
 				fwu->write_project_id = true;
 				goto out;
 			} else {
-			TS_LOG_INFO("get_lockdown_data successfully\n", __func__);
+			TS_LOG_INFO("%s:get_lockdown_data successfully !\n", __func__);
 			goto out;
 			}
 		}

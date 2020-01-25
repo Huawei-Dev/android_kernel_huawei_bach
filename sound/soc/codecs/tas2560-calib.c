@@ -91,7 +91,7 @@ static ssize_t tas_calib_write(struct file *file,
 	}
 
 	if (count > sizeof(struct tas_dsp_pkt) || count == 0) {
-		pr_err("buffer size %d invalid !\n", count);
+		pr_err("buffer size %lu invalid !\n", count);
 		return -ENOMEM;
 	}
 

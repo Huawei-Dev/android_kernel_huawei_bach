@@ -774,7 +774,7 @@ static u8 gup_check_update_file(st_fw_head* fw_head)
 						goodix_ts->firmware_name, ret);
 			return FAIL;
 		}
-		GTP_INFO("Firmware size: %d", update_msg.fw->size);
+		GTP_INFO("Firmware size: %zu", update_msg.fw->size);
 		if (update_msg.fw->size <
 		     (FW_HEAD_LENGTH + FW_SECTION_LENGTH * 4 +
 		     FW_DSP_ISP_LENGTH + FW_DSP_LENGTH + FW_BOOT_LENGTH)) {

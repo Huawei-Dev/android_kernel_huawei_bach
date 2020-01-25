@@ -807,7 +807,7 @@ static int synaptics_chip_check_status(void){
 		}
 		if(frequency_selection_reg != value) {
 			frequency_selection_reg = value;
-			TS_LOG_INFO("frequency_selection reg value change: %d\n", __func__,frequency_selection_reg);
+			TS_LOG_INFO("%s:frequency_selection reg value change: %d\n", __func__, frequency_selection_reg);
 		}
 	}
 
@@ -816,7 +816,7 @@ static int synaptics_chip_check_status(void){
 		synaptics_check_crc_status(rmi4_data->synaptics_chip_data->ic_status_reg);
 	}
 
-	TS_LOG_DEBUG("noise_state_reg : %d frequency_selection_reg : %d\n",noise_state_reg,frequency_selection_reg);
+	TS_LOG_DEBUG("noise_state_reg : %d frequency_selection_reg : %d\n",noise_state_reg, frequency_selection_reg);
 	return 0;
 }
 
@@ -1259,7 +1259,7 @@ static int synaptics_reconstruct_barcode(struct ts_oem_info_param *info)
 	len = info->buff[offset1*16 + 1];
 	if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 		 memcpy(&(info->buff[offset1*16]), tp_type_cmd, tp_type_cmd[1]*16);
-		 TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset1);
+		 TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset1);
 		 return retval;
 	 }
 
@@ -1267,7 +1267,7 @@ static int synaptics_reconstruct_barcode(struct ts_oem_info_param *info)
 	len = info->buff[offset2*16 + 1];
 	if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 		 memcpy(&(info->buff[offset2*16]), tp_type_cmd, tp_type_cmd[1]*16);
-		 TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset2);
+		 TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset2);
 		 return retval;
 	 }
 
@@ -1291,7 +1291,7 @@ static int synaptics_reconstruct_brightness(struct ts_oem_info_param *info)
 	len = info->buff[offset1*16 + 1];
 	if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 		 memcpy(&(info->buff[offset1*16]), tp_type_cmd, tp_type_cmd[1]*16);
-		 TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset1);
+		 TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset1);
 		 return retval;
 	}
 
@@ -1299,7 +1299,7 @@ static int synaptics_reconstruct_brightness(struct ts_oem_info_param *info)
 	len = info->buff[offset2*16 + 1];
 	if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 		 memcpy(&(info->buff[offset2*16]), tp_type_cmd, tp_type_cmd[1]*16);
-		 TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset2);
+		 TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset2);
 		 return retval;
 	 }
 
@@ -1323,7 +1323,7 @@ static int synaptics_reconstruct_whitepoint(struct ts_oem_info_param *info)
 	len = info->buff[offset1*16 + 1];
 	if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 		memcpy(&(info->buff[offset1*16]), tp_type_cmd, tp_type_cmd[1]*16);
-		TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset1);
+		TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset1);
 		return retval;
 	}
 
@@ -1331,7 +1331,7 @@ static int synaptics_reconstruct_whitepoint(struct ts_oem_info_param *info)
 	len = info->buff[offset2*16 + 1];
 	if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 		memcpy(&(info->buff[offset2*16]), tp_type_cmd, tp_type_cmd[1]*16);
-		TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset2);
+		TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset2);
 		return retval;
 	}
 

@@ -556,8 +556,8 @@ static int focal_get_channel_form_ic(struct focal_test_params *params)
 		params->channel_x_num = chl_x;
 		params->channel_y_num = chl_y;
 		params->key_num = 0;//visual key num
-		TS_LOG_INFO("%s:channel_x=%d, channel_y=%d\n,params->key_num",
-			__func__, chl_x, chl_y,params->key_num);
+		TS_LOG_INFO("%s:channel_x=%d, channel_y=%d\n,params->key_num=%d",
+			__func__, chl_x, chl_y, params->key_num);
 	}
 
 	/*
@@ -1612,7 +1612,7 @@ static void focal_put_test_result(
 
 	ret = focal_write_reg(REG_DATA_TYPE, data_type);
 	if (ret) {
-		TS_LOG_ERR("%s:write data type fail, ret=%lu\n", __func__, ret);
+		TS_LOG_ERR("%s:write data type fail, ret=%d\n", __func__, ret);
 		goto exit;
 	}
 
@@ -1766,7 +1766,7 @@ int focal_get_debug_data(
     /* first ,should disable calibration before enter factory mode ,and FW will stop to refresh baseline*/
 	ret = focal_write_reg(FTS_CALIBRATION_DISABLE_REG, 1);
 	if (ret) {
-		TS_LOG_ERR("%s:disable calibration funtion  failed, ret=%lu\n", __func__, ret);
+		TS_LOG_ERR("%s:disable calibration funtion  failed, ret=%d\n", __func__, ret);
 		 return ret;
 	}
 
@@ -1831,7 +1831,7 @@ exit:
     /* finally ,should enable calibration before enter factory mode  */
 	ret = focal_write_reg(FTS_CALIBRATION_DISABLE_REG, 0);
 	if (ret) {
-		TS_LOG_ERR("%s:disable calibration funtion  failed, ret=%lu\n", __func__, ret);
+		TS_LOG_ERR("%s:disable calibration funtion  failed, ret=%d\n", __func__, ret);
 		 return ret;
 	}
 

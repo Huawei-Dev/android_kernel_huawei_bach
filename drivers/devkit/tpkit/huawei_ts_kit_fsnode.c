@@ -2190,7 +2190,7 @@ static ssize_t ts_oem_info_store(struct device *dev, struct device_attribute *at
 
 	if (strlen(buf) > TS_CHIP_TYPE_MAX_SIZE+1) {
 		TS_LOG_ERR("%s: Store TPIC type data size= %d larger than MAX input size=%d \n",
-			__func__, strlen(buf), TS_CHIP_TYPE_MAX_SIZE);
+			__func__, (int)strlen(buf), (int)TS_CHIP_TYPE_MAX_SIZE);
 		error = -EINVAL;
 		goto out;
 	}

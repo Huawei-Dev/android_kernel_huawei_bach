@@ -587,11 +587,11 @@ static ssize_t lcdkit_gram_check_store(void* pdata, const char* buf)
         case TEST_PIC_0:
         case TEST_PIC_1:
         case TEST_PIC_2:
-            LCDKIT_INFO("gram checksum set pic [%ld]\n", pic_index);
+            LCDKIT_INFO("gram checksum set pic [%d]\n", pic_index);
             lcdkit_info.panel_infos.checksum_pic_num = pic_index;
             break;
         default:
-            LCDKIT_INFO("gram checksum set pic [%ld] unknown\n", pic_index);
+            LCDKIT_INFO("gram checksum set pic [%d] unknown\n", pic_index);
             lcdkit_info.panel_infos.checksum_pic_num = 0xff;
             break;
     }

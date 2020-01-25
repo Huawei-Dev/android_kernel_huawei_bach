@@ -78,7 +78,7 @@ int32_t nvt_hybrid_update_firmware_request(char *filename)
 	}
 	fw_entry->size = nvt_hybrid_fw_entry_boot->size;
 	fw_entry->data = (u8 *)nvt_hybrid_fw_entry_boot->data;
-	TS_LOG_INFO("%s: fw_entry->size=%d\n", __func__, fw_entry->size);
+	TS_LOG_INFO("%s: fw_entry->size=%zu\n", __func__, fw_entry->size);
 
 	// check bin file size (124kb)
 	if (fw_entry->size > NVT_HYBRID_FW_BIN_SIZE) {

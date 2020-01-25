@@ -329,7 +329,7 @@ static void focal_prase_test_threshold(
 	focal_of_property_read_u32_default(np, DTS_LCD_NOISE_MAX,
 		&threshold->lcd_noise_max, 0);
 
-	TS_LOG_INFO("%s:%s:%s=%d, %s=%d, %s=%d, %s=%d, %s=%d, %s=%d\n",
+	TS_LOG_INFO("%s:%s:%s=%d, %s=%d, %s=%d, %s=%d, %s=%d, %s=%d, %s=%d\n",
 		__func__, "cb test thresholds",
 		"raw_data_min", threshold->raw_data_min,
 		"raw_data_max", threshold->raw_data_max,

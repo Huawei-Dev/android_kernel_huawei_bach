@@ -220,7 +220,7 @@ static int ts_detect_ghost_algo2(int index) {
 
 	if((ghost_num_record_x[index] > FINGER_PRESS_TIMES_IN_MIN_TIME_ALGO2)
 		||(ghost_num_record_y[index] >  FINGER_PRESS_TIMES_IN_MIN_TIME_ALGO2)){
-		TS_LOG_INFO("%s:%s DETECT:%s\n",__func__, GHOST_LOG_TAG, GHOST_OPERATE_IN_XY_AXIS);
+		TS_LOG_INFO("%s:%s DETECT:%d\n",__func__, GHOST_LOG_TAG, GHOST_OPERATE_IN_XY_AXIS);
 		ghost_num_record_x[index] = 0;
 		ghost_num_record_y[index] = 0;
 		return GHOST_OPERATE_IN_XY_AXIS;
@@ -279,9 +279,9 @@ static int ts_detect_ghost_algo3(int finger_num) {
 					target_y = 0;
 				}
 
-				TS_LOG_DEBUG("%s:%s ghost_algo3_num:%d\n",__func__, GHOST_LOG_TAG,ghost_algo3_num);
+				TS_LOG_DEBUG("%s:%s ghost_algo3_num:%d\n",__func__, GHOST_LOG_TAG, ghost_algo3_num);
 				if(FINGER_PRESS_TIMES_IN_MIN_TIME_ALGO3 == ghost_algo3_num) {
-					TS_LOG_INFO("%s:%s DETECT:%s\n",
+					TS_LOG_INFO("%s:%s DETECT:%d\n",
 						__func__, GHOST_LOG_TAG, GHOST_OPERATE_IN_SAME_POSITION);
 					target_x = 0;
 					target_y = 0;

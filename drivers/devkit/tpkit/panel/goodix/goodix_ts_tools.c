@@ -276,8 +276,8 @@ static ssize_t goodix_tool_write(struct file *filp, const char __user *buff, siz
     if (1 == cmd_head.wr)
     {
 	if (DATA_LENGTH < cmd_head.data_len) {
-		TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %d\n!",
-					__func__,__LINE__,DATA_LENGTH);
+		TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %lu\n!",
+					__func__, __LINE__, DATA_LENGTH);
 		return -EPERM;
 	}
         ret = copy_from_user(&cmd_head.data[GTP_ADDR_LENGTH], &buff[CMD_HEAD_LENGTH], cmd_head.data_len);

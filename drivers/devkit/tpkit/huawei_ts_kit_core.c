@@ -391,8 +391,8 @@ static void rawdata_proc_printf(struct seq_file *m, struct ts_rawdata_info *info
 		seq_printf(m, "selfcap singleenddelta end\n");
 	}
 	if (g_ts_kit_platform_data.chip_data->trx_delta_test_support) {
-			seq_printf(m, "%s\n", info->tx_delta_buf);
-			seq_printf(m, "%s\n", info->rx_delta_buf);
+			seq_printf(m, "%d\n", info->tx_delta_buf);
+			seq_printf(m, "%d\n", info->rx_delta_buf);
 	}
 
 	return;
@@ -1619,7 +1619,7 @@ static int fb_notifier_callback(struct notifier_block* self, unsigned long event
     unsigned char ts_state = 0;
     int times = 0;
 	
-    TS_LOG_INFO("tpkit fb_callback called,ic_type is %d,pt_flag is %ld,event is %d\n",g_tskit_ic_type,g_tskit_pt_station_flag,event);
+    TS_LOG_INFO("tpkit fb_callback called,ic_type is %d,pt_flag is %d,event is %d\n", g_tskit_ic_type, ,g_tskit_pt_station_flag, event);
     if (g_tskit_ic_type || g_tskit_pt_station_flag)
     { 
     	 TS_LOG_INFO("fb_notifier_callback do not need to do, return\n");
@@ -1877,7 +1877,7 @@ static int ts_gpio_request(void)
         TS_LOG_ERR("Fail request gpio:%d, ret=%d\n", g_ts_kit_platform_data.irq_gpio, error);
         return error;
     }
-    TS_LOG_INFO("reset_gpio :%d ,irq_gpio\n", g_ts_kit_platform_data.reset_gpio,g_ts_kit_platform_data.irq_gpio);
+    TS_LOG_INFO("reset_gpio :%d ,irq_gpio:%d\n", g_ts_kit_platform_data.reset_gpio, g_ts_kit_platform_data.irq_gpio);
     return error;
 }
 static int ts_creat_i2c_client(void)

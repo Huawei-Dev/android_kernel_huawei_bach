@@ -943,11 +943,11 @@ static int fwu_do_reflash(void)
 static bool in_bounds(unsigned int  offset, unsigned int size, unsigned int  bound)
 {
 	if (offset > bound || size > bound) {
-		TS_LOG_ERR("%s: %lu or %lu > %lu\n", __func__, offset, size, bound);
+		TS_LOG_ERR("%s: %u or %u > %u\n", __func__, offset, size, bound);
 		return false;
 	}
 	if (offset > (bound - size)) {
-		TS_LOG_ERR("%s: %lu > %lu - %lu\n", __func__, offset, bound, size);
+		TS_LOG_ERR("%s: %u > %u - %u\n", __func__, offset, bound, size);
 		return false;
 	}
 	return true;

@@ -820,23 +820,23 @@ static int focal_after_resume(void *feature_info)
 	{
 		ret = focal_read(&cmd, 1, &reg_val, 1);
 		if (reg_val  == chipid_high) {
-			TS_LOG_INFO("%s:chip id read success, chip id:0x%X, i=%d\n",__func__, reg_val,i);
+			TS_LOG_INFO("%s:chip id read success, chip id:0x%X, i=%d\n", __func__, reg_val, i);
 			break;
 		}
 		else{
-			TS_LOG_DEBUG("%s:chip id read fail, reg_val=%d, i=%d\n",__func__, reg_val, i);
+			TS_LOG_DEBUG("%s:chip id read fail, reg_val=%X, i=%d\n", __func__, reg_val, i);
 			msleep(15);
 		}
 	}
 	if(i == FTS_RESUME_MAX_TIMES)
 	{
-		TS_LOG_ERR("%s:chip id read fail, ret=%d, i=%d\n",__func__, reg_val);
+		TS_LOG_ERR("%s:chip id read fail, ret=%X, i=%d\n", __func__, reg_val, i);
 		return -EINVAL;
 	}
 	ret = focal_status_resume();
 	if(ret < 0)
 	{
-		TS_LOG_ERR("%s: failed to resume status\n",__func__, ret);
+		TS_LOG_ERR("%s: failed to resume status\n", __func__);
 		return -EINVAL;
 	}
 	return ret;
