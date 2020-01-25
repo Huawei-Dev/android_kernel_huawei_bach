@@ -1619,7 +1619,7 @@ static int fb_notifier_callback(struct notifier_block* self, unsigned long event
     unsigned char ts_state = 0;
     int times = 0;
 	
-    TS_LOG_INFO("tpkit fb_callback called,ic_type is %d,pt_flag is %d,event is %d\n", g_tskit_ic_type, ,g_tskit_pt_station_flag, event);
+    TS_LOG_INFO("tpkit fb_callback called,ic_type is %d,pt_flag is %d,event is %d\n", g_tskit_ic_type, g_tskit_pt_station_flag, event);
     if (g_tskit_ic_type || g_tskit_pt_station_flag)
     { 
     	 TS_LOG_INFO("fb_notifier_callback do not need to do, return\n");
