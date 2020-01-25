@@ -158,15 +158,9 @@ int32_t NVT_Hybrid_Check_FW_Ver(void)
 	}
 
 	// compare IC and binary FW version
-#if 0
-	/* update fw, if *.bin firmware verison is larger than ic firmware verison */
-	if (buf[1] >= fw_entry->data[NVT_HYBRID_FW_BIN_VER_OFFSET])
-		return 1;
-#else
 	/* update fw, if *.bin firmware verison is different between ic firmware verison */
 	if (buf[1] == fw_entry->data[NVT_HYBRID_FW_BIN_VER_OFFSET])
 		return 1;
-#endif
 	else
 		return 0;
 }

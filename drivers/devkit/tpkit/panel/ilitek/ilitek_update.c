@@ -272,27 +272,6 @@ int ilitek_fw_update(char *file_name)
 
 	TS_LOG_INFO("firmware_ver[0] = %d, firmware_ver[1] = %d firmware_ver[2]=%d\n",firmware_ver[0], firmware_ver[1], firmware_ver[2]);
 #if 1
-	#if 0
-	if (!(ilitek_data->force_upgrade)) {
-		for(i = 0; i < 3; i++)
-		{
-			TS_LOG_INFO("ilitek_data->firmware_ver[%d] = %d, firmware_ver[%d] = %d\n", i, ilitek_data->firmware_ver[i], i, firmware_ver[i ]);
-			if((ilitek_data->firmware_ver[i] > firmware_ver[i ]) || ((i == 2) && (ilitek_data->firmware_ver[2] == firmware_ver[2])))
-			{
-				set_appinfo_ret = ilitek_set_firmware_ver(ilitek_data->firmware_ver);
-				if (set_appinfo_ret) {
-					TS_LOG_INFO("%s:%d set app info err\n",__FUNCTION__,__LINE__);
-				}
-				TS_LOG_INFO("ilitek_upgrade_firmware Do not need update\n");
-				return NOT_NEED_UPGRADE;
-			}
-			else if(ilitek_data->firmware_ver[i] < firmware_ver[i])
-			{
-				break;
-			}
-		}
-	}
-	#else
 	if (!(ilitek_data->force_upgrade)) {
 		for (i = 0; i < 3; i++) {
 			TS_LOG_INFO("ilitek_data->firmware_ver[%d] = %d, firmware_ver[%d] = %d\n", i, ilitek_data->firmware_ver[i], i, firmware_ver[i ]);
@@ -310,7 +289,6 @@ int ilitek_fw_update(char *file_name)
 			}
 		}
 	}
-	#endif
 #endif
 	ilitek_data->firmware_updating = true;
 	if (ic2120) {

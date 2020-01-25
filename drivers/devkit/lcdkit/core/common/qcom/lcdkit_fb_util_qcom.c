@@ -53,23 +53,6 @@ ssize_t get_lcdkit_support(void)
     return true;
 }
 
-#if 0
-ssize_t lcd_bl_info_show(struct device * dev, char *buf)
-{
-    struct msm_fb_data_type *mfd = get_mfd(dev);
-
-	u32 bl_level_max = lcdkit_info.bl_level_max;
-	u32 bl_level_min = lcdkit_info.bl_level_min;
-    char *lcdtype = lcdkit_is_oled_panel() ? "OLED" : "LCD";
-
-	LCDKIT_INFO("fb%d panel_info = blmax:%u,blmin:%u,lcdtype:%s,\n",
-	    mfd->index, bl_level_max, bl_level_min, lcdtype);
-
-	return scnprintf(buf, PAGE_SIZE, "blmax:%u,blmin:%u,lcdtype:%s,\n",
-                bl_level_max, bl_level_min, lcdtype);
-}
-#endif
-
 #define lcdkit_get_pdata(dev, lcdkit_info, buf, mfd, ctrl_pdata)   \
 {   \
     if (NULL == dev)    \

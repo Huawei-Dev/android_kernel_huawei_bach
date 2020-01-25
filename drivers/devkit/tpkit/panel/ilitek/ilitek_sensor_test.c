@@ -122,23 +122,6 @@ int ilitek_into_hall_halfmode(bool status) {
 	int write_len = 2;
 	TS_LOG_INFO("ilitek_into_hall_halfmode status = %d\n", status);
 	if (status) {
-		#if 0
-		cmd[0] = 0x0d;
-		cmd[1] = ilitek_data->hall_x0 & 0xFF;
-		cmd[2] = (ilitek_data->hall_x0 >> 8) & 0xFF;
-		cmd[3] = ilitek_data->hall_y0 & 0xFF;
-		cmd[4] = (ilitek_data->hall_y0 >> 8) & 0xFF;
-		cmd[5] = ilitek_data->hall_x1 & 0xFF;
-		cmd[6] = (ilitek_data->hall_x1 >> 8) & 0xFF;
-		cmd[7] = ilitek_data->hall_y1 & 0xFF;
-		cmd[8] = (ilitek_data->hall_y1 >> 8) & 0xFF;
-		TS_LOG_INFO("ilitek_into_hall_halfmode 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", cmd[1], cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8]);
-		ret = ilitek_i2c_write(cmd, 9);
-		if(ret < 0){
-			TS_LOG_ERR("%s,  set cover x, y err, ret %d\n", __func__, ret);
-			return ret;
-		}
-		#endif
 		cmd[0] = ILITEK_TP_CMD_HALL;
 		cmd[1] = FUN_DISABLE;
 		ret = ilitek_i2c_write(cmd, write_len);
@@ -452,26 +435,7 @@ static int ilitek_Tx_Rx_test(int *allnode_data, int *allnode_Tx_delta_data, int 
 	ilitek_data->sensor_test_data_result.Txdelta_min = ILITEK_SENSOR_TEST_DATA_MAX;
 	ilitek_data->ilitek_tx_cap_max = &ilitek_tx_cap_max[0];
 	ilitek_data->ilitek_rx_cap_max = &ilitek_rx_cap_max[0];
-#if 0
-	printk("ilitek_tx_cap_max\n");
-	for (i = 0; i < (ilitek_data->y_ch - 1); i++) {
-		for (j = 0; j < ilitek_data->x_ch; j++) {
-			printk("%d,", ilitek_data->ilitek_tx_cap_max[index]);
-			index++;
-		}
-		printk("\n");
-	}
 
-	index = 0;
-	printk("ilitek_rx_cap_max\n");
-	for (i = 0; i < ilitek_data->y_ch; i++) {
-		for (j = 0; j < (ilitek_data->x_ch - 1); j++) {
-			printk("%d,", ilitek_data->ilitek_rx_cap_max[index]);
-			index++;
-		}
-		printk("\n");
-	}
-#endif
 	Tx_Rx_delta_test_result = NO_ERR;
 	index = 0;
 	for (i = 0; i < (ilitek_data->y_ch - 1); i++) {
@@ -797,25 +761,7 @@ static int ilitek_allnode_test(int *allnode_data) {
 	ilitek_data->ilitek_full_raw_min_cap = &ilitek_full_raw_min_cap[0];
 	ilitek_data->ilitek_full_raw_max_cap = &ilitek_full_raw_max_cap[0];
 	TS_LOG_INFO("ilitek_allnode_test test_32 = %d\n", test_32);
-#if 0
-	printk("ilitek_full_raw_max_cap\n");
-	for (i = 0; i < ilitek_data->y_ch; i++) {
-		for (j = 0; j < ilitek_data->x_ch; j++) {
-			printk("%d,", ilitek_data->ilitek_full_raw_max_cap[index]);
-			index++;
-		}
-		printk("\n");
-	}
-	printk("ilitek_full_raw_min_cap\n");
-	index = 0;
-	for (i = 0; i < ilitek_data->y_ch; i++) {
-		for (j = 0; j < ilitek_data->x_ch; j++) {
-			printk("%d,", ilitek_data->ilitek_full_raw_min_cap[index]);
-			index++;
-		}
-		printk("\n");
-	}
-#endif
+
 	allnode_test_result = NO_ERR;
 	cmd[0] = ILITEK_TP_CMD_SENSOR_TEST;
 	cmd[1] = ILITEK_TP_CMD_SENSOR_TEST_ALLNODE;
@@ -980,20 +926,7 @@ int ilitek_into_charger_mode(bool status) {
 	int ret = 0;
 	uint8_t cmd[2] = {0};
 	TS_LOG_INFO("%s, status = %d\n", __func__, status);
-	#if 0
-	cmd[0] = 0x0F;
-	if (status) {
-		cmd[1] = 0x01;
-	}
-	else {
-		cmd[1] = 0x00;
-	}
-	ret = ilitek_i2c_write(cmd, 2);
-	if(ret < 0){
-		TS_LOG_INFO("%s,  err, ret %d\n", __func__, ret);
-		return ret;
-	}
-	#endif
+
 	return 0;
 }
 static int ilitek_set_charger_switch(u8 charger_switch)
@@ -1097,10 +1030,7 @@ void ilitek_set_sensor_test_result(struct ts_rawdata_info *info) {
 	snprintf(tmp_char, str_cat_len, "[%d,%d,%d]", ilitek_data->sensor_test_data_result.allnodedata_ave,
 		ilitek_data->sensor_test_data_result.allnodedata_max, ilitek_data->sensor_test_data_result.allnodedata_min);
 	ilitek_strncat(info->result, tmp_char, TS_RAWDATA_RESULT_MAX);
-	#if 0
-	snprintf(tmp_char, 32, "[%d,%d,%d]", open_ave, open_max, open_min);
-	ilitek_strncat(info->result, tmp_char, TS_RAWDATA_RESULT_MAX);
-	#endif
+
 	snprintf(tmp_char, str_cat_len, "[%d,%d,%d]", ilitek_data->sensor_test_data_result.noise_ave,
 		ilitek_data->sensor_test_data_result.noise_max, ilitek_data->sensor_test_data_result.noise_min);
 	ilitek_strncat(info->result, tmp_char, TS_RAWDATA_RESULT_MAX);
@@ -1149,10 +1079,6 @@ void ilitek_set_sensor_test_result(struct ts_rawdata_info *info) {
 	i = 0;
 	j = 0;
 
-#if 0
-	//ret = read_product_id();
-#endif
-
 	ilitek_data->sensor_testing = true;
 	disable_irq(ilitek_data->ilitek_chip_data->ts_platform_data->irq_id);
 	ret = ilitek_check_int_high(INT_POLL_SHORT_RETRY);
@@ -1160,7 +1086,7 @@ void ilitek_set_sensor_test_result(struct ts_rawdata_info *info) {
 		TS_LOG_ERR("%s, ilitek_check_int_high fail\n", __func__);
 	}
 	ret = ilitek_ready_into_test();
-	//ret=-1;
+
 	if (ret){
 		ilitek_strncat(info->result, "0F-1F-2F-3F-4F-5F-6F", TS_RAWDATA_RESULT_MAX);
 		ilitek_strncat(info->result, ";",  strlen(";"));
@@ -1253,11 +1179,6 @@ void ilitek_set_sensor_test_result(struct ts_rawdata_info *info) {
 	for (i = 0; i < (ilitek_data->x_ch) * (ilitek_data->y_ch - 1); i++) {
 		info->buff[buff_index++] = allnode_Tx_delta_data[i];
 	}
-	#if 0
-	for (i = 0; i < (ilitek_data->x_ch - 1) * ilitek_data->y_ch; i++) {
-		info->buff[buff_index++] = allnode_Rx_delta_data[i];
-	}
-	#endif
 	for (i = 0; i < ilitek_data->y_ch; i++) {
 		for (j = 0; j < (ilitek_data->x_ch - 1); j++) {
 			info->buff[buff_index++] = allnode_Rx_delta_data[i * (ilitek_data->x_ch - 1) + j];

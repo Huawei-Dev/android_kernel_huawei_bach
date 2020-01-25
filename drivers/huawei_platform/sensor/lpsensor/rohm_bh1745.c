@@ -743,32 +743,6 @@ static int rgb_bh1745_calc_lx(struct i2c_client *client, struct rgb_bh1745_rgb_d
 		}
 	}
 
-#if 0
-	if (lx < 200)
-	{
-		if(!dim_flag)
-		{
-			ret = rgb_bh1745_i2c_write(client,BH1745_MODECONTROL1, MEASURE_640MS , BH1745_I2C_BYTE);
-			if (ret < 0)
-				BH1745_ERR("%s,line %d:i2c change measurement error = %d\n",__func__,__LINE__,ret);
-			else
-				dim_flag = 1;
-		}
-	}
-	else
-	{
-		if(dim_flag)
-		{
-			ret = rgb_bh1745_i2c_write(client,BH1745_MODECONTROL1, MEASURE_320MS , BH1745_I2C_BYTE);
-			if (ret < 0)
-				BH1745_ERR("%s,line %d:i2c change measurement error = %d\n",__func__,__LINE__,ret);
-			else
-				dim_flag = 0;
-		}
-
-	}
-#endif
-
 	BH1745_FLOW("%s,line %d:gain = %d, itime=%d, lux = %lld\n",__func__,__LINE__, gain, itime, lx);
 	BH1745_FLOW("%s,line %d:judge = %ld ,red[0] = %ld, red[1]=%ld, green[0] = %ld, green[1]=%ld, blue[0]=%ld,blue[1]=%ld\n",__func__,__LINE__,cofficient_judge,cofficient_red[0], cofficient_red[1],cofficient_green[0], cofficient_green[1],cofficient_blue[0],cofficient_blue[1]);
 

@@ -2196,11 +2196,7 @@ static int himax_chip_get_info(struct ts_chip_info_param *info)
 	if(NULL == info) {
 		return HX_ERROR;
 	}
-#if 0
-	if (himax_read_projectid() < 0) {
-			TS_LOG_ERR("%s read project id error!\n", __func__);
-		}
-#endif
+
 	snprintf(info->ic_vendor, PAGE_SIZE, "himax-%s", himax_product_id);
 	snprintf(info->mod_vendor, PAGE_SIZE, g_himax_ts_data->tskit_himax_data->ts_platform_data->chip_data->module_name);
 

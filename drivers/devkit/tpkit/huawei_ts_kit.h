@@ -1006,45 +1006,6 @@ struct ts_kit_platform_data
 #endif
 };
 
-#if 0
-struct ts_kit_data
-{
-    char product_name[MAX_STR_LEN];
-    int dev_id; //reserved for more ts devices in handset
-    int irq_id;
-    int get_info_flag;
-    int fpga_flag;
-    atomic_t state;
-    int edge_wideth;
-    struct device_node* node;
-    struct i2c_client* client;
-    struct input_dev* input_dev;
-    struct task_struct* ts_task;
-    struct ts_device_data* chip_data;
-    struct ts_bus_info* bops;
-    struct platform_device* ts_dev;
-#if defined(HUAWEI_CHARGER_FB)
-    struct notifier_block charger_detect_notify;
-#endif
-#if defined(CONFIG_FB)
-    struct notifier_block fb_notify;
-#elif defined(CONFIG_HAS_EARLYSUSPEND)
-    struct early_suspend early_suspend;
-#endif
-    struct ts_cmd_queue queue;
-    struct timer_list watchdog_timer;
-    struct work_struct watchdog_work;
-    struct ts_feature_info feature_info;
-    struct ts_window_info window_info;
-    struct device_node* dev_node;
-    int* virtual_keys_values;
-    int virtual_keys_size;
-#if defined (CONFIG_HUAWEI_DSM)
-    struct ts_dsm_info dsm_info;
-#endif
-    struct wake_lock ts_wake_lock;
-};
-#endif
 int ts_kit_power_control_notify(enum ts_pm_type pm_type,  int timeout);
 void ts_kit_thread_stop_notify(void);
 int  ts_kit_put_one_cmd(struct ts_cmd_node * cmd, int timeout);

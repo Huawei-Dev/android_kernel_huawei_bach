@@ -1979,16 +1979,7 @@ int focal_read_project_id(
 	int ret = NO_ERR;
 
 	memset(project_id, 0, size);
-#if 0
-//read project ID from fw  cannot be trusted when the fw is damaged,
-#ifdef READ_PROJECT_FROM_APP
-	ret = focal_read_project_id_from_app(project_id, size);
-	if (!ret && strlen(project_id) > 0) {
-		TS_LOG_INFO("%s:read project id from app success\n", __func__);
-		return 0;
-	}
-#endif /* READ_PROJECT_FROM_APP */
-#endif
+
 	ret = focal_read_project_id_from_pram(focal_pdata, project_id, size);
 	if (ret) {
 		TS_LOG_ERR("%s:read project id from pram fail, ret=%d\n",

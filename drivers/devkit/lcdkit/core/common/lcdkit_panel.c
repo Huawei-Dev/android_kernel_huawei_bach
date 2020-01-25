@@ -669,14 +669,6 @@ static ssize_t lcdkit_dynamic_sram_check_store(void* pdata, const char* buf)
     return ret;
 }
 
-#if 0
-static ssize_t lcd_ic_color_enhancement_mode_show()
-{}
-
-static ssize_t lcd_ic_color_enhancement_mode_store()
-{}
-#endif
-
 static ssize_t lcdkit_ce_mode_show(void* pdata, char* buf)
 {
     return snprintf(buf, PAGE_SIZE, "%d\n", lcdkit_info.panel_infos.ce_mode);
@@ -809,13 +801,7 @@ static ssize_t lcdkit_lp2hs_mipi_check_store(void* pdata, const char* buf)
 static ssize_t lcdkit_bist_check_show(void* pdata, char* buf)
 {
     ssize_t ret = 0;
-#if 0
-    if (lcdkit_diff_func_array[0].enable) {
-        ret = lcdkit_diff_func_array[0].lcdkit_show(pdata, buf);
-        LCDKIT_INFO("%s\n", buf);
-        return ret;
-    }
-#endif
+
     return ret;
 }
 

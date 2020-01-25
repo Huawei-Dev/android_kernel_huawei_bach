@@ -411,9 +411,6 @@ static int ilitek_vci_enable(void)
 		return -EINVAL;
 	}
 	vol_vlaue = ilitek_data->ilitek_chip_data->regulator_ctr.vci_value;
-	#if 0
-	if(g_tskit_ic_type == ONCELL)
-	#endif
 	{
 		TS_LOG_INFO("set vci voltage to %d\n", vol_vlaue);
 		retval = regulator_set_voltage(ilitek_data->vdd, vol_vlaue,vol_vlaue);
@@ -725,13 +722,7 @@ static int ilitek_chip_detect(struct ts_kit_platform_data *pdata)
 		TS_LOG_ERR("%s:hardware reset fail, ret=%d\n",__func__, ret);
 		return ret;
 	}
-	#if 0
-	ret = ilitek_check_int_low(INT_POLL_SHORT_RETRY);
-	if (ret != ILITEK_INT_STATUS_LOW) {
-		TS_LOG_ERR("%s, ilitek_check_int_low fail force upgrade\n", __func__);
-		ilitek_data->force_upgrade = true;
-	}
-	#endif
+
 	ret = i2c_communicate_check(pdata);
 	if (ret < 0) {
 		TS_LOG_ERR("%s:not find ilitek device, ret=%d\n", __func__, ret);
@@ -1512,44 +1503,6 @@ static int ilitek_chip_check_status(void){
 	int retval;
 	unsigned char buf[4]={0};
 	TS_LOG_DEBUG("%s + \n", __func__);
-#if 0
-	if(ilitek_data->firmware_updating) {
-		TS_LOG_INFO("%s: tp fw is updating,return\n", __func__);
-		goto out;
-	}
-	if(ilitek_data->sensor_testing) {
-		TS_LOG_INFO("%s: tp fw is sensor_testing,return\n", __func__);
-		goto out;
-	}
-	if(ilitek_data->suspend) {
-		TS_LOG_INFO("%s: tp fw is suspend,return\n", __func__);
-		goto out;
-	}
-	if (ilitek_data->apk_use) {
-		TS_LOG_INFO("%s: open the ilitek_ctrl file for apk use,return\n", __func__);
-		goto out;
-	}
-	if ((atomic_read(&ilitek_data->ts_interrupts))) {
-		TS_LOG_DEBUG("%s (atomic_read(&ilitek_data->ts_interrupts)) = 1 not check \n", __func__);
-		goto out;
-	}
-	buf[0] = ILITEK_TP_CMD_READ_DATA;
-	retval = ilitek_i2c_write_and_read( buf, 1, ILITEK_WRITE_READ_NOT_DELAY, buf, 4);
-	if (retval < 0){
-		ilitek_reset(ILITEK_RESET_MODEL_CHECKFW_DELAY);
-		atomic_set(&ilitek_data->ilitek_chip_data->ts_platform_data->ts_esd_state, TS_ESD_HAPPENDED);
-		TS_LOG_ERR("%s ESD read error ilitek_reset \n", __func__);
-		goto out;
-	}
-	if (buf[0] == ILITEK_ESD_CHECK_DATA && buf[1] == ILITEK_ESD_CHECK_DATA
-		&& buf[2] == ILITEK_ESD_CHECK_DATA && buf[3] == ILITEK_ESD_CHECK_DATA_END) {
-		atomic_set(&ilitek_data->ilitek_chip_data->ts_platform_data->ts_esd_state, TS_ESD_HAPPENDED);
-		TS_LOG_ERR("%s ESD  DATA ERR 0x%X, 0x%X, 0x%X, 0x%X \n", __func__, buf[0], buf[1], buf[2], buf[3]);
-	}
-
-out:
-	atomic_set(&ilitek_data->ts_interrupts, ILITEK_TS_NO_INTERRUPTS);
-#endif
 	TS_LOG_DEBUG("%s -\n", __func__);
 	return 0;
 }

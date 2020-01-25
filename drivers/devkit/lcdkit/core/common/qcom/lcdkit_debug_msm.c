@@ -14,20 +14,6 @@ void lcdkit_debug_set_vsp_vsn(void *preg, int cnt)
 
     for (i = 0; i < cnt; i++)
     {
-        #if 0
-        if (0 == strncmp(vreg[i].vreg_name,
-            LCDKIT_VREG_VDD_NAME, strlen(vreg[i].vreg_name)))
-        {
-            update_value(vreg[i].min_voltage, lcdkit_dbg.lcdanalog_vcc);
-            update_value(vreg[i].max_voltage, lcdkit_dbg.lcdanalog_vcc);
-        }
-        else if (0 == strncmp(vreg[i].vreg_name,
-            LCDKIT_VREG_VDDIO_NAME, strlen(vreg[i].vreg_name)))
-        {
-            update_value(vreg[i].min_voltage, lcdkit_dbg.lcdio_vcc);
-            update_value(vreg[i].max_voltage, lcdkit_dbg.lcdio_vcc);
-        }
-        #endif
         if (0 == strncmp(vreg[i].vreg_name,
             LCDKIT_VREG_BIAS_NAME, strlen(vreg[i].vreg_name)))
         {

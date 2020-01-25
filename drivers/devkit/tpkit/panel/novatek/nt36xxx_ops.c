@@ -488,88 +488,6 @@ int32_t nvt_kit_check_fw_reset_state(RST_COMPLETE_STATE check_reset_state)
 	return ret;
 }
 
-#if 0
-/*******************************************************
-Description:
-	Novatek touchscreen check chip version trim function.
-
-return:
-	Executive outcomes. 0---NVT IC. -1---not NVT IC.
-*******************************************************/
-static int8_t nvt_ts_check_chip_ver_trim(void)
-{
-	uint8_t buf[8] = {0};
-	int32_t retry = 0;
-	int32_t ret = -1;
-
-	//---Check for 5 times---
-	for (retry = 5; retry > 0; retry--) {
-		nvt_kit_sw_reset_idle();
-
-		buf[0] = 0x00;
-		buf[1] = 0x35;
-		novatek_ts_kit_i2c_write(nvt_ts->client, I2C_HW_Address, buf, 2);
-		msleep(10);
-
-		buf[0] = 0xFF;
-		buf[1] = 0x01;
-		buf[2] = 0xF6;
-		novatek_ts_kit_i2c_write(nvt_ts->client, I2C_FW_Address, buf, 3);
-
-		buf[0] = 0x4E;
-		buf[1] = 0x00;
-		buf[2] = 0x00;
-		buf[3] = 0x00;
-		buf[4] = 0x00;
-		buf[5] = 0x00;
-		buf[6] = 0x00;
-		novatek_ts_kit_i2c_read(nvt_ts->client, I2C_FW_Address, buf, 7);
-
-		if ((buf[1] == 0x55) && (buf[2] == 0x00) && (buf[4] == 0x00) && (buf[5] == 0x00) && (buf[6] == 0x00)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[1] == 0x55) && (buf[2] == 0x72) && (buf[4] == 0x00) && (buf[5] == 0x00) && (buf[6] == 0x00)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[1] == 0xAA) && (buf[2] == 0x00) && (buf[4] == 0x00) && (buf[5] == 0x00) && (buf[6] == 0x00)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[1] == 0xAA) && (buf[2] == 0x72) && (buf[4] == 0x00) && (buf[5] == 0x00) && (buf[6] == 0x00)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[4] == 0x72) && (buf[5] == 0x67) && (buf[6] == 0x03)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[4] == 0x70) && (buf[5] == 0x66) && (buf[6] == 0x03)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[4] == 0x70) && (buf[5] == 0x67) && (buf[6] == 0x03)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else if ((buf[4] == 0x72) && (buf[5] == 0x66) && (buf[6] == 0x03)) {
-			TS_LOG_INFO("%s: this is NVT touch IC\n", __func__);
-			ret = 0;
-			break;
-		} else {
-			TS_LOG_INFO("%s: buf[1]=0x%02X, buf[2]=0x%02X, buf[3]=0x%02X, buf[4]=0x%02X, buf[5]=0x%02X, buf[6]=0x%02X\n",
-				__func__, buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]);
-			ret = -1;
-		}
-
-		msleep(10);
-	}
-
-	nvt_kit_sw_reset();
-	return ret;
-}
-#endif
 static int novatek_get_capacitance_test_type(struct ts_test_type_info *info)
 {
 	TS_LOG_INFO("%s enter\n", __func__);
@@ -583,27 +501,6 @@ static int novatek_get_capacitance_test_type(struct ts_test_type_info *info)
 		TS_CAP_TEST_TYPE_LEN);
 	return NO_ERR;
 }
-#if 0
-static int novatek_wakeup_gesture_enable_switch(struct
-						  ts_wakeup_gesture_enable_info
-						  *info)
-{
-	TS_LOG_INFO("%s enter\n", __func__);
-	
-//---Taylor add : for debug begin---
-return NO_ERR;
-//---Taylor add : for debug end---
-}
-
-static int novatek_holster_switch(struct ts_holster_info *info)
-{
-	TS_LOG_INFO("%s enter\n", __func__);
-
-//---Taylor add : for debug begin---
-return NO_ERR;
-//---Taylor add : for debug end---
-}
-#endif
 
 #define GLOVE_SWITCH_ON 1
 #define GLOVE_SWITCH_OFF 0

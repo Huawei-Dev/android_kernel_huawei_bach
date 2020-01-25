@@ -312,32 +312,6 @@ static int txc_pa2240_dsm_report_no_irq(struct txc_pa2240_data *data)
 	return size;
 }
 
-#if 0
-static int  txc_pa2240_dsm_report_flag(struct txc_pa2240_data *data)
-{
-	struct ls_test_excep *excep = &data->ls_test_exception;
-	ssize_t size = 0;
-	txc_pa2240_dsm_read_regs(data);
-	size = dsm_client_record(txc_pa2240_ps_dclient," regs:%s, enable_ps_sensor = %d\n",
-		excep->reg_buf,data->enable_ps_sensor);
-	TXC_PA2240_ERR("dsm error->""regs:%s,enable_ps_sensor = %d\n",
-		excep->reg_buf,data->enable_ps_sensor);
-	return size;
-}
-
-static int txc_pa2240_dsm_report_ps_threshold(struct txc_pa2240_data *data)
-{
-	struct ls_test_excep *excep = &data->ls_test_exception;
-	ssize_t size = 0;
-	txc_pa2240_dsm_read_regs(data);
-	size = dsm_client_record(txc_pa2240_ps_dclient," regs:%s,pilt = %d,piht = %d\n",
-		excep->reg_buf,data->pilt,data->piht);
-	TXC_PA2240_ERR("dsm error->""regs:%s,pilt = %d,piht = %d\n",
-		excep->reg_buf,data->pilt,data->piht);
-	return size;
-}
-#endif
-
 static int txc_pa2240_dsm_report_err(int errno,struct txc_pa2240_data *data)
 {
 	int size = 0;
@@ -367,16 +341,6 @@ static int txc_pa2240_dsm_report_err(int errno,struct txc_pa2240_data *data)
 		case DSM_LPS_ENABLED_IRQ_ERROR:
 			size = txc_pa2240_dsm_report_no_irq(data);
 			break;
-
-		#if 0
-		case DSM_LPS_ENABLED_ERROR:
-			size = txc_pa2240_dsm_report_flag(data);
-			break;
-
-		case DSM_LPS_THRESHOLD_SIZE_ERROR:
-			size = txc_pa2240_dsm_report_ps_threshold(data);
-			break;
-		#endif
 
 		default:
 			break;

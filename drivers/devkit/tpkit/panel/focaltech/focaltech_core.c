@@ -1465,14 +1465,7 @@ static int focal_chip_detect(struct ts_kit_platform_data *pdata)
 			__func__, ret);
 		goto exit;
 	}
-#if 0
-	ret = gpio_request(g_focal_dev_data->reset_gpio, "ts_reset_gpio");
-	if (ret < 0) {
-		TS_LOG_ERR("%s:Fail request gpio:%d, ret=%d\n",
-			__func__, g_focal_dev_data->reset_gpio, ret);
-		goto exit;
-	}
-#endif
+
 	ret = focal_hardware_reset(FTS_MODEL_FIRST_START);
 	if (ret) {
 		TS_LOG_ERR("%s:hardware reset fail, ret=%d\n",

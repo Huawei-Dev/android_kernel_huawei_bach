@@ -37,9 +37,6 @@ void lcdkit_dsi_cmd_trans(struct dsi_panel_cmds *dsi_cmds,
         dsi_cmds->cmds[i].dchdr.last  = cmds->cmds[i].last;
         dsi_cmds->cmds[i].dchdr.dtype = cmds->cmds[i].dtype;
         dsi_cmds->cmds[i].payload     = cmds->cmds[i].payload;
-
-        //qcom no "waittype", discard "waittype" here!
-        //dsi_cmds->cmds[i].dchdr.waittype = cmds.cmds[i].waittype;
     }
 
     if (flags)
@@ -148,28 +145,6 @@ int lcdkit_dsi_rx(void *pdata, uint32_t *rbuf,
     kfree(dsi_cmds.cmds);
     return 0;
 }
-
-
-#if 0
-//mdss_dsi_read_status
-int lcdkit_dsi_read_status(struct mdss_dsi_ctrl_pdata *ctrl)
-{
-    uint32_t i;
-    uint32_t *readbuf = kzalloc(ctrl->status_cmds_rlen, GFP_KERNEL);
-    if (!readbuf)
-    {
-        LCDKIT_ERR("alloc memory failed!\n");
-		return -ENOMEM;
-    }
-
-    lcdkit_dsi_rx(ctrl, readbuf, ctrl->status_cmds_rlen, &ctrl->status_cmds);
-
-    for (i = 0; i < ctrl->status_cmds_rlen; i++)
-        ctrl->status_buf.data[i] = readbuf[i];
-
-    return 0;
-}
-#endif
 
 u32 lcdkit_panel_cmd_read(void *ctrl,
                 char cmd0, char cmd1, uint32_t *rbuf, int len)

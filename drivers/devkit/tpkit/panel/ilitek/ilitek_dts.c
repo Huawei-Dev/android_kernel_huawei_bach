@@ -188,12 +188,7 @@ int ilitek_parse_dts(struct device_node *device,
 	if (retval) {
 		TS_LOG_ERR("get device ILITEK_VDDIO_REGULATOR_TYPE failed\n");
 	}
-	#if 0
-	retval = of_property_read_string(device, ILITEK_TEST_TYPE, &chip_data->tp_test_type);
-	TS_LOG_INFO("ilitek chip_data->tp_test_type = %s\n", chip_data->tp_test_type);
-	#else
 	retval = of_property_read_string(device, ILITEK_TEST_TYPE, &raw_data_dts);
-	#endif
 	if (retval) {
 		TS_LOG_INFO("get device ILITEK_TEST_TYPE not exit,use default value judge_last_result\n");
 		strncpy(chip_data->tp_test_type,"Normalize_type:judge_last_result",TS_CAP_TEST_TYPE_LEN);

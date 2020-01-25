@@ -967,60 +967,6 @@ static void nvt_ASR_FrameMode(void)
 	nvt_set_memory(0x1F691, 0x01);
 }
 
-#if 0
-static void nvt_TCON_PowerOnInit(void)
-{
-	uint8_t tmp_val = 0;
-
-	// Step1
-	nvt_set_memory(0x1F4BD, 0x01);
-	nvt_set_memory(0x1F60F, 0x03);
-	// ASR(Power On Mode)
-	nvt_ASR_PowerOnMode();
-	// Step2
-	// 0x1F5EC,bit1 = 1 bit5 = 1, (| 0x22)
-	tmp_val = 0;
-	nvt_get_memory(0x1F5EC, &tmp_val);
-	tmp_val |= 0x22;
-	nvt_set_memory(0x1F5EC, tmp_val);
-	// 0x1F5EE,bit1 = 1 bit5 = 1, (| 0x22)
-	tmp_val = 0;
-	nvt_get_memory(0x1F5EE, &tmp_val);
-	tmp_val |= 0x22;
-	nvt_set_memory(0x1F5EE, tmp_val);
-	// ASR(Power On Mode)
-	nvt_ASR_PowerOnMode();
-	// Delay 2ms
-	msleep(2);
-	// Step3
-	// 0x1F5F0, bit0 = 1, (| 0x01)
-	tmp_val = 0;
-	nvt_get_memory(0x1F5F0, &tmp_val);
-	tmp_val |= 0x01;
-	nvt_set_memory(0x1F5F0, tmp_val);
-	// 0x1F5F2, bit0 = 1, (| 0x01)
-	tmp_val = 0;
-	nvt_get_memory(0x1F5F2, &tmp_val);
-	tmp_val |= 0x01;
-	nvt_set_memory(0x1F5F2, tmp_val);
-	// ASR(Power On mode)
-	nvt_ASR_PowerOnMode();
-	// Step4
-	// 0x1F5EC, bit2 = 1 bit3 = 1, (| 0x0C)
-	tmp_val = 0;
-	nvt_get_memory(0x1F5EC, &tmp_val);
-	tmp_val |= 0x0C;
-	nvt_set_memory(0x1F5EC, tmp_val);
-	// 0x1F5EE, bit2 = 1 bit3 = 1, (| 0x0C)
-	tmp_val = 0;
-	nvt_get_memory(0x1F5EE, &tmp_val);
-	tmp_val |= 0x0C;
-	nvt_set_memory(0x1F5EE, tmp_val);
-	// ASR(Frame Mode)
-	nvt_ASR_FrameMode();
-	msleep(1);
-}
-#endif
 //---fix high current issue, Taylor 20160908---
 static void nvt_TCON_PowerOnInit(void)
 {

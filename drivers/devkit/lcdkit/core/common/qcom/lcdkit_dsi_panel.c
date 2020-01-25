@@ -804,14 +804,8 @@ static int mdss_panel_parse_dt(struct device_node *np,
 
     OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-dsi-bpp", &pinfo->bpp, 24);
 
-    #if 0
-	pinfo->mipi.mode = DSI_VIDEO_MODE;
-	data = of_get_property(np, "hw,lcdkit-panel-cmd-type", NULL);
-	if (data && !strncmp(data, "dsi_cmd_mode", 12))
-		pinfo->mipi.mode = DSI_CMD_MODE;
-    #else
     pinfo->mipi.mode = lcdkit_info.panel_infos.lcd_disp_type;;
-    #endif
+
 	pinfo->mipi.boot_mode = pinfo->mipi.mode;
 
 	data = of_get_property(np, "hw,lcdkit-pixel-packing", NULL);
@@ -863,11 +857,6 @@ static int mdss_panel_parse_dt(struct device_node *np,
 
 	lcdkit_info.panel_infos.panel_down_reset
                 = of_property_read_bool(np, "hw,lcdkit-down-reset-enable");
-    #if 0
-	global_tp_pre_lcd_flag
-                = of_property_read_bool(np, "hw,lcdkit-tp-pre-lcd-enable");
-	set_tp_pre_lcd_status(global_tp_pre_lcd_flag);
-    #endif
 
 	if (pinfo->sim_panel_mode == SIM_SW_TE_MODE)
 		pinfo->mipi.hw_vsync_mode = false;
@@ -955,12 +944,7 @@ static int mdss_panel_parse_dt(struct device_node *np,
 
 	pinfo->mipi.lp11_init = of_property_read_bool(np, "hw,lcdkit-lp11-init");
 
-    #if 0
-	OF_PROPERTY_READ_U32_DEFAULT(np,
-                "hw,lcdkit-init-delay-us", &pinfo->mipi.init_delay, 0);
-    #else
     pinfo->mipi.init_delay = lcdkit_info.panel_infos.delay_af_LP11;
-    #endif
 
 	OF_PROPERTY_READ_U32_DEFAULT(np,
                 "hw,lcdkit-post-init-delay", &pinfo->mipi.post_init_delay, 0);

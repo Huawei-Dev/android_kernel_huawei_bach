@@ -4963,27 +4963,6 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 	tskit_parade_data->tthe_debugfs = debugfs_create_file(PARADE_TTHE_TUNER_FILE_NAME,
 		0644, NULL, tskit_parade_data, &tthe_debugfs_fops);
 #endif
-#if 0
-	 /* read irq_gpio */
-    if (of_find_property(core_node, "parade,irq_gpio", NULL)) {
-        core_pdata->irq_gpio = of_get_named_gpio_flags(core_node, "parade,irq_gpio", 0, NULL);
-        TS_LOG_INFO("%s,irq gpio is %d.\n", __func__, core_pdata->irq_gpio);
-    } else {
-        core_pdata->irq_gpio = -1;
-        TS_LOG_ERR("%s,[cy,reset-gpio] read fail.\n", __func__);
-        goto fail_free;
-    }
-
-	/*read rst_gpio */
-    if (of_find_property(core_node, "parade,rst_gpio", NULL)) {
-        core_pdata->rst_gpio = of_get_named_gpio_flags(core_node, "parade,rst_gpio", 0, NULL);
-        TS_LOG_INFO("%s,reset gpio is %d.\n", __func__, core_pdata->rst_gpio);
-    } else {
-        core_pdata->rst_gpio = -1;
-        TS_LOG_ERR("%s,[cy,reset-gpio] read fail.\n", __func__);
-        goto fail_free;
-    }
-#endif
 	tskit_parade_data->parade_chip_data->ts_platform_data->client->addr = parade_get_dts_value(core_node , "slave_address");
 	TS_LOG_INFO("%s,client->addr = %d.\n", __func__, tskit_parade_data->parade_chip_data->ts_platform_data->client->addr);
 	/*hid_desc_register*/
@@ -9502,33 +9481,7 @@ static int parade_chip_detect(struct ts_kit_platform_data *platform_data)
 		TS_LOG_ERR("%s, error request gpio for vci and vddio\n", __func__);
 		goto gpio_err;
 	}
-#if 0
-	/*valid irq and rst*/
-	if (!gpio_is_valid(tskit_parade_data->parade_chip_data->reset_gpio)){
-		TS_LOG_ERR("%s, reset gpio:%d gpio not provided\n", __func__, tskit_parade_data->parade_chip_data->reset_gpio);
-		rc = -EIO;
-		goto out;
-	}
-	if (!gpio_is_valid(tskit_parade_data->parade_chip_data->irq_gpio)){
-		TS_LOG_ERR("%s, irq_gpio gpio:%d gpio not provided\n", __func__, tskit_parade_data->parade_chip_data->irq_gpio);
-		rc = -EIO;
-		goto out;
-	}
-	/*request irq and rst*/
-	rc = gpio_request(tskit_parade_data->parade_chip_data->reset_gpio, "ts_reset_gpio");
-	if (rc < 0) {
-		TS_LOG_ERR("%s, Fail to request gpio:%d. rc = %d\n", __func__, tskit_parade_data->parade_chip_data->reset_gpio,
-			rc);
-		goto out;
-	}
-	rc = gpio_request(tskit_parade_data->parade_chip_data->irq_gpio, "ts_irq_gpio");
-	if (rc < 0) {
-		TS_LOG_ERR("%s, Fail to request gpio:%d. rc = %d\n", __func__, tskit_parade_data->parade_chip_data->irq_gpio,
-			rc);
-		gpio_free(tskit_parade_data->parade_chip_data->reset_gpio);
-		goto out;
-	}
-#endif
+
 	if(tskit_parade_data->pinctrl_set == 1) {
 		rc = parade_pinctrl_select_normal();
 		if(rc < 0){

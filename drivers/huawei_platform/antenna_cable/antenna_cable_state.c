@@ -299,42 +299,6 @@ static int ant_dev_remove(struct platform_device *pdev)
 }
 
 
-/*delete resume or suspend func, because cable det irq can resume device */
-#if 0
-static int ant_dev_resume(struct device *dev)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct ant_device *antdev = platform_get_drvdata(pdev);
-
-	ant_event_report(antdev);
-
-	return 0;
-}
-
-static int ant_dev_suspend(struct device *dev)
-{
-	struct platform_device *pdev = to_platform_device(dev);
-	struct ant_device *antdev = platform_get_drvdata(pdev);
-
-	/*
-	 * Because the gpios can't wake device,
-	 * so we need to reset the varient "prev_state" to default 0.
-	 */
-	antdev->prev_state = 0;
-	cancel_delayed_work_sync(&antdev->dwork);
-
-	return 0;
-}
-
-/**
-  The file Operation table for power
-*/
-static const struct dev_pm_ops ant_dev_pm_ops = {
-	.suspend = ant_dev_resume,
-	.resume = ant_dev_suspend,
-};
-#endif
-
 static struct platform_driver ant_dev_driver = {
 	.probe		= ant_dev_probe,
 	.remove		= ant_dev_remove,

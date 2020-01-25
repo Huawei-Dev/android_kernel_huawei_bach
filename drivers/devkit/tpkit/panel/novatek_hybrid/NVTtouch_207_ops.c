@@ -875,21 +875,7 @@ static int nvt_hybrid_gpio_request(void)
 	int retval = NO_ERR;
 
 	TS_LOG_INFO("%s enter\n", __func__);
-#if 0
-	retval = gpio_request(nvt_hybrid_ts->chip_data->reset_gpio, "ts_reset_gpio");
-	if (retval < 0) {
-		TS_LOG_ERR("Fail request gpio:%d\n",
-			   nvt_hybrid_ts->chip_data->reset_gpio);
-		goto ts_reset_out;
-	}
 
-	retval = gpio_request(nvt_hybrid_ts->chip_data->irq_gpio, "ts_irq_gpio");
-	if (retval) {
-		TS_LOG_ERR("unable to request gpio:%d\n",
-			   nvt_hybrid_ts->chip_data->irq_gpio);
-		goto ts_irq_out;
-	}
-#endif
 	if ((1 == nvt_hybrid_ts->chip_data->vci_gpio_type)
 	    && (1 == nvt_hybrid_ts->chip_data->vddio_gpio_type)) {
 		if (nvt_hybrid_ts->chip_data->vci_gpio_ctrl ==
@@ -947,12 +933,6 @@ static int nvt_hybrid_gpio_request(void)
 ts_vddio_out:
 	gpio_free(nvt_hybrid_ts->chip_data->vci_gpio_ctrl);
 ts_vci_out:
-#if 0
-	gpio_free(nvt_hybrid_ts->chip_data->ts_platform_data->irq_gpio);
-ts_irq_out:
-	gpio_free(nvt_hybrid_ts->chip_data->ts_platform_data->reset_gpio);
-ts_reset_out:
-#endif
 	return retval;
 }
 
@@ -1532,35 +1512,15 @@ static int novatek_hybrid_irq_bottom_half(struct ts_cmd_node *in_cmd,
 				continue;
 
 			press_id[input_id - 1] = 1;
-//			input_report_key(nvt_hybrid_ts->input_dev, BTN_TOUCH, 1);
-//			input_report_abs(nvt_hybrid_ts->input_dev, ABS_MT_POSITION_X, input_x);
-//			input_report_abs(nvt_hybrid_ts->input_dev, ABS_MT_POSITION_Y, input_y);
-//			input_report_abs(nvt_hybrid_ts->input_dev, ABS_MT_TOUCH_MAJOR, input_w);
-//			input_report_abs(nvt_hybrid_ts->input_dev, ABS_MT_PRESSURE, input_p);
-//			input_report_abs(nvt_hybrid_ts->input_dev, ABS_MT_TRACKING_ID, input_id - 1);
-
-//			input_mt_sync(nvt_hybrid_ts->input_dev);
-
 			info->fingers[input_id - 1].status = 1;
 			info->fingers[input_id - 1].x = input_x;
 			info->fingers[input_id - 1].y = input_y;
 			info->fingers[input_id - 1].major = input_w_major;
 			info->fingers[input_id - 1].minor = input_w_minor;
-#if 0
-			TS_LOG_DEBUG("%s: x=%d, y=%d, major=%d, minor=%d\n", __func__,
-				info->fingers[input_id - 1].x, info->fingers[input_id - 1].y,
-				info->fingers[input_id - 1].major, info->fingers[input_id - 1].minor);
-#endif
 			finger_cnt++;
 			temp_finger_status++;
 		}
 	}
-//	if (finger_cnt == 0) {
-//		input_report_key(nvt_hybrid_ts->input_dev, BTN_TOUCH, 0);
-
-//		input_mt_sync(nvt_hybrid_ts->input_dev);
-//	}
-
 
 	info->cur_finger_number = finger_cnt;
 
@@ -1723,25 +1683,11 @@ static int novatek_hybrid_holster_switch(struct ts_holster_info *info)
 			}
 
 			if(NVT_HYBRID_HOLSTER_SWITCH_ON == sw)	{
-#if 0
-				//---enable holster mode & set window---
-				buf[0] = 0x50;
-				buf[1] = 0x75;
-				buf[2] = (uint8_t)(x0 & 0xFF);
-				buf[3] = (uint8_t)((x0 >> 8) & 0xFF);
-				buf[4] = (uint8_t)(y0 & 0xFF);
-				buf[5] = (uint8_t)((y0 >> 8) & 0xFF);
-				buf[6] = (uint8_t)(x1 & 0xFF);
-				buf[7] = (uint8_t)((x1 >> 8) & 0xFF);
-				buf[8] = (uint8_t)(y1 & 0xFF);
-				buf[9] = (uint8_t)((y1 >> 8) & 0xFF);
-				retval = nvt_hybrid_ts_i2c_write(nvt_hybrid_ts->client, NVT_HYBRID_I2C_FW_Address, buf, 10);
-#else
 				//---enable holster mode---
 				buf[0] = 0x50;
 				buf[1] = 0x75;
 				retval = nvt_hybrid_ts_i2c_write(nvt_hybrid_ts->client, NVT_HYBRID_I2C_FW_Address, buf, 2);
-#endif
+
 				if (retval < 0) {
 					TS_LOG_ERR("%s: set holster switch(%d), failed : %d", __func__, sw, retval);
 				}
@@ -2020,17 +1966,6 @@ static int novatek_hybrid_after_resume(void *feature_info)
 	return retval;
 }
 
-#if 0
-void nvt_hybrid_read_projectid(void)
-{
-	strncpy(nvt_hybrid_product_id, "WASW38140", 9);
-
-	nvt_hybrid_get_fw_ver();
-
-	snprintf(nvt_hybrid_ts->chip_data->chip_name, PAGE_SIZE, nvt_hybrid_vendor_name);
-	snprintf(nvt_hybrid_ts->chip_data->module_name, PAGE_SIZE, "ctc");
-}
-#else
 int32_t nvt_hybrid_read_projectid(void)
 {
 	uint8_t buf[64] = {0};
@@ -2123,7 +2058,6 @@ int32_t nvt_hybrid_read_projectid(void)
 	return retval;
 }
 
-#endif
 static int novatek_hybrid_get_info(struct ts_chip_info_param *info)
 {
 	int retval = NO_ERR;

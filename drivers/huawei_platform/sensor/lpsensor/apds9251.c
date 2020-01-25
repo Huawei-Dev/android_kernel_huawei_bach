@@ -500,52 +500,7 @@ static int rgb_apds9251_i2c_read(struct i2c_client*client, u8 reg,bool flag)
 	
 	return err;
 }	
-#if 0
-/*
-*	print the registers value with proper format
-*/
-static int dump_reg_buf(struct rgb_apds9251_data *data,char *buf, int size,int enable)
-{
-	int i=0;
 
-	if(enable)
-		APDS9251_INFO("[enable]");
-	else
-		APDS9251_INFO("[disable]");
-	APDS9251_INFO(" reg_buf= ");
-	for(i = 0;i < size; i++){
-		APDS9251_INFO("0x%2x  ",buf[i]);
-	}
-	
-	APDS9251_INFO("\n");
-	return 0;
-}
-
-static int rgb_apds9251_regs_debug_print(struct rgb_apds9251_data *data,int enable)
-{
-	int i=0;
-	char reg_buf[APDS9251_REG_LEN];
-	u8 reg = 0;
-	struct i2c_client *client = data->client;
-
-	/* read registers[0x0~0x1a] value*/
-	for(i = 0; i < APDS9251_REG_LEN; i++ )
-	{
-		reg = 0x50+i;
-		reg_buf[i] = rgb_apds9251_i2c_read(client, reg, APDS9251_I2C_BYTE);
-
-		if(reg_buf[i] <0){
-			APDS9251_ERR("%s,line %d:read %d reg failed\n",__func__,__LINE__,i);
-			return reg_buf[i] ;
-		}
-	}
-
-	/* print the registers[0x0~0x1a] value in proper format*/
-	dump_reg_buf(data,reg_buf,APDS9251_REG_LEN,enable);
-
-	return 0;
-}
-#endif
 static void rgb_apds9251_dump_register(struct i2c_client *client)
 {
 	int main_ctl,als_meas_rate,als_gain,part_id,int_cfg;
@@ -604,17 +559,6 @@ static int apds9251_dd_set_als_gain(struct i2c_client *client, int als_gain)
 {
 	return rgb_apds9251_i2c_write(client, APDS9251_DD_ALS_GAIN_ADDR, als_gain,APDS9251_I2C_BYTE);
 }
-#if 0
-static int apds9251_dd_get_als_meas_rate(struct i2c_client *client)
-{
-	return rgb_apds9251_i2c_read(client, APDS9251_DD_ALS_MEAS_RATE_ADDR,APDS9251_I2C_BYTE);
-}
-
-static int apds9251_dd_get_als_gain(struct i2c_client *client)
-{
-	return rgb_apds9251_i2c_read(client, APDS9251_DD_ALS_GAIN_ADDR,APDS9251_I2C_BYTE);
-}
-#endif
 
 static void apds9251_als_calibrate(unsigned int *raw_data)//uint16
 {
@@ -735,19 +679,6 @@ static void apds9251_change_als_threshold(struct i2c_client *client)
 #endif
 		
 	LuxCalculation(client);
-	#if 0
-	gain = apds9251_dd_get_als_gain(client);
-	if (gain < 0) {
-		APDS9251_ERR("%s:i2c read gain fail\n",__FUNCTION__);
-		return;
-	}
-
-	rate = apds9251_dd_get_als_meas_rate(client);
-	if (rate < 0) {
-		APDS9251_ERR("%s:i2c read meas rate fail\n",__FUNCTION__);
-		return;
-	}
-	#endif
 	APDS9251_FLOW("%s:lux=%d  red=%d green=%d blue=%d ir=%d \n", __FUNCTION__,data->rgb_data.lx,data->rgb_data.red,
 	data->rgb_data.green,data->rgb_data.blue,data->rgb_data.ir);
 
@@ -1064,9 +995,6 @@ static int rgb_apds9251_enable_als_sensor(struct i2c_client *client, int val)
 
 		if(rgb_apds9251_debug_mask >= 1){
 			APDS9251_FLOW("%s:attention:before als_disable %d times\n", __FUNCTION__,als_enalbe_count);
-			#if 0
-			rgb_apds9251_regs_debug_print(data,enable);
-			#endif
 		}
 		rgb_apds9251_dump_register(client);
 	}else{

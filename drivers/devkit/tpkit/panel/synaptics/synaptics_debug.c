@@ -3313,18 +3313,6 @@ int synap_rmi4_f54_init(struct synaptics_rmi4_data *rmi4_data,
 	}
 
 found:
-#if 0
-	f54->intr_reg_num = (intr_count + 7) / 8;
-	if (f54->intr_reg_num != 0)
-		f54->intr_reg_num -= 1;
-
-	f54->intr_mask = 0;
-	intr_offset = intr_count % 8;
-	for (ii = intr_offset;
-	     ii < ((rmi_fd.intr_src_count & MASK_3BIT) + intr_offset); ii++) {
-		f54->intr_mask |= 1 << ii;
-	}
-#endif
 	retval =
 	    f54->fn_ptr->read(rmi4_data, f54->query_base_addr, f54->query.data,
 			      sizeof(f54->query.data));
