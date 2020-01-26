@@ -29,7 +29,7 @@
 #include "NVTtouch_207.h"
 #include "NVTtouch_207_mp.h"
 
-#include <../../huawei_ts_kit.h>
+#include "../../huawei_ts_kit.h"
 #include <linux/regulator/consumer.h>
 #include <huawei_platform/log/log_jank.h>
 #include "../../huawei_ts_kit_algo.h"

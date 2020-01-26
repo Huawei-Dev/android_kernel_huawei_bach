@@ -24,8 +24,8 @@
 #include <linux/sched/rt.h>
 #include <linux/fb.h>
 #include <linux/workqueue.h>
-#include <huawei_ts_kit.h>
-#include <huawei_ts_kit_api.h>
+#include "huawei_ts_kit.h"
+#include "huawei_ts_kit_api.h"
 #if defined (CONFIG_HUAWEI_DSM)
 #include <dsm/dsm_pub.h>
 extern struct dsm_client *ts_dclient;

@@ -4,7 +4,7 @@
 #define _FOCALTECH_TEST_FT8716_H_
 
 #include <linux/kernel.h>
-#include <focaltech_core.h>
+#include "focaltech_core.h"
 
 #define bool  unsigned char
 #define BYTE  unsigned char
