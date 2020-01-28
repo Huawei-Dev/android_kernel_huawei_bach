@@ -2417,14 +2417,15 @@ bool GetHexCharValue(char cHex, unsigned char * byValue)
 {
 	int i = 0;
 	
-	if(NULL == byValue)
-	{
-		return false;
-	}
 	struct HexValue stHexValue[] = {
 		{'0', 0}, {'1', 1}, {'2', 2}, {'3', 3}, {'4', 4},{'5', 5}, {'6', 6}, {'7', 7}, {'8', 8}, {'9', 9},
 		{'a', 10}, {'b', 11}, {'c', 12}, {'d', 13}, {'e', 14}, {'f', 15}, 
 		{'A', 10}, {'B', 11}, {'C', 12}, {'D', 13}, {'E', 14}, {'F', 15}};
+
+	if (NULL == byValue)
+	{
+		return false;
+	}
 
 	for ( i = 0; i < (int)(sizeof(stHexValue) / sizeof(struct HexValue)); i++)
 	{
@@ -4072,13 +4073,15 @@ static int get_lockdown_data(unsigned char *lockdown_data, unsigned short leng)
 	return retval;
 }
 
-static int synaptics_get_project_id(unsigned char *projectid, int plen){
-	if (!projectid || !fwu || !fwu->rmi4_data){
+static int synaptics_get_project_id(unsigned char *projectid, int plen)
+{
+	unsigned char *project_id =
+	    fwu->rmi4_data->rmi4_mod_info.project_id_string;
+
+	if (!projectid || !fwu || !fwu->rmi4_data) {
 		TS_LOG_ERR("%s error!", __func__);
 		return -1;
 	}
-	unsigned char *project_id =
-	    fwu->rmi4_data->rmi4_mod_info.project_id_string;
 	snprintf(projectid, plen, "%s", project_id);
 	return 0;
 }
@@ -4283,12 +4286,13 @@ int synap_get_fw_data_s3718_boot(char *file_name,
 				     struct touch_settings
 				     *synaptics_sett_param_regs)
 {
-	if((!file_name)||(!synaptics_sett_param_regs)||(!synaptics_sett_param_regs->module_name))
-		return  -EIO;
 	int retval;
 	size_t file_name_size  =strlen(file_name) + strlen(synaptics_sett_param_regs->module_name);
 	char firmware_name[RMI_PRODUCT_ID_LENGTH + file_name_size + 1];
 	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
+
+	if ((!file_name) || (!synaptics_sett_param_regs) || (!synaptics_sett_param_regs->module_name))
+		return  -EIO;
 
 	snprintf(firmware_name, sizeof(firmware_name), "ts/%s_%s.img",
 		 file_name, synaptics_sett_param_regs->module_name);
@@ -4328,9 +4332,10 @@ int synap_get_fw_data_s3718_boot(char *file_name,
 int synap_get_fw_data_s3718_sd(void)
 {
 	int retval;
+	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
 
 	TS_LOG_INFO("synap_get_fw_data_s3718_sd called\n");
-	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
+
 	retval = request_firmware(&fwu->fw_entry_sd, SYNAPTICS_FW_S3718_MANUAL_UPDATE_FILE_NAME, dev);
 	if (retval != 0) {
 		TS_LOG_ERR("Firmware image not available\n");
@@ -4396,7 +4401,7 @@ void synap_fw_data_s3718_release(void)
 {
 	TS_LOG_INFO("s3718 release fw resource\n");
 	//Do not need to release hw data during the test
-	return 0;
+	return;
 
 	if (fwu && fwu->fn_ptr) {
 		kfree(fwu->fn_ptr);

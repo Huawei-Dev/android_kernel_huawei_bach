@@ -2017,7 +2017,9 @@ int ags_hi553_otp_get_checksum(struct msm_sensor_ctrl_t* s_ctrl, enum_ags_hi553_
 		CMR_LOGE("%s read group addr=0x%x\n",__func__,addr);
 		return -1;
 	}
+	return 0;
 }
+
 int ags_hi553_otp_continuous_read(struct msm_sensor_ctrl_t* s_ctrl,uint16_t addr,int rd_num,
 						uint16_t * rd_buf,int *sum)
 {

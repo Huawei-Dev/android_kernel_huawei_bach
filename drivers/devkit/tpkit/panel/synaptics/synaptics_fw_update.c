@@ -1091,11 +1091,12 @@ int synap_get_fw_data_boot(char *file_name,
 {
 	int retval;
 	size_t file_name_size =0;
+	char firmware_name[RMI_PRODUCT_ID_LENGTH + file_name_size + 1];
+	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
+
 	if((!file_name)||(!synaptics_sett_param_regs)||(!synaptics_sett_param_regs->module_name))
 		return  -EIO;
 	 file_name_size =strlen(file_name) + strlen(synaptics_sett_param_regs->module_name);
-	char firmware_name[RMI_PRODUCT_ID_LENGTH + file_name_size + 1];
-	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
 
 	snprintf(firmware_name, sizeof(firmware_name), "ts/%s_%s.img",
 		 file_name, synaptics_sett_param_regs->module_name);
@@ -1131,9 +1132,10 @@ int synap_get_fw_data_boot(char *file_name,
 int synap_get_fw_data_sd(void)
 {
 	int retval;
+	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
 
 	TS_LOG_INFO("synaptics_get_fw_data_sd called\n");
-	struct device *dev = &fwu->rmi4_data->synaptics_dev->dev;
+
 	retval = request_firmware(&fwu->fw_entry_sd, SYNAPTICS_FW_MANUAL_UPDATE_FILE_NAME, dev);
 	if (retval != 0) {
 		TS_LOG_ERR("Firmware image not available\n");
@@ -1160,6 +1162,7 @@ bool synap_check_fw_version(void)
 	enum flash_area flash_area = NONE;
 	struct image_header_data header;
 	const unsigned char *fw_image = NULL;
+	int size = 0;
 
 	if(!fwu || !fwu->fw_image || (fwu->image_size < sizeof(header))){
 		TS_LOG_ERR("fwu is NULL or provided update too small !\n");
@@ -1189,7 +1192,7 @@ bool synap_check_fw_version(void)
 			fw_image + FW_IMAGE_OFFSET + header.firmware_size;
 	}
 
-	int size = FW_IMAGE_OFFSET + header.firmware_size;
+	size = FW_IMAGE_OFFSET + header.firmware_size;
 	
 	if(fwu->image_size < size) {
 			TS_LOG_ERR("config_data = %p , fw_image = %p  , header size  =%d\n",fwu->config_data ,fw_image,header.firmware_size);

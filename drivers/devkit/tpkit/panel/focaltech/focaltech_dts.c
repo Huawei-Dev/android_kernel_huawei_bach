@@ -272,7 +272,7 @@ int focal_parse_dts(
 	focal_of_property_read_u32_default(np, FTS_COVER_FORCE_GLOVE,
 		&dev_data->cover_force_glove, 0);
 	glove_info = &(dev_data->ts_platform_data->feature_info.glove_info);
-	focal_of_property_read_u32_default(np, FTS_GLOVE_SUPPORTED,&glove_info->glove_supported, 1);
+	focal_of_property_read_u32_default(np, FTS_GLOVE_SUPPORTED, &glove_info->glove_supported, 1);
 	if(glove_info->glove_supported){
 		focal_of_property_read_u32_default(np, FTS_GLOVE_SWITCH_ADDR,&glove_info->glove_switch_addr, 0);
 	}

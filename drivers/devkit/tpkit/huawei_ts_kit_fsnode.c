@@ -527,7 +527,7 @@ out:
 }
 
 
- int ts_send_roi_cmd(enum ts_action_status read_write_type, int timeout)
+int ts_send_roi_cmd(enum ts_action_status read_write_type, int timeout)
 {
     int error = NO_ERR;
     struct ts_cmd_node cmd;
@@ -552,10 +552,11 @@ out:
     }
     return error;
 }
-int ts_string_seprater(char *buf,int *enable, int *x0, int *y0, int *x1, int *y1)
+
+int ts_string_seprater(const char *buf, int *enable, int *x0, int *y0, int *x1, int *y1)
 {
     char *cur = NULL;
-    char *tmp = buf;
+    char *tmp = (char *)buf;
     int i = 0;
     int error = -1;
     unsigned long data =0;
@@ -585,7 +586,7 @@ int ts_string_seprater(char *buf,int *enable, int *x0, int *y0, int *x1, int *y1
         TS_LOG_ERR("separate string fail \n");
         goto out;
     }
-    error = (int)strict_strtoul(cur, NULL, &data);
+    error = (int)strict_strtoul(cur, 0, &data);
     if (error){
         TS_LOG_ERR("strict_strtoul return invaild :%d\n", error);
         goto out;
@@ -598,7 +599,7 @@ int ts_string_seprater(char *buf,int *enable, int *x0, int *y0, int *x1, int *y1
         TS_LOG_ERR("separate string fail \n");
         goto out;
     }
-    error = (int)strict_strtoul(cur, NULL, &data);
+    error = (int)strict_strtoul(cur, 0, &data);
     if (error){
         TS_LOG_ERR("strict_strtoul return invaild :%d\n", error);
         goto out;
@@ -611,7 +612,7 @@ int ts_string_seprater(char *buf,int *enable, int *x0, int *y0, int *x1, int *y1
         TS_LOG_ERR("separate string fail \n");
         goto out;
     }
-    error = (int)strict_strtoul(cur, NULL, &data);
+    error = (int)strict_strtoul(cur, 0, &data);
     if (error){
         TS_LOG_ERR("strict_strtoul return invaild :%d\n", error);
         goto out;
@@ -624,7 +625,7 @@ int ts_string_seprater(char *buf,int *enable, int *x0, int *y0, int *x1, int *y1
         TS_LOG_ERR("separate string fail \n");
         goto out;
     }
-    error = (int)strict_strtoul(cur, NULL, &data);
+    error = (int)strict_strtoul(cur, 0, &data);
     if (error){
         TS_LOG_ERR("strict_strtoul return invaild :%d\n", error);
         goto out;
@@ -637,7 +638,7 @@ int ts_string_seprater(char *buf,int *enable, int *x0, int *y0, int *x1, int *y1
         TS_LOG_ERR("separate string fail \n");
         goto out;
     }
-    error = (int)strict_strtoul(cur, NULL, &data);
+    error = (int)strict_strtoul(cur, 0, &data);
     if (error){
         TS_LOG_ERR("strict_strtoul return invaild :%d\n", error);
         goto out;
@@ -666,7 +667,7 @@ static ssize_t ts_touch_window_store(struct device* dev, struct device_attribute
         TS_LOG_INFO("It's parade_solution, and don't support holster\n");
         return -EINVAL;
     }
-    error = ts_string_seprater(buf, &window_enable, &x0,&y0,&x1, &y1);
+    error = ts_string_seprater(buf, &window_enable, &x0, &y0, &x1, &y1);
     if(error)
     {
         TS_LOG_ERR("ts_string_seprater error\n");
@@ -2348,8 +2349,8 @@ static ssize_t ts_touch_switch_store(struct device *dev,
 	}
 
 	if (TS_SWITCH_TYPE_DOZE !=
-		g_ts_kit_platform_data.chip_data->touch_switch_flag
-			& TS_SWITCH_TYPE_DOZE){
+		(g_ts_kit_platform_data.chip_data->touch_switch_flag
+			& TS_SWITCH_TYPE_DOZE)){
 		TS_LOG_INFO("tp doze not support\n");
 		goto out;
 	}

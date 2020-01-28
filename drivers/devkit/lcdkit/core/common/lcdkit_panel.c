@@ -1421,7 +1421,7 @@ static ssize_t lcdkit_reg_read_show(void* pdata, char *buf)
         lcdkit_dsi_tx(pdata, &lcdkit_info.panel_infos.lcd_reg_check_enter_cmds);
     }
 
-    ret = lcdkit_lread_reg(pdata, read_value, &lcd_reg_cmd, lcdkit_info.panel_infos.gama_reg_length);
+    ret = lcdkit_lread_reg(pdata, read_value, lcd_reg_cmd, lcdkit_info.panel_infos.gama_reg_length);
     if (ret) {
         LCDKIT_INFO("read error, ret=%d\n", ret);
         goto error_out;
@@ -1511,7 +1511,7 @@ static ssize_t lcdkit_oem_info_show(void* pdata, char* buf)
     return 0;
 }
 
-static ssize_t lcdkit_oem_info_store(void* pdata, const char* buf)
+static ssize_t lcdkit_oem_info_store(void* pdata, char* buf)
 {
     if (lcdkit_info.panel_infos.is_hostprocessing == 1) {
         return host_panel_oem_info_store(pdata, buf);

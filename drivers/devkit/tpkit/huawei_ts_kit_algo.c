@@ -598,7 +598,7 @@ static int start_stop_area(int x, int y, int *point)
 	return 0;
 }
 
-static int update_restrain_area(int y, int *point)
+static void update_restrain_area(int y, int *point)
 {
 	if (y > EDGE_Y_MID)													//restrain area at the bottom screen
 	{

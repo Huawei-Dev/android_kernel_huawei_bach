@@ -1978,7 +1978,7 @@ static int hi553_otp_get_group(struct msm_sensor_ctrl_t* s_ctrl, enum_hi553_type
 }
 
 static int hi553_otp_continuous_read(struct msm_sensor_ctrl_t* s_ctrl,uint16_t addr,int rd_num,
-						uint16_t * rd_buf,int *sum, int *checksum_otp)
+						uint16_t * rd_buf,int *sum, uint16_t *checksum_otp)
 {
 	int rc = 0;
 	int i=0;

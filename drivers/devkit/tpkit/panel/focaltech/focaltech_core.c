@@ -71,7 +71,7 @@ static int focal_chip_detect(struct ts_kit_platform_data *data);
 static int focal_irq_top_half(struct ts_cmd_node *cmd);
 static int focal_fw_update_boot(char *file_name);
 static int focal_chip_get_info(struct ts_chip_info_param *info);
-static int focal_set_info_flag(struct ts_kit_device_data *info);
+static int focal_set_info_flag(struct ts_kit_platform_data* info);
 static int focal_after_resume(void *feature_info);
 static int focal_wakeup_gesture_enable_switch(
 	struct ts_wakeup_gesture_enable_info *info);
@@ -654,7 +654,7 @@ static int focal_irq_bottom_half(struct ts_cmd_node *in_cmd,
 	int i = 0;
 	int ret = 0;
 	int touch_count = 0;
-	int roi_package_num= 0; 
+	u8 roi_package_num = 0; 
 	struct ts_event st_touch_data;
 	struct algo_param *algo_p = NULL;
 	struct ts_fingers *info = NULL;
@@ -756,7 +756,7 @@ static int focal_chip_get_info(struct ts_chip_info_param *info)
 	return NO_ERR;
 }
 
-static int focal_set_info_flag(struct ts_kit_device_data *info)
+static int focal_set_info_flag(struct ts_kit_platform_data* info)
 {
 	return NO_ERR;
 }

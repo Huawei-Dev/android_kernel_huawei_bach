@@ -43,12 +43,12 @@ static uint8_t NVT_HYBRID_AIN_TX[NVT_HYBRID_IC_TX_CFG_SIZE] = {0, 1, 2, 3, 4, 5,
 static uint8_t NVT_HYBRID_AIN_RX_Order[NVT_HYBRID_IC_RX_CFG_SIZE] = {0};
 static uint8_t NVT_HYBRID_AIN_TX_Order[NVT_HYBRID_IC_TX_CFG_SIZE] = {0};
 
-static uint8_t NVT_Hybrid_RecordResult_FWMutual[40*40] = {0};
+static uint32_t NVT_Hybrid_RecordResult_FWMutual[40 * 40] = {0};
 static uint8_t NVT_Hybrid_RecordResultShort_RXRX[40] = {0};
 static uint8_t NVT_Hybrid_RecordResultOpen[40 * 40] = {0};
 static uint8_t NVT_Hybrid_RecordResultPixelRaw[40 * 40] = {0};
 static uint8_t NVT_Hybrid_RecordResult_FW_Diff[40 * 40] = {0};
-static uint8_t NVT_Hybrid_Rawdata_Buf[40*40] = {0};
+static uint8_t NVT_Hybrid_Rawdata_Buf[40 * 40] = {0};
 
 static int32_t NVT_Hybrid_TestResult_FWMutual = 0;
 static int32_t NVT_Hybrid_TestResult_Short_RXRX = 0;
@@ -196,7 +196,7 @@ Description:
 return:
 	Executive outcomes. 0--passwd. negative--failed.
 *******************************************************/
-static int32_t nvt_hybrid_rawdata_up_low(int32_t rawdata[], uint8_t RecordResult[], uint8_t x_len, uint8_t y_len, int32_t Upper_Lmt[], int32_t Lower_Lmt[])
+static int32_t nvt_hybrid_rawdata_up_low(int32_t rawdata[], uint32_t RecordResult[], uint8_t x_len, uint8_t y_len, int32_t Upper_Lmt[], int32_t Lower_Lmt[])
 {
 	int32_t retval = 0;
 	int32_t i = 0;
@@ -1096,21 +1096,23 @@ return:
 *******************************************************/
 #define NVT_HYBRID_TP_TEST_FAILED_REASON_LEN 20
 static char selftest_failed_reason[NVT_HYBRID_TP_TEST_FAILED_REASON_LEN] = { "-software_reason" };
+
 int32_t nvt_hybrid_selftest(struct ts_rawdata_info *info)
 {
-	unsigned long timer_start=jiffies, timer_end=0;
+	unsigned long timer_start = jiffies, timer_end = 0;
 	uint8_t buf[2] = {0};
-	NVT_Hybrid_TestResult_FWMutual =0;
+	char test_0_result[4] = {0};
+	char test_1_result[4] = {0};
+	char test_2_result[4] = {0};
+	char test_3_result[4] = {0};
+	char test_4_result[4] = {0};
+
+	NVT_Hybrid_TestResult_FWMutual = 0;
 	NVT_Hybrid_TestResult_Short_RXRX = 0;
 	NVT_Hybrid_TestResult_Open = 0;
 	NVT_Hybrid_TestResult_PixelRaw = 0;
 	NVT_Hybrid_TestResult_Noise = 0;
 	NVT_Hybrid_TestResult_FW_Diff = 0;
-	char test_0_result[4]={0};
-	char test_1_result[4]={0};
-	char test_2_result[4]={0};
-	char test_3_result[4]={0};
-	char test_4_result[4]={0};
 
 	nvt_hybrid_ts->sensor_testing = true;
 

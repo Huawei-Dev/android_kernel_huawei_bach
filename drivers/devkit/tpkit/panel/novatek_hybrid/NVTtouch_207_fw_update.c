@@ -778,8 +778,9 @@ err_nvt_hybrid_update_firmware_request:
 
 int32_t nvt_hybrid_fw_update_sd(void)
 {
-	TS_LOG_INFO("%s enter\n", __func__);
 	int32_t ret = 0;
+
+	TS_LOG_INFO("%s enter\n", __func__);
 
 	g_nvt_hybrid_sd_force_update = 1;
 

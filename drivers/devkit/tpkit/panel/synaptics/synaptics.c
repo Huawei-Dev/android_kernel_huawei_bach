@@ -154,7 +154,7 @@ static int synaptics_rmi4_status_resume(struct synaptics_rmi4_data *rmi4_data);
 static int synaptics_rmi4_status_save(struct synaptics_rmi4_data *rmi4_data);
 static void synaptics_rmi4_empty_fn_list(struct synaptics_rmi4_data *rmi4_data);
 static void synaptics_rmi4_f1a_kfree(struct synaptics_rmi4_fn *fhandler);
-static int synaptics_get_debug_data(struct ts_rawdata_info *info,
+static int synaptics_get_debug_data(struct ts_diff_data_info* info,
 				    struct ts_cmd_node *out_cmd);
 static int synaptics_get_rawdata(struct ts_rawdata_info *info,
 				 struct ts_cmd_node *out_cmd);
@@ -1212,7 +1212,7 @@ static int synaptics_get_calibration_info(struct ts_calibration_info_param *info
 	return NO_ERR;
 }
 
-static int synaptics_get_debug_data(struct ts_rawdata_info *info,
+static int synaptics_get_debug_data(struct ts_diff_data_info* info,
 				    struct ts_cmd_node *out_cmd)
 {
 	int retval = 0;
@@ -1364,7 +1364,7 @@ static int synaptics_reconstruct_repair_recode(struct ts_oem_info_param *info)
 
 		if ((type == 0x00 && len == 0x00) ||(type == 0xFF && len == 0xFF)) {
 			memcpy(&(info->buff[offset*16]), tp_type_cmd, tp_type_cmd[1]*16);
-			TS_LOG_INFO("Will write the data to info_buff, offset is %s", offset);
+			TS_LOG_INFO("Will write the data to info_buff, offset is %d", offset);
 			break;
 		} else if( offset == TS_NV_STRUCTURE_REPAIR_OFFSET5 ) {
 			TS_LOG_INFO("%s repaire recode is full, could not write into the data\n", __func__);
@@ -1859,9 +1859,9 @@ static int synaptics_chip_get_info(struct ts_chip_info_param *info)
 	int index = 0;
 	int synaptics_rawdata_count = 0;
 	const char *raw_data_dts = NULL;
-	char *producer = NULL;
+	const char *producer = NULL;
 	int projectid_lenth = 0;
-	char *adv_width = NULL;
+	const char *adv_width = NULL;
 
 	ts_kit_anti_false_touch_param_achieve(chip_data);
 	if (rmi4_data->synaptics_chip_data->projectid_len) {
@@ -2264,15 +2264,7 @@ static int synaptics_parse_dts(struct device_node *device,
 	int index = 0;
 	int array_len = 0;
 	int value = 0;
-	/*chip_data->irq_gpio = of_get_named_gpio(device, SYNAPTCS_IRQ_GPIO, 0);
-	if (!gpio_is_valid(chip_data->irq_gpio)) {
-		TS_LOG_ERR("irq gpio is not valid, value is %d\n",
-			   chip_data->irq_gpio);
-	}
-	chip_data->reset_gpio = of_get_named_gpio(device, SYNAPTCS_RST_GPIO, 0);
-	if (!gpio_is_valid(chip_data->reset_gpio)) {
-		TS_LOG_ERR("reset gpio is not valid\n");
-	}*/
+
 	retval =
 	    of_property_read_u32(device, SYNAPTCS_IRQ_CFG,
 				 &chip_data->irq_config);
@@ -2364,7 +2356,7 @@ static int synaptics_parse_dts(struct device_node *device,
 				 &chip_data->flip_x);
 	if (retval) {
 		TS_LOG_INFO("device flip_x use default\n");
-		chip_data->flip_x = true;
+		chip_data->flip_x = 1;
 	}
 
 	retval =
@@ -2372,7 +2364,7 @@ static int synaptics_parse_dts(struct device_node *device,
 				 &chip_data->flip_y);
 	if (retval) {
 		TS_LOG_INFO("device flip_y use default\n");
-		chip_data->flip_y = true;
+		chip_data->flip_y = 1;
 	}
 
 	retval =
@@ -2409,7 +2401,7 @@ static int synaptics_parse_dts(struct device_node *device,
 	}
 	retval =
 	    of_property_read_string(device, SYNAPTICS_TEST_TYPE,
-				 &chip_data->tp_test_type);
+				 &chip_data->tp_test_type_dts);
 	if (retval) {
 		TS_LOG_INFO
 		    ("get device SYNAPTICS_TEST_TYPE not exit,use default value\n");
@@ -2914,7 +2906,7 @@ static int synaptics_chip_detect(struct ts_kit_platform_data *data)
 	/*power up the chip */
 	synaptics_power_on();
        retval = of_property_read_u32(rmi4_data->synaptics_chip_data->cnode , SYNAPTCS_SLAVE_ADDR,
-                                  &rmi4_data->synaptics_chip_data->ts_platform_data->client->addr);
+                                  &rmi4_data->synaptics_chip_data->ts_platform_data->chip_data->ic_status_reg);
        if (retval)
        {
            rmi4_data->synaptics_chip_data->ts_platform_data->client->addr = SYNAPTIC_DEFAULT_I2C_ADDR;

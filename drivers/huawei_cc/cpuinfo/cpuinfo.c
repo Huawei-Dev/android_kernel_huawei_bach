@@ -124,7 +124,7 @@ static void cpuinfo_get_mx_cx_mode(int *mx_mode, int *cx_mode)
 {
     struct device_node *np = NULL;
     static void *corner_addr = NULL;
-    union uni_corner_info corner={0};
+    union uni_corner_info corner = {{0}};
 
     np = of_find_compatible_node(NULL,
                                  NULL,
@@ -143,7 +143,7 @@ static void cpuinfo_get_mx_cx_mode(int *mx_mode, int *cx_mode)
         return;
     }
 
-    printk(KERN_CRIT "corner addr:%lx\n",corner_addr);
+    printk(KERN_CRIT "corner addr:%lx\n", (long unsigned int)corner_addr);
     corner.corner_value = __raw_readq(corner_addr);
 
     *mx_mode = corner.corner_info.mx_mode;
@@ -380,17 +380,16 @@ static int cpuinfo_probe(struct spmi_device *spmi)
     return 0;
 }
 
-static int cpuinfo_remove(struct spmi_device *pdev)
+static int cpuinfo_remove(struct spmi_device *sdev)
 {
     struct cpu_info_struct * cpuinfo;
+    const struct platform_device *pdev = (const struct platform_device *)sdev;
 
     cpuinfo = platform_get_drvdata(pdev);
 
-    if(cpuinfo)
-    {
+    if (cpuinfo)
         atomic_notifier_chain_unregister(&panic_notifier_list,
                                                 &cpuinfo->panic_blk);
-    }
 
     return 0;
 }

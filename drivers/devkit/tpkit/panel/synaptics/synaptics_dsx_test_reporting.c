@@ -35,7 +35,6 @@
 #define WATCHDOG_TIMEOUT_S 2
 #define FORCE_TIMEOUT_100MS 10
 #define MAX_I2C_MSG_LENS 0x3F
-/*#define STATUS_WORK_INTERVAL 20 /* ms */
 /*Add synaptics capacitor test function */
 #define MMITEST
 /*
@@ -1015,7 +1014,7 @@ static char *g_buf_debug_data;
 static char g_synaptics_trigger_log_flag;
 #endif
 
-static int synaptics_rmi4_f54_attention(void);
+static void synaptics_rmi4_f54_attention(void);
 
 struct f54_query {
 	union {
@@ -3273,13 +3272,7 @@ static int mmi_runtest(int report_type)
 		}
 		patience--;
 	}
-	retval = synaptics_rmi4_f54_attention();
-	if (retval) {
-		TS_LOG_ERR("synaptics_rmi4_f54_attention failed  retval=%d",
-			   retval);
-		goto test_exit;
-	}
-
+	synaptics_rmi4_f54_attention();
 	report_size = f54->report_size;
 
 	TS_LOG_INFO
@@ -3699,7 +3692,7 @@ exit:
 
 static ssize_t hw_synaptics_mmi_test_show(struct kobject *dev,
 					  struct kobj_attribute *attr,
-					  const char *buf)
+					  char *buf)
 {
 	struct synaptics_rmi4_data *rmi4_data = f54->rmi4_data;
 	struct device *cdev = &rmi4_data->input_dev->dev;
@@ -3712,7 +3705,7 @@ static ssize_t hw_synaptics_mmi_test_show(struct kobject *dev,
 
 static ssize_t hw_synaptics_debug_test_show(struct kobject *dev,
 					    struct kobj_attribute *attr,
-					    const char *buf)
+					    char *buf)
 {
 	struct synaptics_rmi4_data *rmi4_data = f54->rmi4_data;
 	struct device *cdev = &rmi4_data->input_dev->dev;
@@ -3725,7 +3718,7 @@ static ssize_t hw_synaptics_debug_test_show(struct kobject *dev,
 
 static ssize_t hw_synaptics_trigger_log_show(struct kobject *dev,
 					     struct kobj_attribute *attr,
-					     const char *buf)
+					     char *buf)
 {
 	TS_LOG_ERR("g_synaptics_trigger_log_flag show is %d\n",
 		   g_synaptics_trigger_log_flag);
@@ -3733,8 +3726,8 @@ static ssize_t hw_synaptics_trigger_log_show(struct kobject *dev,
 	return sprintf(buf, "%d\n", g_synaptics_trigger_log_flag);
 }
 
-static ssize_t hw_synaptics_trigger_log_store(struct device *dev,
-					      struct device_attribute *attr,
+static ssize_t hw_synaptics_trigger_log_store(struct kobject *dev,
+					      struct kobj_attribute *attr,
 					      const char *buf, size_t count)
 {
 	int retval;
@@ -4643,7 +4636,7 @@ exit_no_mem:
 	return -ENOMEM;
 }
 
-static int synaptics_rmi4_f54_status_work(struct work_struct *work)
+static void synaptics_rmi4_f54_status_work(struct work_struct *work)
 {
 	int retval;
 	unsigned char report_index[2];
@@ -4653,7 +4646,7 @@ static int synaptics_rmi4_f54_status_work(struct work_struct *work)
 	unsigned int report_size_temp = MAX_I2C_MSG_LENS;
 	unsigned char *report_data_temp = NULL;
 	if (f54->status != STATUS_BUSY)
-		return -EINVAL;
+		return;
 
 	set_report_size();
 	if (f54->report_size == 0) {
@@ -4732,13 +4725,11 @@ error_exit:
 	mutex_lock(&f54->status_mutex);
 	f54->status = retval;
 	mutex_unlock(&f54->status_mutex);
-
-	return retval;
 }
 
-static int synaptics_rmi4_f54_attention(void)
+static void synaptics_rmi4_f54_attention(void)
 {
-	return synaptics_rmi4_f54_status_work(NULL);
+	synaptics_rmi4_f54_status_work(NULL);
 }
 
 static void synaptics_rmi4_f54_set_regs(struct synaptics_rmi4_data *rmi4_data,

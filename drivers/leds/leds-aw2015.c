@@ -580,16 +580,14 @@ static int aw2015_led_remove(struct i2c_client *client)
     return 0;
 }
 /*lint -save -esym(119, aw2015_led_shutdown) -esym(119, aw2015_write)*/
-static int aw2015_led_shutdown(struct i2c_client *client)
+static void aw2015_led_shutdown(struct i2c_client *client)
 {
     struct aw2015_led *led_array = i2c_get_clientdata(client);
-    int ret = -1;
-    ret = aw2015_write(led_array, AW2015_REG_RESET, AW2015_LED_RESET_MASK);
+    int ret = aw2015_write(led_array, AW2015_REG_RESET, AW2015_LED_RESET_MASK);
     if (0 > ret){
-        return -EINVAL;
+        return;
     }
     dev_info(&client->dev, "[aw2015_led_shutdown]: soft reset\n");
-    return ret;
 }
 /*lint -restore*/
 static const struct i2c_device_id aw2015_led_id[] = {

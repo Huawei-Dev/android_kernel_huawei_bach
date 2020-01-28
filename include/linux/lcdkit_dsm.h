@@ -5,6 +5,7 @@
 
 #ifdef CONFIG_HUAWEI_DSM
 #include <dsm/dsm_pub.h>
+#include <linux/fb.h>
 #define  LCD_PWR_STAT_GOOD  0x000f
 struct lcd_pwr_status_t
 {

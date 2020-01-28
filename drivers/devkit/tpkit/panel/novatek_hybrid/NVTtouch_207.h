@@ -130,8 +130,8 @@ struct nvt_hybrid_ts_data {
 	uint16_t abs_y_max;
 	uint8_t x_num;
 	uint8_t y_num;
-	uint8_t ain_tx_num;
-	uint8_t ain_rx_num;
+	u32 ain_tx_num;
+	u32 ain_rx_num;
 	uint8_t max_touch_num;
 	uint8_t max_button_num;
 	uint32_t int_trigger_type;

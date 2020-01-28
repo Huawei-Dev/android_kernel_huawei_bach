@@ -1315,7 +1315,7 @@ static int himax_parse_dts(struct device_node *device, struct ts_kit_device_data
 	if(NULL == device||NULL == chip_data) {
 		return -1;
 	}
-	retval = of_property_read_u32(device, "reg", &chip_data->ts_platform_data->client->addr);
+	retval = of_property_read_u32(device, "reg", &chip_data->ic_status_reg);
 	if (retval) {
 		chip_data->ts_platform_data->client->addr = SLAVE_I2C_ADRR;
 		TS_LOG_INFO("Not define reg in Dts, use default\n");
@@ -1714,8 +1714,9 @@ static int himax_power_rst_init(void)
 {
 	struct himax_ts_data *ts = NULL;
 	uint8_t data[SLEEP_ON_BUF_LEN] = {0};
-	memset(data, 0x00, sizeof(data));
 	int retval = 0;
+
+	memset(data, 0x00, sizeof(data));
 
 	TS_LOG_INFO("%s: enter \n", __func__);
 	ts = g_himax_ts_data;

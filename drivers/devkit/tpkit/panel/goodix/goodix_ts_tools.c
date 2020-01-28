@@ -276,7 +276,7 @@ static ssize_t goodix_tool_write(struct file *filp, const char __user *buff, siz
     if (1 == cmd_head.wr)
     {
 	if (DATA_LENGTH < cmd_head.data_len) {
-		TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %lu\n!",
+		TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %02X\n!",
 					__func__, __LINE__, DATA_LENGTH);
 		return -EPERM;
 	}
@@ -319,8 +319,8 @@ static ssize_t goodix_tool_write(struct file *filp, const char __user *buff, siz
     else if (3 == cmd_head.wr)  //Write ic type
     {
 		if (DATA_LENGTH < cmd_head.data_len) {
-			TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %d\n!",
-						__func__,__LINE__,DATA_LENGTH);
+			TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %02X\n!",
+						__func__, __LINE__, DATA_LENGTH);
 			return -EPERM;
 		}
         ret = copy_from_user(&cmd_head.data[0], &buff[CMD_HEAD_LENGTH], cmd_head.data_len);
@@ -330,8 +330,8 @@ static ssize_t goodix_tool_write(struct file *filp, const char __user *buff, siz
             return -EPERM;
         }
 		if (sizeof(IC_TYPE) < cmd_head.data_len) {
-			TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %d\n",
-						__func__,__LINE__,sizeof(IC_TYPE));
+			TS_LOG_ERR("%s,%d:Data_len is to large, must no more than %lu\n",
+						__func__, __LINE__, sizeof(IC_TYPE));
 			return -EPERM;
 		}
         memcpy(IC_TYPE, cmd_head.data, cmd_head.data_len);

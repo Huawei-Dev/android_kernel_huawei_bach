@@ -190,6 +190,15 @@ static void ts_work_after_input(void)
 }
 void ts_report_input(struct ts_cmd_node* in_cmd, struct ts_cmd_node* out_cmd)
 {
+#if ANTI_FALSE_TOUCH_USE_PARAM_MAJOR_MINOR
+	struct aft_abs_param_major aft_abs_major;
+	int major = 0;
+	int minor = 0;
+#else
+	int x_y_distance = 0;
+	short tmp_distance = 0;
+	char *p = NULL;
+#endif
     struct ts_fingers* finger = NULL;
     struct input_dev* input_dev = g_ts_kit_platform_data.input_dev;
     struct anti_false_touch_param *local_param = NULL;
@@ -201,15 +210,6 @@ void ts_report_input(struct ts_cmd_node* in_cmd, struct ts_cmd_node* out_cmd)
 		return;
 	}
 	finger = &in_cmd->cmd_param.pub_params.report_info;
-#if ANTI_FALSE_TOUCH_USE_PARAM_MAJOR_MINOR
-	struct aft_abs_param_major aft_abs_major;
-	int major = 0;
-	int minor = 0;
-#else
-	int x_y_distance = 0;
-	short tmp_distance = 0;
-	char *p = NULL;
-#endif
 
 	if (g_ts_kit_platform_data.chip_data){
 		local_param = &(g_ts_kit_platform_data.chip_data->anti_false_touch_param_data);
@@ -587,14 +587,12 @@ bool ts_cmd_need_process(struct ts_cmd_node* cmd)
 
 int ts_kit_power_control_notify(enum ts_pm_type pm_type, int timeout)
 {
-    int error;
+    int error = 0;
     struct ts_cmd_node cmd;
     TS_LOG_INFO("ts_kit_power_control_notify called,pm_type is %d",pm_type);
     if (TS_UNINIT == atomic_read(&g_ts_kit_platform_data.state))
-    {
         TS_LOG_INFO("ts is not init");
-        return;
-    }
+
 #if defined (CONFIG_TEE_TUI)
     if (g_ts_kit_platform_data.chip_data->report_tui_enable && TS_BEFORE_SUSPEND == pm_type) {
     	  g_ts_kit_platform_data.chip_data->tui_set_flag |= 0x1;

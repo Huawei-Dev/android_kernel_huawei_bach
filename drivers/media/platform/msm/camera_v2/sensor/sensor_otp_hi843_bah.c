@@ -2926,17 +2926,13 @@ int hi843_bah_otp_func(struct msm_sensor_ctrl_t *s_ctrl,int index)
 	int rc = 0;
 	CMR_LOGW("%s: otp_function_lists[index].sensor_name is %s otp read\n", __func__,otp_function_lists[index].sensor_name);
 	CMR_LOGW("%s: s_ctrl.sensordata.sensor_name is %s otp read\n", __func__,s_ctrl->sensordata->sensor_name);
-	if (0 != strncmp(s_ctrl->sensordata->sensor_name, otp_function_lists[index].sensor_name,\
-		strlen(otp_function_lists[index].sensor_name))) {
+	if (0 != strncmp(s_ctrl->sensordata->sensor_name, otp_function_lists[index].sensor_name, strlen(otp_function_lists[index].sensor_name))) {
 		CMR_LOGE("%s: otp sensor_name is %s but sctrl sensor_name is %s \n", __func__,otp_function_lists[index].sensor_name,
 			s_ctrl->sensordata->sensor_name);
 		return -1;
 	}
 
-	if (0 == strncmp(otp_function_lists[index].sensor_name, "hi843_kingcome_h7b8_pad",
-		strlen("hi843_kingcome_h7b8_pad")) | \
-		(0 == strncmp(otp_function_lists[index].sensor_name, "hi843_jsl_6124_pad",
-		strlen("hi843_jsl_6124_pad")))) {
+	if ((0 == strncmp(otp_function_lists[index].sensor_name, "hi843_kingcome_h7b8_pad", strlen("hi843_kingcome_h7b8_pad"))) | (0 == strncmp(otp_function_lists[index].sensor_name, "hi843_jsl_6124_pad", strlen("hi843_jsl_6124_pad")))) {
 		is_back_camera_flag = false;
 	}
 

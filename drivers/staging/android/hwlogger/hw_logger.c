@@ -62,7 +62,7 @@ struct logger_log_tag {
 
 static struct logger_log_tag *log_tag;
 
-static int calc_iovc_ki_left(struct iovec *iov, int nr_segs);
+static int calc_iovc_ki_left(const struct iovec *iov, int nr_segs);
 
 typedef enum android_LogPriority {
 	ANDROID_LOG_UNKNOWN = 0,
@@ -510,7 +510,7 @@ static ssize_t hw_logger_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	struct timespec now;
 	ssize_t ret = 0;
 	unsigned long nr_segs = from->nr_segs;
-	struct iovec *iov  = from->iov;
+	const struct iovec *iov  = from->iov;
 
 	now = current_kernel_time();
 
@@ -1130,17 +1130,7 @@ static void __exit logger_exit(void)
 	}
 }
 
-static struct logger_log *get_log_from_name(const char *name)
-{
-	struct logger_log *log;
-
-	list_for_each_entry(log, &log_list, logs)
-	    if (!strcmp(log->misc.name, name))
-		return log;
-	return NULL;
-}
-
-static int calc_iovc_ki_left(struct iovec *iov, int nr_segs)
+static int calc_iovc_ki_left(const struct iovec *iov, int nr_segs)
 {
 	int ret = 0;
 	int seg;
@@ -1153,87 +1143,6 @@ static int calc_iovc_ki_left(struct iovec *iov, int nr_segs)
 	return ret;
 }
 
-ssize_t write_log_to_exception(const char *category, char level,
-			       const char *msg)
-{
-	struct logger_log *log = get_log_from_name(LOGGER_LOG_EXCEPTION);
-
-	struct logger_entry header;
-	struct timespec now;
-	ssize_t ret = 0;
-	struct iovec vec[4];
-	struct iovec *iov = vec;
-	int nr_segs = sizeof(vec) / sizeof(vec[0]);
-	int iovc_ki_left_len = 0;
-	kuid_t euid = { 0 };
-
-	pr_info("%s:%s\n", __func__, msg);
-	/*according to the arguments, fill the iovec struct  */
-	vec[0].iov_base = (unsigned char *)&level;
-	vec[0].iov_len = 1;
-
-	vec[1].iov_base = "message";
-	vec[1].iov_len = strlen("message");	/*here won't add \0*/
-
-	vec[2].iov_base = (void *)category;
-	vec[2].iov_len = strlen(category) + 1;
-
-	vec[3].iov_base = (void *)msg;
-	vec[3].iov_len = strlen(msg) + 1;
-
-	now = current_kernel_time();
-	iovc_ki_left_len = calc_iovc_ki_left(vec, nr_segs);
-
-	header.pid = 0;
-	header.tid = 0;
-	header.sec = now.tv_sec;
-	header.nsec = now.tv_nsec;
-	header.euid = euid;
-	header.len = min(iovc_ki_left_len, LOGGER_ENTRY_MAX_PAYLOAD);
-	header.hdr_size = sizeof(struct logger_entry);
-
-	/* null writes succeed, return zero */
-	if (unlikely(!header.len))
-		return 0;
-
-	if (unlikely(!log))
-		return 0;
-
-	mutex_lock(&log->mutex);
-
-	/*
-	 * Fix up any readers, pulling them forward to the first readable
-	 * entry after (what will be) the new write offset. We do this now
-	 * because if we partially fail, we can end up with clobbered log
-	 * entries that encroach on readable buffer.
-	 */
-	fix_up_readers(log, sizeof(struct logger_entry) + header.len);
-
-	do_write_log(log, &header, sizeof(struct logger_entry));
-
-	while (nr_segs-- > 0) {
-		size_t len;
-		ssize_t nr = 0;
-
-		/* figure out how much of this vector we can keep */
-		len = min_t(size_t, iov->iov_len, header.len - ret);
-
-		/* write out this segment's payload */
-		do_write_log(log, iov->iov_base, len);
-
-		iov++;
-		ret += nr;
-	}
-
-	mutex_unlock(&log->mutex);
-
-	/* wake up any blocked readers */
-	wake_up_interruptible(&log->wq);
-
-	return ret;
-}
-
-EXPORT_SYMBOL(write_log_to_exception);
 device_initcall(logger_init);
 module_exit(logger_exit);
 

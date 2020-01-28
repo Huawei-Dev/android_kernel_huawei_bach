@@ -1801,28 +1801,29 @@ int32_t msm_get_sensor_product_name(void *setting)
 {
     int32_t i = 0, rc = 0;
     int32_t  length = 0;
+    unsigned long copy = 0;
     struct msm_sensor_ctrl_t *s_ctrl = NULL;
     struct msm_support_product_name_info *product_name_info = (struct msm_support_product_name_info *)setting;
-    if(!product_name_info)
+    if (!product_name_info)
     {
         return -1;
     }
-    for(i = 0; i<MAX_SUPPORT_SENSOR_COUNT; i++)
+    for (i = 0; i < MAX_SUPPORT_SENSOR_COUNT; i++)
     {
         s_ctrl = g_sctrl[i];
-        if(s_ctrl == NULL)
+        if (s_ctrl == NULL)
         {
             break;
         }
-        if(!s_ctrl->product_name)
+        if (!s_ctrl->product_name)
         {
             rc = -1;
             pr_err("%s: don't support look up product name!\n",__func__);
             break;
         }
         length = strlen(s_ctrl->product_name);
-        copy_to_user(product_name_info->product_name_info[i],s_ctrl->product_name,length+1);
-        pr_info("%s: camera get product name is: %s \n",__func__,s_ctrl->product_name);
+        copy = copy_to_user(product_name_info->product_name_info[i], s_ctrl->product_name, length + 1);
+        pr_info("%s: camera get product name is: %s \n", __func__, s_ctrl->product_name);
     }
     return rc;
 }

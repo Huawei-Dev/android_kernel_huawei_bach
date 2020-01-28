@@ -259,12 +259,12 @@ enum FW_uptate_state
  * goodix_ts_ops - touch driver operations stub
  */
 struct goodix_ts_ops {
-	int (*i2c_write)(u16 addr, u8 * buffer, s32 len);
-	int (*i2c_read)(u16 addr, u8 * buffer, s32 len);
+	int (*i2c_write)(u16 addr, u8 * buffer, u16 len);
+	int (*i2c_read)(u16 addr, u8 * buffer, u16 len);
 	int (*chip_reset)(void);
 	int (*send_cmd)(u8 cmd, u8 data);
 	int (*send_cfg)(struct goodix_ts_config *cfg_ptr);
-	int (*i2c_read_dbl_check)(u16 addr, u8 * buffer, s32 len);
+	int (*i2c_read_dbl_check)(u16 addr, u8 * buffer, u16 len);
 	int (*read_version)(struct goodix_hw_info * hw_info);
 	int (*parse_cfg_data)(struct goodix_ts_data *ts,
 			char *cfg_type, u8 *cfg, int *cfg_len, u8 sid);
@@ -290,7 +290,8 @@ struct goodix_ts_ops {
  *		be used by firmware in holster state
  * @roi: finger sense data structure
  * @max_x/@max_y: max resolution in x/y direction
- * @vdd_value: analog voltage value
+ * @vdd_value
+: analog voltage value
  * @vio_value: digital voltage value
  * @flip_x/@flip_y: coordinates transformation
  * @rawdiff_mode: rawdiff mode, this mode is mainly used by
@@ -341,7 +342,7 @@ struct goodix_ts_data {
 // debug-
 	u8  fw_error;
 	u8  enter_update;
-	bool support_get_tp_color;/*for tp color */
+	u32 support_get_tp_color;/*for tp color */
 };
 
 extern struct goodix_ts_data *goodix_ts;
@@ -369,7 +370,7 @@ extern struct ts_kit_device_data 	*g_goodix_dev_data;
 									   }while(0)
 #define IS_NUM_OR_CHAR(x)    (((x) >= 'A' && (x) <= 'Z') || ((x) >= '0' && (x) <= '9'))
 
-#define GTP_DEBUG_ARRAY(array, num)    do{\                                         
+#define GTP_DEBUG_ARRAY(array, num)    do{\
 											u32 i;\
 											u8* a = array;\
 											if(GTP_DEBUG_ARRAY_ON)\
@@ -380,8 +381,8 @@ extern struct ts_kit_device_data 	*g_goodix_dev_data;
 													printk("%02x   ", (a)[i]);\
 													if ((i + 1 ) %10 == 0)\
 													{\
-														printk("\n");\ 
-													}\ 
+														printk("\n");\
+													}\
 												}\
 												printk("\n");\
 											}\

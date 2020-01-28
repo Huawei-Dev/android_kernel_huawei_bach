@@ -216,7 +216,7 @@ int  focal_start_test_tp(
 	struct focal_test_params *params,
 	struct ts_rawdata_info *info)
 {
-	char cap_test_num = 0;
+	unsigned char cap_test_num = 0;
 	int i = 0;
 	int ret = 0;
 	struct focal_test_result *test_results[FTS_MAX_CAP_TEST_NUM] = {0};
@@ -228,44 +228,44 @@ int  focal_start_test_tp(
 	}
 	//first test is i2c test which is completed in  focal_init_test_prm,so there count from 1;
 	/*  raw data test */
-	ret = focal_raw_data_test(params, &test_results[cap_test_num],cap_test_num+1);
-	if(ret){
+	ret = focal_raw_data_test(params, &test_results[cap_test_num], cap_test_num + 1);
+	if (ret) {
 		tp_cap_test_status = SOFTWARE_REASON;
-		strncpy(tp_test_failed_reason, "-software reason",TP_TEST_FAILED_REASON_LEN);
+		strncpy(tp_test_failed_reason, "-software reason", TP_TEST_FAILED_REASON_LEN);
 	}
 	cap_test_num++;
 	/*  cb data test */
-	ret = focal_cb_test(params, &test_results[cap_test_num],cap_test_num+1);
-	if(ret){
+	ret = focal_cb_test(params, &test_results[cap_test_num], cap_test_num + 1);
+	if (ret) {
 		tp_cap_test_status = SOFTWARE_REASON;
-		strncpy(tp_test_failed_reason, "-software reason",TP_TEST_FAILED_REASON_LEN);
+		strncpy(tp_test_failed_reason, "-software reason", TP_TEST_FAILED_REASON_LEN);
 	}
 	cap_test_num++;
-	if(FOCAL_FT8716 == g_focal_dev_data->ic_type)
+	if (FOCAL_FT8716 == g_focal_dev_data->ic_type)
 	{
 		/* open test */
-		ret = focal_open_test(params, &test_results[cap_test_num],cap_test_num+1);
-		if(ret){
+		ret = focal_open_test(params, &test_results[cap_test_num], cap_test_num + 1);
+		if (ret) {
 			tp_cap_test_status = SOFTWARE_REASON;
-			strncpy(tp_test_failed_reason, "-software reason",TP_TEST_FAILED_REASON_LEN);
+			strncpy(tp_test_failed_reason, "-software reason", TP_TEST_FAILED_REASON_LEN);
 		}
 		cap_test_num++;
 	}
 	/*  short test */
-	ret = focal_short_circuit_test(params, &test_results[cap_test_num],cap_test_num+1);
-	if(ret){
+	ret = focal_short_circuit_test(params, &test_results[cap_test_num], cap_test_num + 1);
+	if (ret) {
 		tp_cap_test_status = SOFTWARE_REASON;
-		strncpy(tp_test_failed_reason, "-software reason",TP_TEST_FAILED_REASON_LEN);
+		strncpy(tp_test_failed_reason, "-software reason", TP_TEST_FAILED_REASON_LEN);
 	}
  	cap_test_num++;
 
 	if(FOCAL_FT8607 == g_focal_dev_data->ic_type)
 	{
 		/* lcd_noise test */
-		ret = focal_lcd_noise_test(params, &test_results[cap_test_num],cap_test_num+1);
+		ret = focal_lcd_noise_test(params, &test_results[cap_test_num], cap_test_num + 1);
 		if(ret){
 			tp_cap_test_status = SOFTWARE_REASON;
-			strncpy(tp_test_failed_reason, "-software reason",TP_TEST_FAILED_REASON_LEN);
+			strncpy(tp_test_failed_reason, "-software reason", TP_TEST_FAILED_REASON_LEN);
 		}
 		cap_test_num++;
 	}

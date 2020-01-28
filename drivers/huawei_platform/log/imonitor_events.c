@@ -85,12 +85,12 @@ struct imonitor_eventobj {
 	/*time*/
 	long long time;
 	/*dynamic file path should be packed and uploaded*/
-	char *dynamic_path[MAX_PATH_NUMBER];
+	const char *dynamic_path[MAX_PATH_NUMBER];
 	/*
 	 * dynamic file path should be packed and uploaded, deleted
 	 * after packing and uploading
 	 */
-	char *dynamic_path_delete[MAX_PATH_NUMBER];
+	const char *dynamic_path_delete[MAX_PATH_NUMBER];
 };
 
 static char *imonitor_convert_string(struct imonitor_eventobj *eventobj);

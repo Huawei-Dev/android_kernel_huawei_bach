@@ -4709,12 +4709,13 @@ static int sdhci_msm_suspend(struct device *dev)
 	int sdio_cfg = 0;
 	ktime_t start = ktime_get();
 
-	if (gpio_is_valid(msm_host->pdata->status_gpio) &&
-		(msm_host->mmc->slot.cd_irq >= 0))
-		if (msm_host->pdata->huawei_sdcard_irq_wake)
+	if (gpio_is_valid(msm_host->pdata->status_gpio) && (msm_host->mmc->slot.cd_irq >= 0)) {
+		if (msm_host->pdata->huawei_sdcard_irq_wake) {
 			enable_irq_wake(msm_host->mmc->slot.cd_irq);
-		else
+		} else {
 			disable_irq(msm_host->mmc->slot.cd_irq);
+		}
+	}
 	if (pm_runtime_suspended(dev)) {
 		pr_debug("%s: %s: already runtime suspended\n",
 		mmc_hostname(host->mmc), __func__);
@@ -4743,12 +4744,13 @@ static int sdhci_msm_resume(struct device *dev)
 	int sdio_cfg = 0;
 	ktime_t start = ktime_get();
 
-	if (gpio_is_valid(msm_host->pdata->status_gpio) &&
-		(msm_host->mmc->slot.cd_irq >= 0))
-		if (msm_host->pdata->huawei_sdcard_irq_wake)
+	if (gpio_is_valid(msm_host->pdata->status_gpio) && (msm_host->mmc->slot.cd_irq >= 0)) {
+		if (msm_host->pdata->huawei_sdcard_irq_wake) {
 			disable_irq_wake(msm_host->mmc->slot.cd_irq);
-		else
+		} else {
 			enable_irq(msm_host->mmc->slot.cd_irq);
+		}
+	}
 	if (pm_runtime_suspended(dev)) {
 		pr_debug("%s: %s: runtime suspended, defer system resume\n",
 		mmc_hostname(host->mmc), __func__);

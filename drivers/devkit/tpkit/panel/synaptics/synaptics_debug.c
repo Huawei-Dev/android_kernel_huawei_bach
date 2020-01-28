@@ -131,8 +131,8 @@
 static char tp_test_failed_reason[TP_TEST_FAILED_REASON_LEN] = { "-software_reason" };
 static unsigned short report_rate_offset = 38;
 static char buf_f54test_result[F54_BUF_LEN] = { 0 };	/*store mmi test result*/
-static int *tx_delta_buf = NULL;
-static int *rx_delta_buf = NULL;
+static char *tx_delta_buf = NULL;
+static char *rx_delta_buf = NULL;
 
 extern char synaptics_raw_data_limit_flag;
 static int mmi_buf_size;
@@ -3209,6 +3209,7 @@ static int match_module_name(const char *module_name)
 			return -EINVAL;
 		}
 	}
+	return NO_ERR;
 }
 
 int synap_rmi4_f54_init(struct synaptics_rmi4_data *rmi4_data,

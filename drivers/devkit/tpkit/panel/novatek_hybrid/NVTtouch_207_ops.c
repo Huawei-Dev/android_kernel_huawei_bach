@@ -1030,7 +1030,7 @@ static int nvt_hybrid_parse_dts(struct device_node *device,
 	int read_val = 0;
 	const char *raw_data_dts = NULL;
 	const char *mp_selftest_mode_dts = NULL;
-	char *producer=NULL;
+	const char *producer = NULL;
 
 	retval =
 	    of_property_read_u32(device, NVT_HYBRID_IRQ_CFG,

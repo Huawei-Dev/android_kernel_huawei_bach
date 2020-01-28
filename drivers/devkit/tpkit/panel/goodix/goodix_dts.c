@@ -18,12 +18,12 @@ int goodix_parse_dts(struct goodix_ts_data *ts)
 	int ret = 0;
 
 	/* get tp color flag */
-	ret = of_property_read_u32(device,  "support_get_tp_color", &ts->support_get_tp_color);
+	ret = of_property_read_u32(device, "support_get_tp_color", &ts->support_get_tp_color);
 	if (ret) {
 		TS_LOG_INFO("%s, get device support_get_tp_color failed, will use default value: 0 \n ", __func__);
 		ts->support_get_tp_color = 0; //default 0: no need know tp color
 	}
-	TS_LOG_INFO("%s, support_get_tp_color = %d \n", __func__, ts->support_get_tp_color);
+	TS_LOG_INFO("%s, support_get_tp_color = %lu \n", __func__, (unsigned long)ts->support_get_tp_color);
 
 	ret = of_property_read_u32(device, GTP_PRAM_PROJECTID_ADDR, &ts->pram_projectid_addr);
 	if (ret) {
@@ -137,8 +137,8 @@ int goodix_parse_cfg_data(struct goodix_ts_data *ts,
 	if (!prop || !prop->value || *cfg_len == 0)
 		return -EINVAL;/* fail */
 	memcpy(cfg, prop->value, *cfg_len);
-	if (*cfg_len > GTP_CONFIG_ORG_LENGTH &&
-					cfg[EXTERN_CFG_OFFSET] & 0x40)
+	if ((*cfg_len > GTP_CONFIG_ORG_LENGTH) &&
+					(cfg[EXTERN_CFG_OFFSET] & 0x40))
 		/* extends config */
 		correct_len = GTP_CONFIG_ORG_LENGTH + GTP_CONFIG_EXT_LENGTH;
 	else
@@ -198,7 +198,7 @@ int goodix_chip_parse_config(struct device_node *device,
 	TS_LOG_INFO("gesture_supported = %d\n",chip_data->ts_platform_data->feature_info.wakeup_gesture_enable_info.switch_value);
 
 	ret = of_property_read_string(device, GTP_TEST_TYPE,
-				 &chip_data->tp_test_type);
+				 &chip_data->tp_test_type_dts);
 	if (ret) {
 		GTP_INFO
 		    ("get device tp_test_type not exit,use default value");

@@ -478,8 +478,8 @@ struct ts_rawdata_info
     int buff[TS_RAWDATA_BUFF_MAX];
     int buff_3d[TS_RAWDATA_BUFF_MAX];
     char result[TS_RAWDATA_RESULT_MAX];
-	int *tx_delta_buf;
-	int *rx_delta_buf;
+    char *tx_delta_buf;
+    char *rx_delta_buf;
 };
 struct ts_calibration_data_info {
 	int status;
@@ -557,7 +557,7 @@ struct ts_charger_info
 
 struct ts_special_hardware_test_info
 {
-    u8 switch_value;
+    u32 switch_value;
     int op_action;
     int status;
     char* result;
@@ -565,31 +565,31 @@ struct ts_special_hardware_test_info
 
 struct ts_glove_info
 {
-    u8 glove_supported;
+    u32 glove_supported;
     u8 glove_switch;
     int op_action;
     int status;
-    u16 glove_switch_addr;
+    u32 glove_switch_addr;
     u16 glove_switch_bit;
 };
 
 struct ts_holster_info
 {
-    u8 holster_supported;
+    u32 holster_supported;
     u8 holster_switch;
     int op_action;
     int status;
-    u16 holster_switch_addr;
+    u32 holster_switch_addr;
     u16 holster_switch_bit;
 };
 
 struct ts_roi_info
 {
-    u8 roi_supported;
+    u32 roi_supported;
     u8 roi_switch;
     int op_action;
     int status;
-    u16 roi_control_addr;
+    u32 roi_control_addr;
     u8 roi_control_bit;
     u16 roi_data_addr;
 };
@@ -614,7 +614,7 @@ struct ts_easy_wakeup_info
 
 struct ts_wakeup_gesture_enable_info
 {
-    u8 switch_value;
+    u32 switch_value;
     int op_action;
     int status;
 };
@@ -860,11 +860,11 @@ struct ts_kit_device_data
 	bool is_direct_proc_cmd;
     bool is_i2c_one_byte;
     bool is_new_oem_structure;
-    bool disable_reset;
+    u32 disable_reset;
     bool is_in_cell;
     bool report_tui_enable;
     u8 tui_set_flag;
-    bool need_wd_check_status;
+    u32 need_wd_check_status;
     int check_status_watchdog_timeout;
     int rawdata_arrange_swap;
     int rawdata_get_timeout;
@@ -873,6 +873,7 @@ struct ts_kit_device_data
     char module_name[MAX_STR_LEN];
     char version_name[MAX_STR_LEN];
     char tp_test_type[TS_CAP_TEST_TYPE_LEN];
+    const char *tp_test_type_dts;
     struct device_node* cnode;
     struct ts_device_ops* ops;
     struct ts_easy_wakeup_info easy_wakeup_info;
@@ -896,8 +897,8 @@ struct ts_kit_device_data
     int y_max;
     int x_max_mt;
     int y_max_mt;
-    bool flip_x;
-    bool flip_y;
+    u32 flip_x;
+    u32 flip_y;
     int reset_delay;
     int reg_num;
     u8 reg_values[TS_MAX_REG_VALUE_NUM];

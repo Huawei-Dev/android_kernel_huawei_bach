@@ -451,9 +451,9 @@ struct lcdkit_panel_infos
     struct lcdkit_dsi_panel_cmds checksum_enable_cmds;
     struct lcdkit_dsi_panel_cmds checksum_disable_cmds;
     struct lcdkit_arrays_data checksum_value;
+    struct lcdkit_arrays_data checksum_read_again;
     u8 checksum_pic_num;
     u8 checksum_support;
-    u8 checksum_read_again;
 
     /*dynamic sram check*/
     struct lcdkit_dsi_panel_cmds dynamic_sram_check_enter_cmds;
@@ -586,7 +586,7 @@ struct lcdkit_panel_infos
     bool display_on_need_send;
 
     u8 dis_on_cmds_delay_margin_support;
-    unsigned long dis_on_cmds_delay_margin_time;
+    u32 dis_on_cmds_delay_margin_time;
     bool dis_on_cmds_panel_on_tag;
     struct timeval dis_on_cmds_record_tv;
     /*hiace*/
@@ -738,13 +738,13 @@ struct lcdkit_panel_data
     ssize_t (*lcdkit_amoled_hbm_ctrl_show)(char* buf);
     ssize_t (*lcdkit_amoled_hbm_ctrl_store)(void* pdata, const char* buf);
     ssize_t (*lcdkit_oem_info_show)(void* pdata, char* buf);
-    ssize_t (*lcdkit_oem_info_store)(void* pdata, const char* buf);
+    ssize_t (*lcdkit_oem_info_store)(void* pdata, char* buf);
     ssize_t (*lcdkit_support_mode_show)(char* buf);
     ssize_t (*lcdkit_support_mode_store)(const char* buf);
     ssize_t (*lcdkit_support_checkmode_show)(char* buf);
     ssize_t (*lcdkit_test_config_show)(void* pdata, char* buf);
     ssize_t (*lcdkit_test_config_store)(const char* buf);
-    ssize_t (*lcdkit_ce_mode_show)(struct platform_device *pdev, char* buf);
+    ssize_t (*lcdkit_ce_mode_show)(void* pdata, char* buf);
     ssize_t (*lcdkit_ce_mode_store)(void* pdata, const char* buf, size_t count);
     ssize_t (*lcdkit_reg_read_show)(void* pdata, char* buf);
     ssize_t (*lcdkit_reg_read_store)(void* pdata, const char *buf);

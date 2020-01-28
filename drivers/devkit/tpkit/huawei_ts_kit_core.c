@@ -386,8 +386,8 @@ static void rawdata_proc_printf(struct seq_file *m, struct ts_rawdata_info *info
 		seq_printf(m, "selfcap singleenddelta end\n");
 	}
 	if (g_ts_kit_platform_data.chip_data->trx_delta_test_support) {
-			seq_printf(m, "%d\n", info->tx_delta_buf);
-			seq_printf(m, "%d\n", info->rx_delta_buf);
+			seq_printf(m, "%s\n", info->tx_delta_buf);
+			seq_printf(m, "%s\n", info->rx_delta_buf);
 	}
 
 	return;
@@ -601,13 +601,13 @@ static int rawdata_proc_show(struct seq_file *m, void *v)
 		tx_rx_delta_size);
 
 	if (trx_delta_test_support) {
-		info->tx_delta_buf = (int *)kzalloc(tx_rx_delta_size, GFP_KERNEL);
+		info->tx_delta_buf = (char *)kzalloc(tx_rx_delta_size, GFP_KERNEL);
 		if (!info->tx_delta_buf) {
 			TS_LOG_ERR("malloc failed\n");
 			error = -ENOMEM;
 			goto out;
 		}
-		info->rx_delta_buf = (int *)kzalloc(tx_rx_delta_size, GFP_KERNEL);
+		info->rx_delta_buf = (char *)kzalloc(tx_rx_delta_size, GFP_KERNEL);
 		if (!info->rx_delta_buf) {
 			TS_LOG_ERR("malloc failed\n");
 			error = -ENOMEM;
@@ -1614,7 +1614,7 @@ static int fb_notifier_callback(struct notifier_block* self, unsigned long event
     unsigned char ts_state = 0;
     int times = 0;
 	
-    TS_LOG_INFO("tpkit fb_callback called,ic_type is %d,pt_flag is %d,event is %d\n", g_tskit_ic_type, g_tskit_pt_station_flag, event);
+    TS_LOG_INFO("tpkit fb_callback called,ic_type is %d,pt_flag is %d,event is %lu\n", g_tskit_ic_type, g_tskit_pt_station_flag, event);
     if (g_tskit_ic_type || g_tskit_pt_station_flag)
     { 
     	 TS_LOG_INFO("fb_notifier_callback do not need to do, return\n");
@@ -2273,10 +2273,11 @@ static void ts_kit_status_check_init(void)
 static int ts_send_init_cmd(void)
 {
 	int error = NO_ERR;
+	struct ts_cmd_node cmd;
+
 	TS_LOG_INFO("%s Enter\n", __func__);
 	if(g_ts_kit_platform_data.chip_data->is_direct_proc_cmd){
 		g_ts_kit_platform_data.chip_data->is_can_device_use_int = true;
-		struct ts_cmd_node cmd;
 		cmd.command = TS_TP_INIT;
 		error = ts_kit_put_one_cmd(&cmd, NO_SYNC_TIMEOUT);
 		if (error) {
@@ -2297,11 +2298,10 @@ static void proc_init_cmd(void){
 static void tp_init_work_fn(struct work_struct *work){
 	struct ts_cmd_node use_cmd;
 	int i = TS_CMD_QUEUE_SIZE;
-	struct ts_cmd_queue *q;
 	unsigned long flags;
 	struct ts_cmd_node *cmd = &use_cmd;
 	struct ts_kit_device_data *dev = g_ts_kit_platform_data.chip_data;
-	q = &g_ts_kit_platform_data.no_int_queue;
+	struct ts_cmd_queue *q = &g_ts_kit_platform_data.no_int_queue;
 	int error = NO_ERR;
 	//Call chip init
 	g_ts_kit_platform_data.chip_data->isbootupdate_finish = false;
@@ -2670,6 +2670,8 @@ out:
 int ts_kit_proc_command_directly(struct ts_cmd_node *cmd)
 {
 	int error = NO_ERR;
+	struct ts_cmd_node outcmd;
+
 	TS_LOG_DEBUG("%s Enter\n",__func__);
 	/*Do not use cmd->sync in this func, setting it as null*/
 	cmd->sync = NULL;
@@ -2678,7 +2680,7 @@ int ts_kit_proc_command_directly(struct ts_cmd_node *cmd)
 		error = -EIO;
 		goto out;
 	}
-	struct ts_cmd_node outcmd;
+
 	mutex_lock(&g_ts_kit_platform_data.chip_data->device_call_lock);
 
 	switch (cmd->command) {

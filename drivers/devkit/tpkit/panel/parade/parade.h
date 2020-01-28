@@ -1253,6 +1253,8 @@ enum parade_cmd_status {
 	CY_CMD_STATUS_FAILURE,
 };
 
+struct parade_oem_data;
+
 struct parade_oem_ops {
          int (*suspend)(struct parade_oem_data *parade_oem_data);
          int (*resume)(struct parade_oem_data *parade_oem_data);
