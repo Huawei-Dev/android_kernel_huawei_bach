@@ -2,6 +2,7 @@
 #ifndef LINUX_SPI_FINGERPRINT_H
 #define LINUX_SPI_FINGERPRINT_H
 
+#include <linux/atomic.h>
 
 #define EVENT_HOLD   28
 #define EVENT_CLICK  174
@@ -92,7 +93,7 @@ struct fp_data
     int event_type;
     int event_code;
     struct mutex lock;
-    bool wakeup_enabled;
+    atomic_t wakeup_enabled;
     bool read_image_flag;
     unsigned int sensor_id;
     unsigned int autotest_input;

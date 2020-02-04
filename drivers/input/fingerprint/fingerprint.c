@@ -238,7 +238,7 @@ static irqreturn_t fingerprint_irq_handler(int irq, void* handle)
 
     smp_rmb();
 
-    if (fingerprint->wakeup_enabled )
+    if (atomic_read(&fingerprint->wakeup_enabled))
     {
         wake_lock_timeout(&fingerprint->ttw_wl, msecs_to_jiffies(fingerprint->irq_hold_time));
     }
@@ -796,11 +796,11 @@ static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long
 
             if (key == 1)
             {
-                fingerprint->wakeup_enabled=true;
+                atomic_set(&fingerprint->wakeup_enabled, 1);
             }
             else
             {
-                fingerprint->wakeup_enabled=false;
+                atomic_set(&fingerprint->wakeup_enabled, 0);
             }
 
             fpc_log_info("FP_IOC_CMD_SET_WAKELOCK_STATUS key = %d\n", key);
@@ -1081,7 +1081,7 @@ static int fingerprint_probe(struct spi_device* spi)
         goto exit;
     }
 
-    fingerprint->wakeup_enabled = false;
+    atomic_set(&fingerprint->wakeup_enabled, 0);
 
     fingerprint->pf_dev= platform_device_alloc(FP_DEV_NAME, -1);
     if (!fingerprint->pf_dev)
@@ -1130,7 +1130,7 @@ static int fingerprint_probe(struct spi_device* spi)
 
     /* Request that the interrupt should be wakeable */
     enable_irq_wake(fingerprint->irq);
-    fingerprint->wakeup_enabled = true;
+    atomic_set(&fingerprint->wakeup_enabled, 1);
     fingerprint->snr_stat = 0;
 
 
