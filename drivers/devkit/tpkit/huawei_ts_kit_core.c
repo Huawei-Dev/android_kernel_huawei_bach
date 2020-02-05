@@ -27,6 +27,7 @@
 #if defined(CONFIG_FB)
 #include <linux/notifier.h>
 #include <linux/fb.h>
+#include "../lcdkit/core/common/qcom/lcdkit_dsi_status.h"
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 #include <linux/earlysuspend.h>
 #endif
@@ -1605,7 +1606,7 @@ static void ts_kit_charger_notifier_register(void)
 #endif
 
 #if defined(CONFIG_FB)
-static int fb_notifier_callback(struct notifier_block* self, unsigned long event, void* data)
+int fb_notifier_callback(struct notifier_block* self, unsigned long event, void* data)
 {
     int error = NO_ERR;
     int i;

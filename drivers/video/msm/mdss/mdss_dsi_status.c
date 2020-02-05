@@ -188,7 +188,7 @@ int __init mdss_dsi_status_init(void)
 		return -ENOMEM;
 	}
 
-	ps_data->fb_notifier.notifier_call = fb_event_callback;
+	ps_data->fb_notifier.notifier_call = fb_notifier_callback;
 
 	rc = fb_register_client(&ps_data->fb_notifier);
 	if (rc < 0) {
