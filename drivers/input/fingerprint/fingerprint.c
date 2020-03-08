@@ -180,34 +180,34 @@ static ssize_t fingerprint_chip_info_show(struct device *device, struct device_a
             ret = of_property_read_string(np, "fingerprint,moduleid_low", &module_info);
             if (ret)
             {
-                strncpy(module, "NN", 3);
+                strncpy(module, "NN", sizeof(module));
                 fpc_log_err("failed to get moduleid_low from device tree\n");
                 break;
             }
-            strncpy(module, module_info, 3);
+            strncpy(module, module_info, sizeof(module));
             break;
         case MODULEID_HIGH:
             ret = of_property_read_string(np, "fingerprint,moduleid_high", &module_info);
             if (ret)
             {
-                strncpy(module, "NN", 3);
+                strncpy(module, "NN", sizeof(module));
                 fpc_log_err("failed to get moduleid_high from device tree\n");
                 break;
             }
-            strncpy(module, module_info, 3);
+            strncpy(module, module_info, sizeof(module));
             break;
         case MODULEID_FLOATING:
             ret = of_property_read_string(np, "fingerprint,moduleid_float", &module_info);
             if (ret)
             {
-                strncpy(module, "NN",3);
+                strncpy(module, "NN", sizeof(module));
                 fpc_log_err("failed to get moduleid_float from device tree\n");
                 break;
             }
-            strncpy(module, module_info, 3);
+            strncpy(module, module_info, sizeof(module));
             break;
         default:
-            strncpy(module, "NN", 3);
+            strncpy(module, "NN", sizeof(module));
             break;
     }
     sprintf(sensor_id, "%x", fingerprint->sensor_id);
@@ -745,6 +745,12 @@ static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long
     int status;
     unsigned int sensor_id;
     fingerprint = (struct fp_data*)file->private_data;
+    
+    if (fingerprint == NULL)
+    {
+        fpc_log_err("%s fingerprint is NULL\n", __func__);
+        return -EFAULT;
+    }
 
     if (_IOC_TYPE(cmd) != FP_IOC_MAGIC)
     { return -ENOTTY; }
@@ -768,6 +774,11 @@ static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long
                 return -EFAULT;
             }
 
+            if (key < 0 || key > 255)
+            {
+                fpc_log_err("%s nav key is %d.\n", __func__ , key);
+                return -EFAULT;
+            }
             fingerprint_input_report(fingerprint, key);
             fpc_log_info("FP_IOC_CMD_SEND_UEVENT\n");
             break;
@@ -775,6 +786,11 @@ static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long
         case FP_IOC_CMD_GET_IRQ_STATUS:
 
             status = fingerprint_get_irq_status(fingerprint);
+            if (status != 0 && status != 1)
+            {
+                fpc_log_err("%s fingerprint irq is %d.\n", __func__ , status);
+                return -EFAULT;
+            }
 
             error = copy_to_user(argp, &status, sizeof(status));
 
