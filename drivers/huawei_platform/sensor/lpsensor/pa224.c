@@ -34,7 +34,6 @@
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
 #include <huawei_platform/sensor/pa224.h>
-//#include <huawei_platform/sensor/hw_sensor_info.h>
 #include <linux/regulator/consumer.h>
 #include <linux/of_gpio.h>
 #include <linux/sensors.h>
@@ -101,7 +100,7 @@ static unsigned int low_threshold = 0;
 static unsigned int middle_threshold = 0;
 static unsigned int calibration_threshold = 0;
 
- struct ls_test_excep{
+ struct ls_test_excep {
 	int i2c_scl_val;		/* when i2c transfer err, read the gpio value*/
 	int i2c_sda_val;
 	int vdd_mv;
@@ -122,6 +121,7 @@ static unsigned int calibration_threshold = 0;
 	struct mutex dsm_lock;
 	char *reg_buf;
 };
+
 struct txc_pa2240_data {
 	struct i2c_client *client;
 	/*to protect the i2c read and write operation*/
@@ -173,6 +173,7 @@ struct txc_pa2240_data {
 
 	bool device_exist;
 };
+
 static struct sensors_classdev sensors_proximity_cdev = {
 	.name = "pa2240-proximity",
 	.vendor = "txc",
@@ -230,29 +231,53 @@ static struct dsm_dev dsm_ps_pa2240 = {
 
 static void txc_pa2240_dsm_read_regs(struct txc_pa2240_data *data)
 {
-	struct ls_test_excep *excep = &data->ls_test_exception;
+	struct ls_test_excep *excep = NULL;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
 	/*
 	* read all regs to buf
 	*/
-	txc_pa2240_print_reg_buf(&data->client->dev,&txc_pa2240_show_regs, excep->reg_buf);
+	txc_pa2240_print_reg_buf(&data->client->dev, &txc_pa2240_show_regs, excep->reg_buf);
 }
 
 
 static int txc_pa2240_dsm_report_i2c(struct txc_pa2240_data *data)
 {
-	struct ls_test_excep *excep = &data->ls_test_exception;
+	struct ls_test_excep *excep = NULL;
 
 	ssize_t size = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	size = dsm_client_record(txc_pa2240_ps_dclient,
 				"i2c_scl_val=%d,i2c_sda_val=%d,vdd = %d, vdd_status = %d\n"
 				"vio=%d, vio_status=%d, excep_num=%d, i2c_err_num=%d\n"
-				,excep->i2c_scl_val,excep->i2c_sda_val,excep->vdd_mv,excep->vdd_status
-				,excep->vio_mv,excep->vio_status,excep->excep_num,excep->i2c_err_num);
+				, excep->i2c_scl_val, excep->i2c_sda_val, excep->vdd_mv,excep->vdd_status
+				, excep->vio_mv, excep->vio_status, excep->excep_num, excep->i2c_err_num);
 
 	/*if device is not probe successfully or client is null, don't notify dsm work func*/
-	if(!data->device_exist  || txc_pa2240_ps_dclient == NULL){
+	if (!data->device_exist  || (txc_pa2240_ps_dclient == NULL)) {
 		return -ENODEV;
 	}
 
@@ -262,10 +287,24 @@ static int txc_pa2240_dsm_report_i2c(struct txc_pa2240_data *data)
 
 static int txc_pa2240_dsm_report_wrong_irq(struct txc_pa2240_data *data)
 {
-	struct ls_test_excep *excep = &data->ls_test_exception;
-	int irq_gpio = data->platform_data->irq_gpio;
-	ssize_t size;
+	struct ls_test_excep *excep = NULL;
+	int irq_gpio = 0;
+	ssize_t size = 0;
 
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or platform_data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	irq_gpio = data->platform_data->irq_gpio;
 
 	/*
 	*	read  regs and irq gpio
@@ -274,7 +313,7 @@ static int txc_pa2240_dsm_report_wrong_irq(struct txc_pa2240_data *data)
 	excep->irq_val = gpio_get_value(irq_gpio);
 
 
-	size = dsm_client_record( txc_pa2240_ps_dclient,"irq_pin = %d\n regs:%s \n",
+	size = dsm_client_record( txc_pa2240_ps_dclient, "irq_pin = %d\n regs:%s \n",
 		excep->irq_val, excep->reg_buf);
 
 	TXC_PA2240_ERR("dsm error-> irq_pin = %d\n regs:%s\n",
@@ -286,8 +325,21 @@ static int txc_pa2240_dsm_report_wrong_irq(struct txc_pa2240_data *data)
 
 static int txc_pa2240_dsm_report_not_change_threshold(struct txc_pa2240_data *data)
 {
-	struct ls_test_excep *excep = &data->ls_test_exception;
+	struct ls_test_excep *excep = NULL;
 	ssize_t size = 0;
+	
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or platform_data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	txc_pa2240_dsm_read_regs(data);
 	excep->irq_val = gpio_get_value(data->platform_data->irq_gpio);
@@ -306,6 +358,12 @@ static int txc_pa2240_dsm_report_not_change_threshold(struct txc_pa2240_data *da
 static int txc_pa2240_dsm_report_no_irq(struct txc_pa2240_data *data)
 {
 	ssize_t size = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	size = txc_pa2240_dsm_report_wrong_irq(data);
 
@@ -315,17 +373,23 @@ static int txc_pa2240_dsm_report_no_irq(struct txc_pa2240_data *data)
 static int txc_pa2240_dsm_report_err(int errno,struct txc_pa2240_data *data)
 {
 	int size = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	if(dsm_client_ocuppy(txc_pa2240_ps_dclient))
+	if (dsm_client_ocuppy(txc_pa2240_ps_dclient))
 	{
 		/* buffer is busy */
-		TXC_PA2240_ERR("%s: buffer is busy!, errno = %d\n", __func__,errno);
+		TXC_PA2240_ERR("%s: buffer is busy!, errno = %d\n", __func__, errno);
 		return -EBUSY;
 	}
 
 	TXC_PA2240_INFO("dsm error, errno = %d \n", errno);
 
-	switch(errno){
+	switch (errno) {
 		case DSM_LPS_I2C_ERROR:
 			size = txc_pa2240_dsm_report_i2c(data);
 			break;
@@ -346,19 +410,30 @@ static int txc_pa2240_dsm_report_err(int errno,struct txc_pa2240_data *data)
 			break;
 
 	}
-	if(size > -1)
+	if (size > -1)
 	{
 		dsm_client_notify(txc_pa2240_ps_dclient, errno);
-		TXC_PA2240_ERR("%s:line:%d,size = %d\n",__func__,__LINE__,size);
+		TXC_PA2240_ERR("%s:line:%d,size = %d\n", __func__, __LINE__, size);
 	}
 	return size;
 }
 
 static void txc_pa2240_dsm_no_irq_check(struct txc_pa2240_data *data)
 {
-	struct ls_test_excep *excep = &data->ls_test_exception;
+	struct ls_test_excep *excep = NULL;
 
-
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	/* add this code segment to enable ps func
 	*	irq gpio status
 	*/
@@ -370,7 +445,19 @@ static void txc_pa2240_dsm_no_irq_check(struct txc_pa2240_data *data)
 
 static void txc_pa2240_dsm_save_threshold(struct txc_pa2240_data *data, int high, int low)
 {
-	struct ls_test_excep *excep = &data->ls_test_exception;
+	struct ls_test_excep *excep = NULL;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
 	mutex_lock(&excep->dsm_lock);
 	excep->last_high_threshold = high;
@@ -380,11 +467,22 @@ static void txc_pa2240_dsm_save_threshold(struct txc_pa2240_data *data, int high
 
 static void txc_pa2240_dsm_no_update_threhold_check(struct txc_pa2240_data *data)
 {
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	schedule_delayed_work(&data->dsm_work, msecs_to_jiffies(10));
 }
 
 static void txc_pa2240_dsm_change_ps_enable_status(struct txc_pa2240_data *data)
 {
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
 	/*
 	*	add this code segment to report ps event.
 	*/
@@ -397,7 +495,19 @@ static int txc_pa2240_dump_i2c_exception_status(struct txc_pa2240_data *data)
 {
 	int ret = 0;
 	/* print pm status and i2c gpio status*/
-	struct ls_test_excep *excep = &data->ls_test_exception;
+	struct ls_test_excep *excep = NULL;
+	
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or platform data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (data->vdd == NULL) {
 		return -ENXIO;
@@ -415,32 +525,32 @@ static int txc_pa2240_dump_i2c_exception_status(struct txc_pa2240_data *data)
 
 	/* get regulator's status*/
 	excep->vdd_status = regulator_is_enabled(data->vdd);
-	if(excep->vdd_status < 0){
-		TXC_PA2240_ERR("%s,line %d:regulator_is_enabled vdd failed\n",__func__,__LINE__);
+	if (excep->vdd_status < 0) {
+		TXC_PA2240_ERR("%s,line %d:regulator_is_enabled vdd failed\n", __func__, __LINE__);
 	}
 	excep->vio_status = regulator_is_enabled(data->vio);
-	if(excep->vio_status < 0){
-		TXC_PA2240_ERR("%s,line %d:regulator_is_enabled vio failed\n",__func__,__LINE__);
+	if (excep->vio_status < 0) {
+		TXC_PA2240_ERR("%s,line %d:regulator_is_enabled vio failed\n", __func__, __LINE__);
 	}
 
 	/* get regulator's value*/
 	excep->vdd_mv = regulator_get_voltage(data->vdd)/1000;
-	if(excep->vdd_mv < 0){
-		TXC_PA2240_ERR("%s,line %d:regulator_get_voltage vdd failed\n",__func__,__LINE__);
+	if (excep->vdd_mv < 0) {
+		TXC_PA2240_ERR("%s,line %d:regulator_get_voltage vdd failed\n", __func__, __LINE__);
 	}
 
 	excep->vio_mv = regulator_get_voltage(data->vio)/1000;
-	if(excep->vio_mv < 0){
-		TXC_PA2240_ERR("%s,line %d:regulator_get_voltage vio failed\n",__func__,__LINE__);
+	if (excep->vio_mv < 0) {
+		TXC_PA2240_ERR("%s,line %d:regulator_get_voltage vio failed\n", __func__, __LINE__);
 	}
 
 	/* report i2c err info */
-	ret = txc_pa2240_dsm_report_err(DSM_LPS_I2C_ERROR,data);
+	ret = txc_pa2240_dsm_report_err(DSM_LPS_I2C_ERROR, data);
 
 	TXC_PA2240_INFO("%s,line %d:i2c_scl_val=%d,i2c_sda_val=%d,vdd = %d, vdd_status = %d\n"
-			"vio=%d, vio_status=%d, excep_num=%d, i2c_err_num=%d",__func__,__LINE__
-			,excep->i2c_scl_val,excep->i2c_sda_val,excep->vdd_mv,excep->vdd_status
-			,excep->vio_mv,excep->vio_status,excep->excep_num,excep->i2c_err_num);
+			"vio=%d, vio_status=%d, excep_num=%d, i2c_err_num=%d", __func__, __LINE__
+			,excep->i2c_scl_val, excep->i2c_sda_val, excep->vdd_mv, excep->vdd_status
+			,excep->vio_mv, excep->vio_status, excep->excep_num, excep->i2c_err_num);
 
 	excep->i2c_err_num = 0;
 
@@ -448,9 +558,13 @@ static int txc_pa2240_dump_i2c_exception_status(struct txc_pa2240_data *data)
 
 }
 
-
 static void txc_pa2240_report_i2c_info(struct txc_pa2240_data* data, int ret)
 {
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
 	data->ls_test_exception.i2c_err_num = ret;
 	txc_pa2240_dump_i2c_exception_status(data);
 }
@@ -465,59 +579,93 @@ static void txc_pa2240_report_i2c_info(struct txc_pa2240_data* data, int ret)
 *************************************************/
 static void txc_pa2240_dsm_irq_excep_work(struct work_struct *work)
 {
-	struct txc_pa2240_data *data =
-		container_of((struct delayed_work *)work, struct txc_pa2240_data, dsm_irq_work);
+	struct txc_pa2240_data *data = NULL;
+	struct ls_test_excep *excep = NULL;
+	
+	if (work == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	data = container_of((struct delayed_work *)work, struct txc_pa2240_data, dsm_irq_work);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+ 
+	excep = &data->ls_test_exception;
+	if (excep == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
-	struct ls_test_excep *excep = &data->ls_test_exception;
-
-			if(!excep->ps_report_flag){
-				/*
-				* report dsm err, no irq occured after ps enabled.
-				*/
-				txc_pa2240_dsm_report_err(DSM_LPS_ENABLED_IRQ_ERROR,data);
-
-			}
+	if (!excep->ps_report_flag) {
+		/*
+		* report dsm err, no irq occured after ps enabled.
+		*/
+		txc_pa2240_dsm_report_err(DSM_LPS_ENABLED_IRQ_ERROR, data);
+	}
 }
 
 static void txc_pa2240_excep_work(struct work_struct *work)
 {
-	struct txc_pa2240_data *data =
-		container_of((struct delayed_work *)work, struct txc_pa2240_data, dsm_work);
-	struct i2c_client *client = data->client;
-	int high_threshold;
-	int low_threshold;
+	struct txc_pa2240_data *data = NULL;
+	struct i2c_client *client = NULL;
+	int high_threshold = 0;
+	int low_threshold = 0;
+	
+	if (work == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	data = container_of((struct delayed_work *)work, struct txc_pa2240_data, dsm_work);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+ 
+	client = data->client;
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
-	/*
-	*	read high and low threshold, save them.
-	*/
-	//low_threshold = txc_pa2240_i2c_read(client,APDS993X_PILTL_REG,APDS993X_I2C_WORD);
-	//high_threshold = txc_pa2240_i2c_read(client,APDS993X_PIHTL_REG,APDS993X_I2C_WORD);
-	low_threshold = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TL,TXC_PA2240_I2C_BYTE);
-	high_threshold = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TH,TXC_PA2240_I2C_BYTE);
+	low_threshold = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TL, TXC_PA2240_I2C_BYTE);
+	high_threshold = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TH, TXC_PA2240_I2C_BYTE);
 	txc_pa2240_dsm_save_threshold(data, high_threshold, low_threshold);
 
 	/*
 	* report dsm err, high and low threshold don't changed after ps irq.
 	*/
-	txc_pa2240_dsm_report_err(DSM_LPS_THRESHOLD_ERROR,data);
-
-
+	txc_pa2240_dsm_report_err(DSM_LPS_THRESHOLD_ERROR, data);
 }
-
 
 static int txc_pa2240_dsm_init(struct txc_pa2240_data *data)
 {
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	txc_pa2240_ps_dclient = dsm_register_client(&dsm_ps_pa2240);
 	if (!txc_pa2240_ps_dclient) {
-		TXC_PA2240_ERR("%s@%d register dsm txc_pa2240_ps_dclient failed!\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s@%d register dsm txc_pa2240_ps_dclient failed!\n", __func__, __LINE__);
 		return -ENOMEM;
 	}
 	/*for dmd */
 	//txc_pa2240_ps_dclient->driver_data = data;
 
 	data->ls_test_exception.reg_buf = kzalloc(512, GFP_KERNEL);
-	if(!data->ls_test_exception.reg_buf){
-		TXC_PA2240_ERR("%s@%d alloc dsm reg_buf failed!\n",__func__,__LINE__);
+	if (!data->ls_test_exception.reg_buf) {
+		TXC_PA2240_ERR("%s@%d alloc dsm reg_buf failed!\n", __func__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -530,21 +678,41 @@ static int txc_pa2240_dsm_init(struct txc_pa2240_data *data)
 
 static void txc_pa2240_dsm_exit(void)
 {
-	dsm_unregister_client(txc_pa2240_ps_dclient,&dsm_ps_pa2240);
+	dsm_unregister_client(txc_pa2240_ps_dclient, &dsm_ps_pa2240);
 }
 
 static ssize_t txc_pa2240_sysfs_dsm_test(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	long mode;
+	struct i2c_client *client = NULL;
+	struct txc_pa2240_data *data = NULL;
+	long mode = 0;
 	int ret = 0;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (strict_strtol(buf, 10, &mode))
 			return -EINVAL;
 
-	switch(mode){
+	switch (mode) {
 		case DSM_LPS_I2C_ERROR:
 			ret = txc_pa2240_dump_i2c_exception_status(data);
 			break;
@@ -557,23 +725,19 @@ static ssize_t txc_pa2240_sysfs_dsm_test(struct device *dev, struct device_attri
 		default:
 			TXC_PA2240_ERR("%s unsupport err_no = %ld \n", __func__, mode);
 			break;
-
 	}
-
 	return ret;
 }
 
 static DEVICE_ATTR(dsm_excep,S_IWUSR|S_IWGRP, NULL, txc_pa2240_sysfs_dsm_test);
-
 #endif
 
-
-static ssize_t txc_pa2240_write_file(char *filename, char* param)
+static ssize_t txc_pa2240_write_file(char *filename, char *param)
 {
-	struct file  *fop;
+	struct file *fop = NULL;
 	mm_segment_t old_fs;
 
-	if(NULL == filename)
+	if ((filename == NULL) || (param == NULL))
 	{
 		TXC_PA2240_ERR("filename is empty\n");
 		return -1;
@@ -581,43 +745,55 @@ static ssize_t txc_pa2240_write_file(char *filename, char* param)
 	
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
-	fop = filp_open(filename,O_CREAT | O_RDWR,0660);
+	fop = filp_open(filename,O_CREAT | O_RDWR, 0660);
 	if (IS_ERR_OR_NULL(fop))
 	{
 		set_fs(old_fs);
-		TXC_PA2240_ERR("Create file error!! Path = %s\n",filename);
+		TXC_PA2240_ERR("Create file error!! Path = %s\n", filename);
 		return -1;
 	}
 	
 	vfs_write(fop, (char *)param, strlen(param), &fop->f_pos);
 
-	filp_close(fop,NULL);
+	filp_close(fop, NULL);
 	set_fs(old_fs);
 	return 0;
 }
 
 /*we use the unified the function for i2c write and read operation*/
-static int txc_pa2240_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool flag)
+static int txc_pa2240_i2c_write(struct i2c_client *client, u8 reg, u16 value, bool flag)
 {
-	int err,loop;
-
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
+	int err = 0, loop = 0;
+	struct txc_pa2240_data *data = NULL;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	loop = TXC_PA2240_I2C_RETRY_COUNT;
 	/*we give three times to repeat the i2c operation if i2c errors happen*/
-	while(loop) {
+	while (loop) {
 		mutex_lock(&data->update_lock);
 		/*0 is i2c_smbus_write_byte_data,1 is i2c_smbus_write_word_data*/
-		if(flag == TXC_PA2240_I2C_BYTE)
+		if (flag == TXC_PA2240_I2C_BYTE)
 		{
 			err = i2c_smbus_write_byte_data(client, reg, (u8)value);
 		}
-		else if(flag == TXC_PA2240_I2C_WORD)
+		else if (flag == TXC_PA2240_I2C_WORD)
 		{
 			err = i2c_smbus_write_word_data(client, reg, value);
 		}
 		mutex_unlock(&data->update_lock);
-		if(err < 0){
+		if (err < 0) {
 			loop--;
 			msleep(TXC_PA2240_I2C_RETRY_TIMEOUT);
 		}
@@ -625,11 +801,11 @@ static int txc_pa2240_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool
 			break;
 	}
 	/*after three times,we print the register and regulator value*/
-	if(loop == 0){
-		TXC_PA2240_ERR("%s,line %d:attention:i2c write err = %d\n",__func__,__LINE__,err);
+	if (loop == 0) {
+		TXC_PA2240_ERR("%s,line %d:attention:i2c write err = %d\n", __func__, __LINE__, err);
 #ifdef CONFIG_HUAWEI_DSM
-		if (data->device_exist){
-			txc_pa2240_report_i2c_info(data,err);
+		if (data->device_exist) {
+			txc_pa2240_report_i2c_info(data, err);
 		}
 #endif
 	}
@@ -637,27 +813,39 @@ static int txc_pa2240_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool
 	return err;
 }
 
-static int txc_pa2240_i2c_read(struct i2c_client*client, u8 reg,bool flag)
+static int txc_pa2240_i2c_read(struct i2c_client *client, u8 reg, bool flag)
 {
-	int err,loop;
-
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
+	int err = 0, loop = 0;
+	struct txc_pa2240_data *data = NULL;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	loop = TXC_PA2240_I2C_RETRY_COUNT;
 	/*we give three times to repeat the i2c operation if i2c errors happen*/
-	while(loop) {
+	while (loop) {
 		mutex_lock(&data->update_lock);
 		/*0 is i2c_smbus_read_byte_data,1 is i2c_smbus_read_word_data*/
-		if(flag == TXC_PA2240_I2C_BYTE)
+		if (flag == TXC_PA2240_I2C_BYTE)
 		{
 			err = i2c_smbus_read_byte_data(client, reg);
 		}
-		else if(flag == TXC_PA2240_I2C_WORD)
+		else if (flag == TXC_PA2240_I2C_WORD)
 		{
 			err = i2c_smbus_read_word_data(client, reg);
 		}
 		mutex_unlock(&data->update_lock);
-		if(err < 0){
+		if (err < 0) {
 			loop--;
 			msleep(TXC_PA2240_I2C_RETRY_TIMEOUT);
 		}
@@ -665,11 +853,11 @@ static int txc_pa2240_i2c_read(struct i2c_client*client, u8 reg,bool flag)
 			break;
 	}
 	/*after three times,we print the register and regulator value*/
-	if(loop == 0){
-		TXC_PA2240_ERR("%s,line %d:attention: i2c read err = %d,reg=0x%x\n",__func__,__LINE__,err,reg);
+	if (loop == 0) {
+		TXC_PA2240_ERR("%s,line %d:attention: i2c read err = %d,reg=0x%x\n", __func__, __LINE__, err, reg);
 #ifdef CONFIG_HUAWEI_DSM
 		if (data->device_exist){
-			txc_pa2240_report_i2c_info(data,err);
+			txc_pa2240_report_i2c_info(data, err);
 		}
 #endif
 	}
@@ -682,10 +870,16 @@ static int txc_pa2240_get_pscrosstalk(struct i2c_client *client)
 {
 	int ret = 0;
 	
-	ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_OFFSET, TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	if (client == NULL)
 	{
-		TXC_PA2240_ERR("%s,line %d:read TXC OFFSET reg failed\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_OFFSET, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
+	{
+		TXC_PA2240_ERR("%s,line %d:read TXC OFFSET reg failed\n", __func__, __LINE__);
 	}
 
 	TXC_PA2240_FLOW("%s,line %d: read TXC OFFSET reg : %d\n", __func__, __LINE__, ret);
@@ -695,257 +889,370 @@ static int txc_pa2240_get_pscrosstalk(struct i2c_client *client)
 /*
 *	print the registers value with proper format
 */
-static int dump_reg_buf(struct txc_pa2240_data *data,char *buf, int size,int enable)
+static int dump_reg_buf(struct txc_pa2240_data *data, char *buf, int size, int enable)
 {
-	int i=0;
+	int i = 0;
+	
+	if ((data == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or buf is NULL!\n",__func__,__LINE__);
+		return -EINVAL;
+	}
 
 	mutex_lock(&data->update_lock);
 
-	if(enable)
+	if (enable)
 		TXC_PA2240_INFO("[enable]");
 	else
 		TXC_PA2240_INFO("[disable]");
 	TXC_PA2240_INFO(" reg_buf= ");
-	for(i = 0;i < size; i++){
-		TXC_PA2240_INFO("0x%2x  ",buf[i]);
+	for (i = 0; i < size; i++) {
+		TXC_PA2240_INFO("0x%2x  ", buf[i]);
 	}
 	mutex_unlock(&data->update_lock);
 
 	TXC_PA2240_INFO("\n");
 	return 0;
 }
-static int txc_pa2240_regs_debug_print(struct txc_pa2240_data *data,int enable)
+
+static int txc_pa2240_regs_debug_print(struct txc_pa2240_data *data, int enable)
 {
-	int i=0;
-	char reg_buf[TXC_PA2240_REG_LEN];
-	struct i2c_client *client = data->client;
+	int i = 0;
+	char reg_buf[TXC_PA2240_REG_LEN] = {0,};
+	struct i2c_client *client = NULL;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = data->client;
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	/* read registers[0x0~0x1a] value*/
-	for(i = 0; i < TXC_PA2240_REG_LEN; i++ )
+	for (i = 0; i < TXC_PA2240_REG_LEN; i++ )
 	{
+		reg_buf[i] = txc_pa2240_i2c_read(client, i, TXC_PA2240_I2C_BYTE);
 
-		reg_buf[i] = txc_pa2240_i2c_read(client,i,TXC_PA2240_I2C_BYTE);
-
-		if(reg_buf[i] <0){
-			TXC_PA2240_ERR("%s,line %d:read %d reg failed\n",__func__,__LINE__,i);
+		if (reg_buf[i] < 0) {
+			TXC_PA2240_ERR("%s,line %d:read %d reg failed\n", __func__, __LINE__, i);
 			return reg_buf[i] ;
 		}
 	}
 
 	/* print the registers[0x0~0x1a] value in proper format*/
-	dump_reg_buf(data,reg_buf,TXC_PA2240_REG_LEN,enable);
+	dump_reg_buf(data, reg_buf, TXC_PA2240_REG_LEN, enable);
 
 	return 0;
 }
 
 static int txc_pa2240_set_cfg0(struct i2c_client *client, int enable)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0, enable,TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error,enable = %d\n",__func__,__LINE__,enable);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0, enable, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:i2c error,enable = %d\n", __func__, __LINE__, enable);
 		return ret;
 	}
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 enable = %d\n",__func__,__LINE__,enable);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 enable = %d\n", __func__, __LINE__, enable);
 	return ret;
 }
 
 static int txc_pa2240_set_cfg1(struct i2c_client *client, int cfg)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG1, cfg,TXC_PA2240_I2C_BYTE);
+	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG1, cfg, TXC_PA2240_I2C_BYTE);
 	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error,cfg1 = %d\n",__func__,__LINE__,cfg);
+		TXC_PA2240_ERR("%s,line %d:i2c error,cfg1 = %d\n", __func__, __LINE__, cfg);
 		return ret;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 cfg1 = %d\n",__func__,__LINE__,cfg);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 cfg1 = %d\n", __func__, __LINE__, cfg);
 	return ret;
 }
 
 static int txc_pa2240_set_cfg2(struct i2c_client *client, int cfg)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2, cfg,TXC_PA2240_I2C_BYTE);
+	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2, cfg, TXC_PA2240_I2C_BYTE);
 	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error,cfg2 = %d\n",__func__,__LINE__,cfg);
+		TXC_PA2240_ERR("%s,line %d:i2c error,cfg2 = %d\n", __func__, __LINE__, cfg);
 		return ret;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 cfg2 = %d\n",__func__,__LINE__,cfg);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 cfg2 = %d\n", __func__, __LINE__, cfg);
 	return ret;
 }
 
 static int txc_pa2240_set_pilt(struct i2c_client *client, int threshold)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	int ret;
+	struct txc_pa2240_data *data = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TL, threshold,TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error,threshold = %d\n",__func__,__LINE__,threshold);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TL, threshold, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:i2c error,threshold = %d\n", __func__, __LINE__, threshold);
 		return ret;
 	}
 
 	data->pilt = threshold;
-	TXC_PA2240_INFO("%s,line %d:set txc_pa2240 pilt =%d\n", __func__, __LINE__,threshold);
+	TXC_PA2240_INFO("%s,line %d:set txc_pa2240 pilt =%d\n", __func__, __LINE__, threshold);
 
 	return ret;
 }
 
 static int txc_pa2240_set_piht(struct i2c_client *client, int threshold)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	int ret;
+	struct txc_pa2240_data *data = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TH, threshold,TXC_PA2240_I2C_BYTE);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TH, threshold, TXC_PA2240_I2C_BYTE);
 	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error,threshold = %d\n",__func__,__LINE__,threshold);
+		TXC_PA2240_ERR("%s,line %d:i2c error,threshold = %d\n", __func__, __LINE__, threshold);
 		return ret;
 	}
 
 	data->piht = threshold;
-	TXC_PA2240_INFO("%s,line %d:set txc_pa2240 piht =%d\n", __func__,__LINE__,threshold);
+	TXC_PA2240_INFO("%s,line %d:set txc_pa2240 piht =%d\n", __func__, __LINE__, threshold);
 
 	return ret;
 }
 
 static int txc_pa2240_set_cfg3(struct i2c_client *client, int config)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG3, config,TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error,config3 = %d\n",__func__,__LINE__,config);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG3, config, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:i2c error,config3 = %d\n", __func__, __LINE__, config);
 		return ret;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 config3 = %d\n",__func__,__LINE__,config);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240 config3 = %d\n", __func__, __LINE__, config);
 	return ret;
 }
 
-static int txc_pa2240_set_ps(struct i2c_client *client,int config)
+static int txc_pa2240_set_ps(struct i2c_client *client, int config)
 {
-	int ret;
+	int ret = 0;
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_SET, config,TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error, set ps set err\n",__func__,__LINE__);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_SET, config, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:i2c error, set ps set err\n", __func__, __LINE__);
 		return ret;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240, set ps  set success\n",__func__,__LINE__);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240, set ps  set success\n", __func__, __LINE__);
 	return ret;
 }
 
 static int txc_pa2240_get_ps(struct i2c_client *client)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_SET, TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error, get ps err\n",__func__,__LINE__);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:i2c error, get ps err\n", __func__, __LINE__);
 		return ret;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240, get ps success\n",__func__,__LINE__);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240, get ps success\n", __func__, __LINE__);
 	return ret;
 }
 
-static int txc_pa2240_set_flct(struct i2c_client *client,int config)
+static int txc_pa2240_set_flct(struct i2c_client *client, int config)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_FLCT, config,TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:i2c error, set ps flct set err\n",__func__,__LINE__);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_FLCT, config, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:i2c error, set ps flct set err\n", __func__, __LINE__);
 		return ret;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:txc_pa2240, set ps flct set success\n",__func__,__LINE__);
+	TXC_PA2240_FLOW("%s,line %d:txc_pa2240, set ps flct set success\n", __func__, __LINE__);
 	return ret;
 }
-
 
 static void txc_pa2240_dump_register(struct i2c_client *client)
 {
-	int reg_cfg0,reg_cfg1,reg_cfg2,reg_ps_tl,reg_ps_th,reg_ps_data,reg_ps_offset;
-	reg_cfg0 = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG0,TXC_PA2240_I2C_BYTE);
-	reg_cfg1= txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG1,TXC_PA2240_I2C_BYTE);
-	reg_cfg2 =txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG2,TXC_PA2240_I2C_BYTE);
-	reg_ps_tl=txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TL,TXC_PA2240_I2C_BYTE);
-	reg_ps_th=txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TH,TXC_PA2240_I2C_BYTE);
-	reg_ps_data = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA,TXC_PA2240_I2C_BYTE);
-	reg_ps_offset= txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_OFFSET,TXC_PA2240_I2C_BYTE);
+	int reg_cfg0 = 0, reg_cfg1 = 0, reg_cfg2 = 0, reg_ps_tl = 0, reg_ps_th = 0, reg_ps_data = 0, reg_ps_offset = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	reg_cfg0 = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG0, TXC_PA2240_I2C_BYTE);
+	reg_cfg1 = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG1, TXC_PA2240_I2C_BYTE);
+	reg_cfg2 = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG2, TXC_PA2240_I2C_BYTE);
+	reg_ps_tl = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TL, TXC_PA2240_I2C_BYTE);
+	reg_ps_th = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_TH, TXC_PA2240_I2C_BYTE);
+	reg_ps_data = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA, TXC_PA2240_I2C_BYTE);
+	reg_ps_offset = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_OFFSET, TXC_PA2240_I2C_BYTE);
 
-	TXC_PA2240_INFO("%s,line %d:reg_cfg0 = 0x%x,reg_cfg1=0x%x,reg_cfg2=0x%x\n",__func__,__LINE__,reg_cfg0,reg_cfg1,reg_cfg2);
-	TXC_PA2240_INFO("%s,line %d:reg_ps_tl = 0x%x,reg_ps_th=0x%x,reg_ps_data=0x%x\n",__func__,__LINE__,reg_ps_tl,reg_ps_th,reg_ps_data);
-	TXC_PA2240_INFO("%s,line %d:reg_ps_offset = 0x%x;\n",__func__,__LINE__,reg_ps_offset);
+	TXC_PA2240_INFO("%s,line %d:reg_cfg0 = 0x%x,reg_cfg1=0x%x,reg_cfg2=0x%x\n", __func__, __LINE__, reg_cfg0, reg_cfg1, reg_cfg2);
+	TXC_PA2240_INFO("%s,line %d:reg_ps_tl = 0x%x,reg_ps_th=0x%x,reg_ps_data=0x%x\n", __func__, __LINE__, reg_ps_tl, reg_ps_th, reg_ps_data);
+	TXC_PA2240_INFO("%s,line %d:reg_ps_offset = 0x%x;\n", __func__, __LINE__, reg_ps_offset);
 }
+
 static void txc_pa2240_ps_report_event(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	int ret;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
-	ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA,TXC_PA2240_I2C_BYTE);
-	if( ret < 0 )
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA, TXC_PA2240_I2C_BYTE);
+	if ( ret < 0 )
 	{
 	/* the number "200" is a value to make sure there is a valid value */
 		data->ps_data = 200 ;
 		TXC_PA2240_ERR("%s, line %d: pdate<0, reset to %d\n", __func__, __LINE__, data->ps_data);
-	}else{
+	} else {
 		data->ps_data = ret ;
 	}
 
-	if(data->ps_data < PA2240_PDATA_SATURATION_VAL)
+	if (data->ps_data < PA2240_PDATA_SATURATION_VAL)
 	{
 		TXC_PA2240_ERR("%s: pa224 saturation happen\n", __func__);
 		data->saturation_flag = true;
-		if(data->ps_detection == TXC_PA2240_CLOSE_FLAG)
+		if (data->ps_detection == TXC_PA2240_CLOSE_FLAG)
 		{
 			input_report_abs(data->input_dev_ps, ABS_DISTANCE, TXC_PA2240_FAR_FLAG);
 			input_sync(data->input_dev_ps);
 			data->ps_detection= TXC_PA2240_FAR_FLAG;
-			TXC_PA2240_ERR("%s: sunlight report far event, data->ps_data:%d\n", __func__,data->ps_data);
+			TXC_PA2240_ERR("%s: sunlight report far event, data->ps_data:%d\n", __func__, data->ps_data);
 			/*Change high threshld to detect close event also report far event*/
 			data->piht = min(far_ps_min + oil_effect, PA2240_PDATA_MAX_HIGH_TH - oil_effect);
-			ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TH, data->piht, TXC_PA2240_I2C_BYTE);
-			if (ret < 0){
-				TXC_PA2240_ERR("%s,line %d:data->pilt = %d,data->piht=%d, i2c wrong\n",__func__,__LINE__,data->pilt,data->piht);
+			ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TH, data->piht, TXC_PA2240_I2C_BYTE);
+			if (ret < 0) {
+				TXC_PA2240_ERR("%s,line %d:data->pilt = %d,data->piht=%d, i2c wrong\n", __func__, __LINE__, data->pilt, data->piht);
 			}
 			TXC_PA2240_INFO("%s,line %d:change threshoid,data->ps_data =%d,data->pilt=%d,data->piht=%d,far_ps_min=%d\n",
-				__func__,__LINE__,data->ps_data, data->pilt, data->piht,far_ps_min);
+				__func__, __LINE__, data->ps_data, data->pilt, data->piht, far_ps_min);
 		}
 		/*Prevent too many interruptions under sunlight*/
 		msleep(50);
 		return;
 	}
 
-	TXC_PA2240_FLOW("%s,line %d:TXC PA2240 ps_data=%d middle_threshold=%d calibration_threshold=%d\n",__func__,__LINE__,data->ps_data,middle_threshold,calibration_threshold);
-	TXC_PA2240_FLOW("%s,line %d:TXC PA2240 low_threshold=%d high_threshold=%d oil_effect=%d pdata->ir_current=%d\n",__func__,__LINE__,low_threshold,high_threshold,oil_effect,pdata->ir_current);
+	TXC_PA2240_FLOW("%s,line %d:TXC PA2240 ps_data=%d middle_threshold=%d calibration_threshold=%d\n", __func__, __LINE__, data->ps_data, middle_threshold, calibration_threshold);
+	TXC_PA2240_FLOW("%s,line %d:TXC PA2240 low_threshold=%d high_threshold=%d oil_effect=%d pdata->ir_current=%d\n", __func__, __LINE__,low_threshold, high_threshold, oil_effect, pdata->ir_current);
 	/*
 	 *	Status is far and object is moving away or crosstalk is getting smaller
 	 */
 	TXC_PA2240_INFO("%s:%d data->ps_data =%d,data->pilt=%d,data->piht=%d,far_ps_min=%d, pdata_min=%d, data->ps_detection=%d, oil_occur=%d.\n",
-		__func__,__LINE__,data->ps_data, data->pilt, data->piht,far_ps_min, data->pdata_min, data->ps_detection, data->oil_occur);
+		__func__, __LINE__, data->ps_data, data->pilt, data->piht, far_ps_min, data->pdata_min, data->ps_detection, data->oil_occur);
 	/*To avoid middle value of ps data under sunlight*/
-	if(data->saturation_flag){
+	if (data->saturation_flag) {
 		data->saturation_flag = false;
 		msleep(20);
 		return;
 	}
 
-	if(data->ps_data <= data->pilt){
-
-		if (data->ps_detection == TXC_PA2240_CLOSE_FLAG){
+	if (data->ps_data <= data->pilt) {
+		if (data->ps_detection == TXC_PA2240_CLOSE_FLAG) {
 			data->ps_detection = TXC_PA2240_FAR_FLAG;
 			input_report_abs(data->input_dev_ps, ABS_DISTANCE, TXC_PA2240_FAR_FLAG);
 			input_sync(data->input_dev_ps);
-			TXC_PA2240_INFO("%s,line %d:PROXIMITY far event\n", __func__,__LINE__);
+			TXC_PA2240_INFO("%s,line %d:PROXIMITY far event\n", __func__, __LINE__);
 		}
 		data->pdata_min = min(data->pdata_min, data->ps_data);
 
@@ -954,78 +1261,96 @@ static void txc_pa2240_ps_report_event(struct i2c_client *client)
 #endif
 
 		/*If user touch TP or oil occure or user continously move away, update far_ps_min*/
-		if((data->oil_occur) || (far_ps_min > data->ps_data)){
+		if ((data->oil_occur) || (far_ps_min > data->ps_data)) {
 			far_ps_min = data->ps_data;
 			data->oil_occur = false;
 		}
 		data->pilt = far_ps_min -low_threshold;
 		data->piht = far_ps_min + high_threshold;
-	}else if (data->ps_data >= data->piht){
+	} else if (data->ps_data >= data->piht) {
 		/*
 		*	Status is far and object is moving close or status is near and object is moving closer
 		*	It is very important to detect object moving closer in both near adn far state
 		*/
-		if (data->ps_detection == TXC_PA2240_FAR_FLAG){
+		if (data->ps_detection == TXC_PA2240_FAR_FLAG) {
 			data->ps_detection = TXC_PA2240_CLOSE_FLAG;
 			input_report_abs(data->input_dev_ps, ABS_DISTANCE, TXC_PA2240_CLOSE_FLAG);
 			input_sync(data->input_dev_ps);
-			TXC_PA2240_INFO("%s,line %d:PROXIMITY close event\n", __func__,__LINE__);
+			TXC_PA2240_INFO("%s,line %d:PROXIMITY close event\n", __func__, __LINE__);
 		}
 
 #ifdef CONFIG_HUAWEI_DSM
 		txc_pa2240_dsm_change_ps_enable_status(data);
 #endif
          /*User is not close to TP*/
-		if (data->ps_data < PA2240_PDATA_TOUCH_VAL){
+		if (data->ps_data < PA2240_PDATA_TOUCH_VAL) {
 			data->pilt = ((far_ps_min + middle_threshold) < data->ps_data)  ?  (far_ps_min + middle_threshold) : (data->ps_data -oil_effect);
 			data->piht = PA2240_PDATA_TOUCH_VAL;
 		/*User is very close to TP, oil may occured*/
-		}else{
+		} else {
 			data->pilt = min(data->pdata_min + oil_effect, (PA2240_PDATA_MAX_HIGH_TH -oil_effect));
 			data->piht = PA2240_PDATA_MAX_HIGH_TH;
 			data->oil_occur = true;
 		}
-	}else {
+	} else {
 #ifdef CONFIG_HUAWEI_DSM
 		txc_pa2240_dsm_no_update_threhold_check(data);
 #endif
-
 		TXC_PA2240_ERR("%s:%d read pdata Not within reasonable limits,data->pilt=%d,data->piht=%d data->ps_data=%d\n",
-			__FUNCTION__,__LINE__,data->pilt,data->piht,data->ps_data);
+			__FUNCTION__, __LINE__, data->pilt, data->piht, data->ps_data);
 	}
 
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TH, data->piht, TXC_PA2240_I2C_BYTE);
-	ret += txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TL, data->pilt, TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
-		TXC_PA2240_ERR("%s,line %d:data->pilt = %d,data->piht=%d, i2c wrong\n",__func__,__LINE__,data->pilt,data->piht);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TH, data->piht, TXC_PA2240_I2C_BYTE);
+	ret += txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TL, data->pilt, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
+		TXC_PA2240_ERR("%s,line %d:data->pilt = %d,data->piht=%d, i2c wrong\n", __func__, __LINE__, data->pilt, data->piht);
 		goto exit;
 	}
 
 	TXC_PA2240_INFO("%s,line %d:change threshoid,data->ps_data =%d,data->pilt=%d,data->piht=%d,far_ps_min=%d, pdata_min=%d, oil_occur=%d\n",
-		__func__,__LINE__,data->ps_data, data->pilt, data->piht,far_ps_min, data->pdata_min, data->oil_occur);
+		__func__, __LINE__, data->ps_data, data->pilt, data->piht,far_ps_min, data->pdata_min, data->oil_occur);
 	
-	return ;
+	return;
 exit:
 	/*if i2c error happens,we report far event*/
-	if(data->ps_detection == TXC_PA2240_CLOSE_FLAG){
+	if (data->ps_detection == TXC_PA2240_CLOSE_FLAG) {
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, TXC_PA2240_FAR_FLAG);
 		input_sync(data->input_dev_ps);
 		data->ps_detection= TXC_PA2240_FAR_FLAG;
-		TXC_PA2240_ERR("%s:i2c error happens, report far event, data->ps_data:%d\n", __func__,data->ps_data);
-		return ;
+		TXC_PA2240_ERR("%s:i2c error happens, report far event, data->ps_data:%d\n", __func__, data->ps_data);
+		return;
 	}
 }
 
 /* PS interrupt routine */
-
 static void txc_pa2240_work_handler(struct work_struct *work)
 {
-	struct txc_pa2240_data *data = container_of(work, struct txc_pa2240_data, dwork);
-	struct i2c_client *client=data->client;
-	int reg_cfg2;
-	int ret;
-	int pdata;
-	int status;
+	struct txc_pa2240_data *data = NULL;
+	struct i2c_client *client = NULL;
+	int reg_cfg2 = 0;
+	int ret = 0;
+	int pdata = 0;
+	int status = 0;
+	
+	if (work == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	data = container_of(work, struct txc_pa2240_data, dwork);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	client = data->client;
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
 	status = wait_event_timeout(data->notify_i2c_ready_event,
 		(data->i2c_ready_flag == true),
@@ -1045,30 +1370,30 @@ static void txc_pa2240_work_handler(struct work_struct *work)
 			TXC_PA2240_ERR("%s: Failed to reinit txc_pa2240 client\n", __func__);
 		}
 	}
-	pdata = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA,TXC_PA2240_I2C_BYTE);
-	reg_cfg2 = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG2,TXC_PA2240_I2C_BYTE);
-	if(pdata == (TXC_PA2240_PROX_MAX_ADC_VALUE + 1))
+	pdata = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA, TXC_PA2240_I2C_BYTE);
+	reg_cfg2 = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG2, TXC_PA2240_I2C_BYTE);
+	if (pdata == (TXC_PA2240_PROX_MAX_ADC_VALUE + 1))
 	{
 		txc_pa2240_dump_register(client);
 	}
 
 	if (reg_cfg2 & TXC_PA2240_PS_INT_ACTIVE) {
 		txc_pa2240_ps_report_event(client);		
-	} else{
-		TXC_PA2240_ERR("%s,line %d:wrong interrupts,TXC_PA2240_REG_CFG2 is 0X%x\n",__func__,__LINE__,reg_cfg2);
+	} else {
+		TXC_PA2240_ERR("%s,line %d:wrong interrupts,TXC_PA2240_REG_CFG2 is 0X%x\n", __func__, __LINE__, reg_cfg2);
 	}
 
 	/*  CLR PS INT */
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2, (reg_cfg2 & (~TXC_PA2240_PS_INT_ACTIVE)),TXC_PA2240_I2C_BYTE);
+	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2, (reg_cfg2 & (~TXC_PA2240_PS_INT_ACTIVE)), TXC_PA2240_I2C_BYTE);
 	mutex_unlock(&data->single_lock);
 	if (ret < 0)
 	{
-		TXC_PA2240_ERR("%s,%d:i2c error happens, pls clear irq flag ,ret = %d\n", __func__,__LINE__,ret);
-		return ;
+		TXC_PA2240_ERR("%s,%d:i2c error happens, pls clear irq flag ,ret = %d\n", __func__, __LINE__, ret);
+		return;
 	}
 	if (data->irq)
 	{
-		operate_irq(data,1,true);
+		operate_irq(data, 1, true);
 	}
 #ifdef CONFIG_SENSOR_DEVELOP_TEST
 	if(sensorDT_mode)
@@ -1080,9 +1405,15 @@ static void txc_pa2240_work_handler(struct work_struct *work)
 
 void operate_irq(struct txc_pa2240_data *data, int enable, bool sync)
 {
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	if (data->irq)
 	{
-		if(enable)
+		if (enable)
 		{
 			/*Avoid competitive access problems*/
 			data->count++;
@@ -1090,9 +1421,9 @@ void operate_irq(struct txc_pa2240_data *data, int enable, bool sync)
 		}
 		else
 		{
-			if(data->count > 0)
+			if (data->count > 0)
 			{
-				if(sync)
+				if (sync)
 				{
 					disable_irq(data->irq);
 				}
@@ -1109,10 +1440,31 @@ void operate_irq(struct txc_pa2240_data *data, int enable, bool sync)
 /* assume this is ISR */
 static irqreturn_t txc_pa2240_interrupt(int vec, void *info)
 {
-	struct i2c_client *client=(struct i2c_client *)info;
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct txc_pa2240_data *data = NULL;
+	
+	if (info == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: info is NULL!\n", __func__, __LINE__);
+		return IRQ_NONE;
+	}
+	
+	client = (struct i2c_client *)info;
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return IRQ_NONE;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return IRQ_NONE;
+	}	
+	
 	/*in 400ms,system keeps in wakeup state to avoid the sleeling system lose the pls event*/
-	operate_irq(data,0,false);
+	operate_irq(data, 0, false);
 	wake_lock_timeout(&data->ps_report_wk, PS_WAKEUP_TIME);
 	queue_work(txc_pa2240_workqueue, &data->dwork);
 
@@ -1121,91 +1473,119 @@ static irqreturn_t txc_pa2240_interrupt(int vec, void *info)
 
 static void txc_pa2240_swap(int *x, int *y)
 {
-        int temp = *x;
+        int temp = 0;
+        
+	if ((x == NULL) || (y == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: x or y is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
         *x = *y;
         *y = temp;
 }
 
 static int pa224_run_calibration(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	int i, j;	
-	int ret;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	int i = 0, j = 0;	
+	int ret = 0;
 	u16 sum_of_pdata = 0;
 	u8  cfg0data = 0, cfg2data = 0;
-	int temp_pdata[20];
+	int temp_pdata[20] = {0,};
 	unsigned int ArySize = 20;
 	unsigned int cal_check_flag = 0;
 	char buftemp[20] = "\0";
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+		
 	TXC_PA2240_INFO("%s: START proximity sensor calibration\n", __func__);
 	pdata->flag = PA2240_CALIBRATION_SUCCESS;
 	if (data->platform_data->power_on)
-		if(0==data->enable_ps_sensor)
-			data->platform_data->power_on(true,data);
+		if (data->enable_ps_sensor == 0)
+			data->platform_data->power_on(true, data);
 RECALIBRATION:
 	sum_of_pdata = 0;
 	/* Prevent interrput */
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TH,0xFF,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TH, 0xFF, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TL,0x00,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TL, 0x00, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 	/*Offset mode & disable intr from ps*/
-	cfg2data = txc_pa2240_i2c_read(client,TXC_PA2240_REG_CFG2,TXC_PA2240_I2C_BYTE);
-	if(cfg2data < 0)
+	cfg2data = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG2, TXC_PA2240_I2C_BYTE);
+	if (cfg2data < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2,0x08,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG2, 0x08, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 	/*Set crosstalk = 0*/	
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_OFFSET,0x00,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_OFFSET, 0x00, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 	/*PS On*/
-	cfg0data = txc_pa2240_i2c_read(client,TXC_PA2240_REG_CFG0,TXC_PA2240_I2C_BYTE);	
-	if(cfg0data < 0)
+	cfg0data = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG0, TXC_PA2240_I2C_BYTE);	
+	if (cfg0data < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG0,cfg0data | 0x02,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0,cfg0data | 0x02, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 	for (i = 0; i < 20; i++)
 	{
 		msleep(50);
-		temp_pdata[i] = txc_pa2240_i2c_read(client,TXC_PA2240_REG_PS_DATA,TXC_PA2240_I2C_BYTE);
-		if(temp_pdata[i] < 0)
+		temp_pdata[i] = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA, TXC_PA2240_I2C_BYTE);
+		if (temp_pdata[i] < 0)
 		{
 			pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-			TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+			TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 			return -EINVAL;
 		}
 		TXC_PA2240_INFO("temp_data = %d\n", temp_pdata[i]);	
@@ -1213,7 +1593,7 @@ RECALIBRATION:
 	
 	/* pdata sorting */
 	for (i = 0; i < ArySize - 1; i++)
-	for (j = i+1; j < ArySize; j++)
+	for (j = i + 1; j < ArySize; j++)
 		if (temp_pdata[i] > temp_pdata[j])
 			txc_pa2240_swap(temp_pdata + i, temp_pdata + j);	
 	
@@ -1229,17 +1609,17 @@ RECALIBRATION:
                         __func__, sum_of_pdata, pdata->crosstalk);
 	
 	/* Restore CFG2  and Measure base x-talk */
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2,cfg2data,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG2, cfg2data, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 	if (pdata->crosstalk > calibration_threshold)
 	{
-		TXC_PA2240_INFO("%s: invalid calibrated data,pdata->crosstalk = %d\n", __func__,pdata->crosstalk);
-		if(cal_check_flag == 0)
+		TXC_PA2240_INFO("%s: invalid calibrated data,pdata->crosstalk = %d\n", __func__, pdata->crosstalk);
+		if (cal_check_flag == 0)
 		{
 			TXC_PA2240_INFO("%s: RECALIBRATION start\n", __func__);
 			cal_check_flag = 1;
@@ -1250,22 +1630,22 @@ RECALIBRATION:
 			TXC_PA2240_INFO("%s: CALIBRATION FAIL -> "
                                "cross_talk is set to DEFAULT\n", __func__);
 			pdata->crosstalk = pdata ->defalt_crosstalk;
-			ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG0,cfg0data,TXC_PA2240_I2C_BYTE);
-			if(ret < 0)
+			ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0,cfg0data, TXC_PA2240_I2C_BYTE);
+			if (ret < 0)
 			{
 				pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-				TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+				TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 				return -EINVAL;
 			}
 			pdata->flag = PA2240_CALIBRATION_ERROR;
 			return -EINVAL;
              }
 	}	
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG0,cfg0data,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0, cfg0data, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		pdata->flag = PA2240_CALIBRATION_I2C_ERROR;
-		TXC_PA2240_ERR("%s,line %d\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d\n", __func__, __LINE__);
 		return -EINVAL;
 	}
 	/*the file will store two number
@@ -1273,11 +1653,11 @@ RECALIBRATION:
 	*  this place store the pdata->crosstalk of calibration 
 	*/
 	snprintf(buftemp, MAX_BUF_LEN,"%d  ", pdata->crosstalk);
-	TXC_PA2240_INFO("%s:%d calibration end buftemp=%s\n",__func__,__LINE__,buftemp);
+	TXC_PA2240_INFO("%s:%d calibration end buftemp=%s\n", __func__, __LINE__, buftemp);
 	
 	TXC_PA2240_INFO("%s: FINISH proximity sensor calibration\n", __func__);
 
-	if(txc_pa2240_write_file(TXC_PA2240_PS_CAL_FILE_PATH,buftemp) < 0)
+	if (txc_pa2240_write_file(TXC_PA2240_PS_CAL_FILE_PATH,buftemp) < 0)
 	{
 		TXC_PA2240_ERR("Open PS x-talk calibration file error!!");
 	}
@@ -1286,39 +1666,59 @@ RECALIBRATION:
 		TXC_PA2240_INFO("Open PS x-talk calibration file Success!!");
 	}
 	
-	TXC_PA2240_INFO("%s,line %d:CALIBRATION SUCCESS\n",__func__,__LINE__);
+	TXC_PA2240_INFO("%s,line %d:CALIBRATION SUCCESS\n", __func__, __LINE__);
 	if (data->platform_data->power_on)
-		if(0==data->enable_ps_sensor)
-			data->platform_data->power_on(false,data);
+		if (data->enable_ps_sensor == 0)
+			data->platform_data->power_on(false, data);
 	return pdata->crosstalk;	
 }
 
 static int txc_pa2240_run_fast_calibration(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	int ret =0;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	int ret = 0;
 	int i = 0;
 	int j = 0;	
 	int sum_of_pdata = 0;
 	int  xtalk_temp = 0;
-    	int temp_pdata[4];
+    	int temp_pdata[4] = {0,};
    	unsigned int ArySize = 4;
 	u8 cfg0data = 0, cfg2data = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
    	TXC_PA2240_INFO("func:%s, line:%d,START proximity sensor calibration\n", __func__, __LINE__);
 
 	/*Offset mode & disable intr from ps*/
-	cfg2data = txc_pa2240_i2c_read(client,TXC_PA2240_REG_CFG2,TXC_PA2240_I2C_BYTE);
-	ret = txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2,0x08,TXC_PA2240_I2C_BYTE);
+	cfg2data = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG2, TXC_PA2240_I2C_BYTE);
+	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG2, 0x08, TXC_PA2240_I2C_BYTE);
 
 	/*Set crosstalk = 0*/
-	cfg0data = txc_pa2240_i2c_read(client,TXC_PA2240_REG_CFG0,TXC_PA2240_I2C_BYTE);
+	cfg0data = txc_pa2240_i2c_read(client, TXC_PA2240_REG_CFG0, TXC_PA2240_I2C_BYTE);
 	ret +=txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_OFFSET, 0x00, TXC_PA2240_I2C_BYTE);
 
 	/*PS On*/
-	ret += txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0,0x02, TXC_PA2240_I2C_BYTE); 
-	if(ret < 0)
+	ret += txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0, 0x02, TXC_PA2240_I2C_BYTE); 
+	if (ret < 0)
 	{
 		TXC_PA2240_ERR("func:%s, line:%d, set TXC CHIP fail( %d)\n", __func__, __LINE__, ret);
 		return ret;
@@ -1327,12 +1727,12 @@ static int txc_pa2240_run_fast_calibration(struct i2c_client *client)
 	for (i = 0; i < 4; i++)
 	{
 		msleep(50);
-		ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA,TXC_PA2240_I2C_BYTE);
-		if(ret < 0)
+		ret = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA, TXC_PA2240_I2C_BYTE);
+		if (ret < 0)
 		{
 			TXC_PA2240_ERR("func:%s, line:%d,read ps data err( %d)\n", __func__, __LINE__, ret);
 			return ret;
-		}else{
+		} else {
 			temp_pdata[i] = ret; 
 		}
 		TXC_PA2240_FLOW("func:%s, line:%d,temp_data = %d\n", __func__, __LINE__, temp_pdata[i]);	
@@ -1341,7 +1741,7 @@ static int txc_pa2240_run_fast_calibration(struct i2c_client *client)
 	
 	/* pdata sorting */
 	for (i = 0; i < ArySize - 1; i++)
-		for (j = i+1; j < ArySize; j++)
+		for (j = i + 1; j < ArySize; j++)
 			if (temp_pdata[i] > temp_pdata[j])
 			txc_pa2240_swap(temp_pdata + i, temp_pdata + j);	
 	
@@ -1355,11 +1755,11 @@ static int txc_pa2240_run_fast_calibration(struct i2c_client *client)
 	xtalk_temp = sum_of_pdata/2;
 
 	xtalk_temp += PA2240_PS_OFFSET_EXTRA;
-	TXC_PA2240_INFO("%s:%d pdata->defalt_crosstalk=%d pdata->crosstalk=%d xtalk_temp=%d\n",__func__, __LINE__, pdata->defalt_crosstalk,pdata->crosstalk,xtalk_temp);
+	TXC_PA2240_INFO("%s:%d pdata->defalt_crosstalk=%d pdata->crosstalk=%d xtalk_temp=%d\n", __func__, __LINE__, pdata->defalt_crosstalk, pdata->crosstalk, xtalk_temp);
 	if ((xtalk_temp < pdata->crosstalk + 30) && (xtalk_temp > pdata->crosstalk))
 	{
 		/*calibration success*/
-		TXC_PA2240_FLOW("%s:%d Fast calibrated data=%d\n", __func__, __LINE__,xtalk_temp);
+		TXC_PA2240_FLOW("%s:%d Fast calibrated data=%d\n", __func__, __LINE__, xtalk_temp);
 	}
 	else
 	{
@@ -1373,9 +1773,9 @@ static int txc_pa2240_run_fast_calibration(struct i2c_client *client)
                         __func__, sum_of_pdata, xtalk_temp);
 
 	ret = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_OFFSET, xtalk_temp, TXC_PA2240_I2C_BYTE);
-	ret += txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG2,cfg2data | 0x40,TXC_PA2240_I2C_BYTE);
-	ret += txc_pa2240_i2c_write(client,TXC_PA2240_REG_CFG0,cfg0data,TXC_PA2240_I2C_BYTE);
-	if(ret < 0)
+	ret += txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG2,cfg2data | 0x40, TXC_PA2240_I2C_BYTE);
+	ret += txc_pa2240_i2c_write(client, TXC_PA2240_REG_CFG0,cfg0data, TXC_PA2240_I2C_BYTE);
+	if (ret < 0)
 	{
 		TXC_PA2240_ERR("func:%s, line:%d,set PS calibration fail\n", __func__, __LINE__);
 		return ret;
@@ -1384,35 +1784,25 @@ static int txc_pa2240_run_fast_calibration(struct i2c_client *client)
 	TXC_PA2240_INFO("func:%s, line:%d,FINISH PS calibration\n", __func__, __LINE__);
 		
 	return 0;
-
 }
 
 static int txc_pa2240_open_ps_sensor(struct txc_pa2240_data *data, struct i2c_client *client)
 {
 	int ret = 0;
+	
+	if ((data == NULL) || (data->platform_data == NULL) || (client == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
 	/* turn on p sensor */
-	if (data->enable_ps_sensor==0) {
+	if (data->enable_ps_sensor == 0) {
 		/* Power on and initalize the device */
 		if (data->platform_data->power_on)
-			data->platform_data->power_on(true,data);
+			data->platform_data->power_on(true, data);
 
-		/*must calibration ps offset before use the device */
-		/*delete this because this algorithm can not resolve the oil problem*/
-		/*
-		ret = txc_pa2240_run_fast_calibration(client);
-		if(ret < 0)
-		{
-			TXC_PA2240_ERR("%s:line:%d,Failed to set txc_pa2240 ps offset\n", __func__, __LINE__);
-			return ret;
-		}
-
-		ret = txc_pa2240_init_client(client);
-		if (ret) {
-			TXC_PA2240_ERR("%s:line:%d,Failed to init txc_pa2240\n", __func__, __LINE__);
-			return ret;
-		}
-		*/
-		data->enable_ps_sensor= 1;
+		data->enable_ps_sensor = 1;
 		data->saturation_flag = false;
 		data->oil_occur = false;
 		/*initialize the ps_min_threshold,to update data->piht and data->pilt*/
@@ -1428,44 +1818,55 @@ static int txc_pa2240_open_ps_sensor(struct txc_pa2240_data *data, struct i2c_cl
 		}
 	}
 
-//		txc_pa2240_set_flct(client,TXC_PA2240_FILTER);
 		data->enable = TXC_PA2240_PS_ACTIVE;
 		txc_pa2240_set_cfg0(client, data->enable);
 		msleep(PA24_PS_ENABLE_DELAY);
-//		txc_pa2240_set_flct(client,(TXC_PA2240_FILTER | (PA2240_PS_FLCT<<4)));
-		TXC_PA2240_INFO("%s: line:%d,enable pls sensor.data->enable = 0x%x\n", __func__, __LINE__,data->enable);
+		TXC_PA2240_INFO("%s: line:%d,enable pls sensor.data->enable = 0x%x\n", __func__, __LINE__, data->enable);
 
 		data->ps_detection = TXC_PA2240_FAR_FLAG;
 		/*first report event  0 is close, 1 is far */
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, TXC_PA2240_FAR_FLAG);
 		input_sync(data->input_dev_ps);
-		TXC_PA2240_INFO("%s,line %d: enable ps, report ABS_DISTANCE, far event\n", __func__,__LINE__);
+		TXC_PA2240_INFO("%s,line %d: enable ps, report ABS_DISTANCE, far event\n", __func__, __LINE__);
 
 		far_ps_min = 255 - oil_effect;
 		data->pdata_min = far_ps_min;
 		ret = txc_pa2240_set_pilt(client, far_init);
 		ret += txc_pa2240_set_piht(client, near_init);
-		if (ret < 0){
+		if (ret < 0) {
 			return ret;
 		}
 		TXC_PA2240_INFO("%s,line %d:data->pilt=%d,data->piht=%d,\n",
-			__func__,__LINE__,data->pilt,data->piht);
+			__func__, __LINE__, data->pilt, data->piht);
 
 		if (data->irq)
 		{
-			operate_irq(data,1,true);
+			operate_irq(data, 1, true);
 			/*set the property of pls irq,so the pls irq can wake up the sleeping system */
 			irq_set_irq_wake(data->irq, 1);
 		}
 	}
 	return ret;
 }
-static int txc_pa2240_enable_ps_sensor(struct i2c_client *client,unsigned int val)
+static int txc_pa2240_enable_ps_sensor(struct i2c_client *client, unsigned int val)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	int ret;
+	struct txc_pa2240_data *data = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	TXC_PA2240_INFO("%s,line %d:val=%d\n",__func__,__LINE__,val);
+	data = i2c_get_clientdata(client);
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	TXC_PA2240_INFO("%s,line %d:val=%d\n", __func__, __LINE__, val);
 	if ((val != 0) && (val != 1)) {
 		TXC_PA2240_ERR("%s: invalid value=%d\n", __func__, val);
 		return -EINVAL;
@@ -1474,9 +1875,9 @@ static int txc_pa2240_enable_ps_sensor(struct i2c_client *client,unsigned int va
 		mutex_lock(&data->single_lock);
 		ret = txc_pa2240_open_ps_sensor(data, client);
 		mutex_unlock(&data->single_lock);
-		if(ret)
+		if (ret)
 		{
-			TXC_PA2240_ERR("%s,line %d:read power_value failed,open ps fail\n",__func__,__LINE__);
+			TXC_PA2240_ERR("%s,line %d:read power_value failed,open ps fail\n", __func__, __LINE__);
 			return ret;
 		}
 #ifdef CONFIG_HUAWEI_DSM
@@ -1486,47 +1887,52 @@ static int txc_pa2240_enable_ps_sensor(struct i2c_client *client,unsigned int va
 		power_key_ps = false;
 		schedule_delayed_work(&data->powerkey_work, msecs_to_jiffies(100));
 	} else {
-
-		if (data->enable_ps_sensor==1) {
-
+		if (data->enable_ps_sensor == 1) {
 			mutex_lock(&data->single_lock);
-			
 			data->enable_ps_sensor = 0;
-			data->enable= 0x00;
+			data->enable = 0x00;
 			txc_pa2240_set_cfg0(client, data->enable);
-
 			mutex_unlock(&data->single_lock);
-			TXC_PA2240_INFO("%s: line:%d,disable pls sensor,data->enable = 0x%x\n", __func__, __LINE__,data->enable);
+			TXC_PA2240_INFO("%s: line:%d,disable pls sensor,data->enable = 0x%x\n", __func__, __LINE__, data->enable);
 			cancel_work_sync(&data->dwork);
 			cancel_delayed_work(&data->powerkey_work);
 			if (data->irq)
 			{
 				/*when close the pls,make the wakeup property diabled*/
 				irq_set_irq_wake(data->irq, 0);
-				operate_irq(data,0,true);
+				operate_irq(data, 0, true);
 			}
-
 #ifdef CONFIG_HUAWEI_DSM
 		txc_pa2240_dsm_change_ps_enable_status(data);
 #endif
-
 		}
 	}
-
 	txc_pa2240_regs_debug_print(data, data->enable_ps_sensor);
 	/* Vote off  regulators if both light and prox sensor are off */
-	if ((data->enable_ps_sensor == 0) &&(data->platform_data->power_on)){
-		data->platform_data->power_on(false,data);
+	if ((data->enable_ps_sensor == 0) && (data->platform_data->power_on)) {
+		data->platform_data->power_on(false, data);
 	}
 	return 0;
 }
 
-
 static int txc_pa2240_ps_set_enable(struct sensors_classdev *sensors_cdev,
 		unsigned int enable)
 {
-	struct txc_pa2240_data *data = container_of(sensors_cdev,
-			struct txc_pa2240_data, ps_cdev);
+	struct txc_pa2240_data *data = NULL;
+
+	if (sensors_cdev == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: sensors_cdev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = container_of(sensors_cdev, struct txc_pa2240_data, ps_cdev);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	if ((enable != 0) && (enable != 1)) {
 		TXC_PA2240_ERR("%s: invalid value(%d)\n", __func__, enable);
 		return -EINVAL;
@@ -1537,19 +1943,31 @@ static int txc_pa2240_ps_set_enable(struct sensors_classdev *sensors_cdev,
 static ssize_t txc_pa2240_show_pdata(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	int pdata;
-
-	pdata = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA,TXC_PA2240_I2C_BYTE);
-	if(pdata <0){
-		TXC_PA2240_ERR("%s,line %d:read pdata failed\n",__func__,__LINE__);
+	struct i2c_client *client = NULL;
+	int pdata = 0;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
 	}
 
-	return snprintf(buf,32, "%d\n", pdata);
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = txc_pa2240_i2c_read(client, TXC_PA2240_REG_PS_DATA, TXC_PA2240_I2C_BYTE);
+	if (pdata < 0) {
+		TXC_PA2240_ERR("%s,line %d:read pdata failed\n", __func__, __LINE__);
+	}
+
+	return snprintf(buf, 32, "%d\n", pdata);
 }
 
 static DEVICE_ATTR(pdata, S_IRUGO, txc_pa2240_show_pdata, NULL);
-
 
 /*
 * set the register's value from userspace
@@ -1559,62 +1977,75 @@ static DEVICE_ATTR(pdata, S_IRUGO, txc_pa2240_show_pdata, NULL);
 static ssize_t txc_pa2240_write_reg(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
+	struct i2c_client *client = NULL;
 	int val_len_max = 4;
-	char* input_str =NULL;
-	char reg_addr_str[10]={'\0'};
-	char reg_val_str[10]={'\0'};
-	long reg_addr,reg_val;
-	int addr_lenth=0,value_lenth=0,buf_len=0,ret = -1;
-	char* strtok=NULL;
+	char *input_str = NULL;
+	char reg_addr_str[10] = {'\0'};
+	char reg_val_str[10] = {'\0'};
+	long reg_addr = 0, reg_val = 0;
+	int addr_lenth = 0, value_lenth = 0, buf_len = 0, ret = 0;
+	char *strtok = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	buf_len = strlen(buf);
 	input_str = kzalloc(buf_len, GFP_KERNEL);
 	if (!input_str)
 	{
-		TXC_PA2240_ERR("%s:kmalloc fail!\n",__func__);
+		TXC_PA2240_ERR("%s:kmalloc fail!\n", __func__);
 		return -ENOMEM;
 	}
 
-	snprintf(input_str, 10,"%s", buf);
+	snprintf(input_str, 10, "%s", buf);
 	/*Split the string when encounter "|", for example "0x08|0x12" will be splited "0x18" "0x12" */
-	strtok=strsep(&input_str, "|");
-	if(strtok!=NULL)
+	strtok = strsep(&input_str, "|");
+	if (strtok != NULL)
 	{
 		addr_lenth = strlen(strtok);
-		memcpy(reg_addr_str,strtok,((addr_lenth > (val_len_max))?(val_len_max):addr_lenth));
+		memcpy(reg_addr_str, strtok, ((addr_lenth > (val_len_max)) ? (val_len_max) : addr_lenth));
 	}
 	else
 	{
-		TXC_PA2240_ERR("%s: buf name Invalid:%s", __func__,buf);
+		TXC_PA2240_ERR("%s: buf name Invalid:%s", __func__, buf);
 		goto parse_fail_exit;
 	}
-	strtok=strsep(&input_str, "|");
-	if(strtok!=NULL)
+	strtok = strsep(&input_str, "|");
+	if (strtok != NULL)
 	{
 		value_lenth = strlen(strtok);
-		memcpy(reg_val_str,strtok,((value_lenth > (val_len_max))?(val_len_max):value_lenth));
+		memcpy(reg_val_str, strtok, ((value_lenth > (val_len_max)) ? (val_len_max) : value_lenth));
 	}
 	else
 	{
-		TXC_PA2240_ERR("%s: buf value Invalid:%s", __func__,buf);
+		TXC_PA2240_ERR("%s: buf value Invalid:%s", __func__, buf);
 		goto parse_fail_exit;
 	}
 	/* transform string to long int */
-	ret = kstrtol(reg_addr_str,16,&reg_addr);
-	if(ret)
+	ret = kstrtol(reg_addr_str, 16, &reg_addr);
+	if (ret)
 		goto parse_fail_exit;
 
-	ret = kstrtol(reg_val_str,16,&reg_val);
-	if(ret)
+	ret = kstrtol(reg_val_str, 16, &reg_val);
+	if (ret)
 		goto parse_fail_exit;
 
 	/* write the parsed value in the register*/
-	ret = txc_pa2240_i2c_write(client,(char)reg_addr,(char)reg_val,TXC_PA2240_I2C_BYTE);
-	if (ret < 0){
+	ret = txc_pa2240_i2c_write(client, (char)reg_addr, (char)reg_val, TXC_PA2240_I2C_BYTE);
+	if (ret < 0) {
 		goto parse_fail_exit;
 	}
-	if(input_str)
+	if (input_str)
 		kfree(input_str);
 	return count;
 
@@ -1631,38 +2062,64 @@ parse_fail_exit:
 static ssize_t txc_pa2240_print_reg_buf(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	int i;
-	char reg[TXC_PA2240_REG_LEN];
-	struct i2c_client *client = to_i2c_client(dev);
+	int i = 0;
+	char reg[TXC_PA2240_REG_LEN] = {0,};
+	struct i2c_client *client = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	/* read all register value and print to user*/
-	for(i = 0; i < TXC_PA2240_REG_LEN; i++ )
+	for (i = 0; i < TXC_PA2240_REG_LEN; i++ )
 	{
-		reg[i] = txc_pa2240_i2c_read(client,i,TXC_PA2240_I2C_BYTE);
-		if(reg[i] <0){
-			TXC_PA2240_ERR("%s,line %d:read %d reg failed\n",__func__,__LINE__,i);
-			return reg[i] ;
+		reg[i] = txc_pa2240_i2c_read(client, i, TXC_PA2240_I2C_BYTE);
+		if (reg[i] <0) {
+			TXC_PA2240_ERR("%s,line %d:read %d reg failed\n", __func__, __LINE__, i);
+			return reg[i];
 		}
 	}
 
 	return snprintf(buf,512,"reg[0x0~0x8]=0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
 			"reg[0x09~0x12]0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n",
-			reg[0x00],reg[0x01],reg[0x02],reg[0x03],reg[0x04],reg[0x05],reg[0x06],reg[0x07],reg[0x08],
-			reg[0x09],reg[0x0a],reg[0x0b],reg[0x0c],reg[0x0d],reg[0x0e],reg[0x0f],reg[0x10],reg[0x11],reg[0x12]);
+			reg[0x00], reg[0x01], reg[0x02], reg[0x03], reg[0x04], reg[0x05], reg[0x06], reg[0x07], reg[0x08],
+			reg[0x09], reg[0x0a], reg[0x0b], reg[0x0c], reg[0x0d], reg[0x0e], reg[0x0f], reg[0x10], reg[0x11], reg[0x12]);
 }
 
-static DEVICE_ATTR(dump_reg ,S_IRUGO | S_IWUSR, txc_pa2240_print_reg_buf, txc_pa2240_write_reg);
+static DEVICE_ATTR(dump_reg, S_IRUGO | S_IWUSR, txc_pa2240_print_reg_buf, txc_pa2240_write_reg);
 
 static ssize_t txc_pa2240_show_ps_calibration(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	int ps_cal_offset =0;
-	struct i2c_client *client = to_i2c_client(dev);
+	int ps_cal_offset = 0;
+	struct i2c_client *client = NULL;
 	
-	ps_cal_offset =  txc_pa2240_get_pscrosstalk(client);
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	ps_cal_offset = txc_pa2240_get_pscrosstalk(client);
 	
 	return snprintf(buf, MAX_BUF_LEN, "x-talk = %d\n", ps_cal_offset);
-	
+
 }
 
 /* PS Calibration */
@@ -1670,12 +2127,31 @@ static ssize_t txc_pa2240_store_ps_calibration(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
 	static int ret = 0;
-	struct i2c_client *client = to_i2c_client(dev);	
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;	
+	struct txc_pa2240_data *data = NULL;
 
+	if (buf == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+		
 	ret = txc_pa2240_run_fast_calibration(client);
-	if(ret)
+	if (ret)
 	{
 		TXC_PA2240_ERR("%s,line%d:set ps_cal_offset fail:%d\n ", __func__, __LINE__, ret);
 	}
@@ -1688,18 +2164,38 @@ static ssize_t txc_pa2240_store_ps_calibration(struct device *dev,
 static ssize_t pa224_store_ps_calibration(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);	
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	int err;
-	u32 val;
+	struct i2c_client *client = NULL;	
+	struct txc_pa2240_data *data = NULL;
+	int err = 0;
+	u32 val = 0;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	err = kstrtoint(buf, 0, &val);
 	if (err < 0) {
-		TXC_PA2240_ERR("%s:%d kstrtoint failed\n", __func__,__LINE__);
+		TXC_PA2240_ERR("%s:%d kstrtoint failed\n", __func__, __LINE__);
 		return err;
 	}
 	TXC_PA2240_INFO("%s,line%d:val =%d\n ", __func__, __LINE__, val);
-	if(val == 1)
+	if (val == 1)
 	{
 		mutex_lock(&data->single_lock);
 		pa224_run_calibration(client);
@@ -1711,7 +2207,21 @@ static ssize_t pa224_store_ps_calibration(struct device *dev,
 static ssize_t pa224_show_ps_calibration(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);	
+	struct i2c_client *client = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	return snprintf(buf, MAX_BUF_LEN, "x-talk = %d\n", txc_pa2240_get_pscrosstalk(client));
 	
 }
@@ -1719,29 +2229,84 @@ static ssize_t pa224_show_ps_calibration(struct device *dev,
 static ssize_t pa224_show_ps_calibration_result(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);	
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	if(pdata->flag < 0)
+	struct i2c_client *client = NULL;	
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
 	{
-		return snprintf(buf, MAX_BUF_LEN,"%d\n", pdata->flag);
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
 	}
 	
-	return snprintf(buf, MAX_BUF_LEN,"%d\n", pdata->crosstalk);
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	if (pdata->flag < 0)
+	{
+		return snprintf(buf, MAX_BUF_LEN, "%d\n", pdata->flag);
+	}
+	
+	return snprintf(buf, MAX_BUF_LEN, "%d\n", pdata->crosstalk);
 }
 
 static ssize_t pa224_store_ps_calibration_result(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	int err;
-	u32 val;
+	struct i2c_client *client = NULL;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	int err = 0;
+	u32 val = 0;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
 	err = kstrtoint(buf, 0, &val);
 	if (err < 0) {
-		TXC_PA2240_ERR("%s:%d kstrtoint failed\n", __func__,__LINE__);
+		TXC_PA2240_ERR("%s:%d kstrtoint failed\n", __func__, __LINE__);
 		return err;
 	}
 	TXC_PA2240_INFO("%s,line%d:val =%d\n ", __func__, __LINE__, val);
@@ -1751,7 +2316,7 @@ static ssize_t pa224_store_ps_calibration_result(struct device *dev,
 
 static DEVICE_ATTR(ps_calibration, S_IRUGO | S_IWUSR, txc_pa2240_show_ps_calibration, txc_pa2240_store_ps_calibration);
 static DEVICE_ATTR(txc_pa2240_calibration, S_IRUGO | S_IWUSR, pa224_show_ps_calibration, pa224_store_ps_calibration);
-static DEVICE_ATTR(txc_pa2240_calibration_result, S_IRUGO | S_IWUSR, pa224_show_ps_calibration_result,pa224_store_ps_calibration_result);
+static DEVICE_ATTR(txc_pa2240_calibration_result, S_IRUGO | S_IWUSR, pa224_show_ps_calibration_result, pa224_store_ps_calibration_result);
 
 static struct attribute *txc_pa2240_attributes[] = {
 	&dev_attr_pdata.attr,
@@ -1774,21 +2339,42 @@ static const struct attribute_group txc_pa2240_attr_group = {
  */
 static int txc_pa2240_init_client(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	int err;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	int err = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	data->enable = 0x00;
 	err = txc_pa2240_set_cfg0(client, data->enable);
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg0 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg0 FAIL ", __func__, __LINE__);
 		return err;
 	}
 
 	err = txc_pa2240_set_cfg1(client, (pdata->ir_current << 4) | ( PA2240_PS_PRST << 2));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg1 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg1 FAIL ", __func__, __LINE__);
 		return err;
 	}
 
@@ -1796,33 +2382,33 @@ static int txc_pa2240_init_client(struct i2c_client *client)
 	err = txc_pa2240_set_cfg3(client, (PA2240_INT_TYPE << 6) | (PA2240_PS_PERIOD << 3));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg3 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg3 FAIL ", __func__, __LINE__);
 		return err;
 	}
-	err = txc_pa2240_set_ps(client,0x82);
+	err = txc_pa2240_set_ps(client, 0x82);
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_ps FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_ps FAIL ", __func__, __LINE__);
 		return err;
 	}
-	err = txc_pa2240_set_flct(client,(0x0C | (PA2240_PS_FLCT<<4)));
+	err = txc_pa2240_set_flct(client, (0x0C | (PA2240_PS_FLCT<<4)));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_flct FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_flct FAIL ", __func__, __LINE__);
 		return err;
 	}	
 	/* init threshold for proximity */
 	err = txc_pa2240_set_pilt(client, 0);
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_pilt FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_pilt FAIL ", __func__, __LINE__);
 		return err;
 	}
 
 	err = txc_pa2240_set_piht(client, 0xFF);
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_piht FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_piht FAIL ", __func__, __LINE__);
 		return err;
 	}
 	data->ps_detection = TXC_PA2240_FAR_FLAG; /* initial value = far*/
@@ -1831,7 +2417,7 @@ static int txc_pa2240_init_client(struct i2c_client *client)
 	err = txc_pa2240_set_cfg2(client, (PA2240_PS_MODE << 6) | (1 << 2));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg2 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg2 FAIL ", __func__, __LINE__);
 		return err;
 	}
 
@@ -1840,21 +2426,43 @@ static int txc_pa2240_init_client(struct i2c_client *client)
 /*power off init client */
 static int txc_pa2240_power_off_init_client(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
-	int err;
-	TXC_PA2240_INFO("%s,line%d:txc_pa2240_power_off_init_client\n",__func__,__LINE__);
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	int err = 0;
+	
+	TXC_PA2240_INFO("%s,line%d:txc_pa2240_power_off_init_client\n", __func__, __LINE__);
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	err = txc_pa2240_set_cfg0(client, data->enable);
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg0 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg0 FAIL ", __func__, __LINE__);
 		return err;
 	}
 
 	err = txc_pa2240_set_cfg1(client, (pdata->ir_current << 4) | ( PA2240_PS_PRST << 2));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg1 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg1 FAIL ", __func__, __LINE__);
 		return err;
 	}
 
@@ -1862,27 +2470,27 @@ static int txc_pa2240_power_off_init_client(struct i2c_client *client)
 	err = txc_pa2240_set_cfg3(client, (PA2240_INT_TYPE << 6) | (PA2240_PS_PERIOD << 3));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg3 FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_cfg3 FAIL ", __func__, __LINE__);
 		return err;
 	}
-	err = txc_pa2240_set_ps(client,0x82);
+	err = txc_pa2240_set_ps(client, 0x82);
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_ps FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_ps FAIL ", __func__, __LINE__);
 		return err;
 	}
-	err = txc_pa2240_set_flct(client,(0x0C | (PA2240_PS_FLCT<<4)));
+	err = txc_pa2240_set_flct(client, (0x0C | (PA2240_PS_FLCT<<4)));
 	if (err < 0)
 	{
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_flct FAIL ",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_flct FAIL ", __func__, __LINE__);
 		return err;
 	}	
 	/* init threshold for proximity */
-	err = txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TH, data->piht, TXC_PA2240_I2C_BYTE); 
-	err += txc_pa2240_i2c_write(client,TXC_PA2240_REG_PS_TL, data->pilt, TXC_PA2240_I2C_BYTE);
+	err = txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TH, data->piht, TXC_PA2240_I2C_BYTE); 
+	err += txc_pa2240_i2c_write(client, TXC_PA2240_REG_PS_TL, data->pilt, TXC_PA2240_I2C_BYTE);
 	if (err < 0) 
 	{ 
-		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_piht FAIL ",__func__,__LINE__); 
+		TXC_PA2240_ERR("%s,line%d:txc_pa2240_set_piht FAIL ", __func__, __LINE__); 
 		return err; 
 	} 
 
@@ -1891,22 +2499,28 @@ static int txc_pa2240_power_off_init_client(struct i2c_client *client)
 /*qualcom updated the regulator configure functions and we add them all*/
 static int sensor_regulator_configure(struct txc_pa2240_data *data, bool on)
 {
-	int rc;
+	int rc = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (!on) {
-		if (regulator_count_voltages(data->vdd) > 0){
+		if (regulator_count_voltages(data->vdd) > 0) {
 			rc = regulator_set_voltage(data->vdd, 0, TXC_PA2240_VDD_MAX_UV);
-			if(rc){
-				TXC_PA2240_ERR("%s,line%d:Regulator set vdd failed rc=%d\n",__func__,__LINE__,rc);
+			if (rc) {
+				TXC_PA2240_ERR("%s,line%d:Regulator set vdd failed rc=%d\n", __func__, __LINE__, rc);
 			}
 		}
 
 		regulator_put(data->vdd);
 
-		if (regulator_count_voltages(data->vio) > 0){
+		if (regulator_count_voltages(data->vio) > 0) {
 			rc = regulator_set_voltage(data->vio, 0, TXC_PA2240_VIO_MAX_UV);
-			if(rc){
-				TXC_PA2240_ERR("%s,line%d:Regulator set vio failed rc=%d\n",__func__,__LINE__,rc);
+			if (rc) {
+				TXC_PA2240_ERR("%s,line%d:Regulator set vio failed rc=%d\n", __func__, __LINE__, rc);
 			}
 		}
 
@@ -1916,7 +2530,7 @@ static int sensor_regulator_configure(struct txc_pa2240_data *data, bool on)
 		data->vdd = regulator_get(&data->client->dev, "vdd");
 		if (IS_ERR(data->vdd)) {
 			rc = PTR_ERR(data->vdd);
-			TXC_PA2240_ERR("%s,line%d:Regulator get failed vdd rc=%d\n",__func__,__LINE__, rc);
+			TXC_PA2240_ERR("%s,line%d:Regulator get failed vdd rc=%d\n", __func__, __LINE__, rc);
 			return rc;
 		}
 
@@ -1924,7 +2538,7 @@ static int sensor_regulator_configure(struct txc_pa2240_data *data, bool on)
 			rc = regulator_set_voltage(data->vdd,
 				TXC_PA2240_VDD_MIN_UV, TXC_PA2240_VDD_MAX_UV);
 			if (rc) {
-				TXC_PA2240_ERR("%s,line%d:Regulator set failed vdd rc=%d\n",__func__,__LINE__,rc);
+				TXC_PA2240_ERR("%s,line%d:Regulator set failed vdd rc=%d\n", __func__, __LINE__, rc);
 				goto reg_vdd_put;
 			}
 		}
@@ -1932,7 +2546,7 @@ static int sensor_regulator_configure(struct txc_pa2240_data *data, bool on)
 		data->vio = regulator_get(&data->client->dev, "vio");
 		if (IS_ERR(data->vio)) {
 			rc = PTR_ERR(data->vio);
-			TXC_PA2240_ERR("%s,line%d:Regulator get failed vio rc=%d\n",__func__,__LINE__, rc);
+			TXC_PA2240_ERR("%s,line%d:Regulator get failed vio rc=%d\n", __func__, __LINE__, rc);
 			goto reg_vdd_set;
 		}
 
@@ -1940,11 +2554,10 @@ static int sensor_regulator_configure(struct txc_pa2240_data *data, bool on)
 			rc = regulator_set_voltage(data->vio,
 				TXC_PA2240_VIO_MIN_UV, TXC_PA2240_VIO_MAX_UV);
 			if (rc) {
-				TXC_PA2240_ERR("%s,line%d:Regulator set failed vio rc=%d\n",__func__,__LINE__, rc);
+				TXC_PA2240_ERR("%s,line%d:Regulator set failed vio rc=%d\n", __func__, __LINE__, rc);
 				goto reg_vio_put;
 			}
 		}
-
 	}
 
 	return 0;
@@ -1961,10 +2574,19 @@ reg_vdd_put:
 /*In suspend and resume function,we only control the als,leave pls alone*/
 static int txc_pa2240_suspend(struct i2c_client *client, pm_message_t mesg)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	if (NULL == data) {
-		TXC_PA2240_ERR("%s: i2c_get_clientdata is null\n", __func__);
-		return -1;
+	struct txc_pa2240_data *data = NULL;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
 	}
 
 	data->i2c_ready_flag = false;
@@ -1974,10 +2596,19 @@ static int txc_pa2240_suspend(struct i2c_client *client, pm_message_t mesg)
 
 static int txc_pa2240_resume(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	if (NULL == data) {
-		TXC_PA2240_ERR("%s: i2c_get_clientdata is null\n", __func__);
-		return -1;
+	struct txc_pa2240_data *data = NULL;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
 	}
 
 	data->i2c_ready_flag = true;
@@ -1985,33 +2616,55 @@ static int txc_pa2240_resume(struct i2c_client *client)
 	TXC_PA2240_INFO("%s: data->i2c_ready_flag: %d\n", __func__, data->i2c_ready_flag);
 	return 0;
 }
+
 /*pamameter subfunction of probe to reduce the complexity of probe function*/
-static int txc_pa2240_sensorclass_init(struct txc_pa2240_data *data,struct i2c_client* client)
+static int txc_pa2240_sensorclass_init(struct txc_pa2240_data *data, struct i2c_client* client)
 {
-	int err;
+	int err = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	/* Register to sensors class */
 	data->ps_cdev = sensors_proximity_cdev;
 	data->ps_cdev.sensors_enable = txc_pa2240_ps_set_enable;
 	data->ps_cdev.sensors_poll_delay = NULL;
 
-	err = sensors_classdev_register(&data ->input_dev_ps ->dev, &data->ps_cdev);
+	err = sensors_classdev_register(&data->input_dev_ps->dev, &data->ps_cdev);
 	if (err) {
-		TXC_PA2240_ERR("%s: Unable to register to sensors class: %d\n",__func__, err);
+		TXC_PA2240_ERR("%s: Unable to register to sensors class: %d\n", __func__, err);
 	}
 
 	return err;
 }
+
 static void txc_pa2240_parameter_init(struct txc_pa2240_data *data)
 {
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	/* Set the default parameters */
 	data->enable = 0x00;	/* default mode is standard */
 	data->enable_ps_sensor = 0;	// default to 0
 	data->count = 1;	// disable_irq is before enable_irq, so the initial value should more than zero
 }
+
 /*input init subfunction of probe to reduce the complexity of probe function*/
 static int txc_pa2240_input_init(struct txc_pa2240_data *data)
 {
 	int err = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	data->input_dev_ps = input_allocate_device();
 	if (!data->input_dev_ps) {
@@ -2039,16 +2692,24 @@ unregister_als:
 exit:
 	return err;
 }
+
 /*irq request subfunction of probe to reduce the complexity of probe function*/
-static int txc_pa2240_irq_init(struct txc_pa2240_data *data,struct i2c_client *client)
+static int txc_pa2240_irq_init(struct txc_pa2240_data *data, struct i2c_client *client)
 {
 	int ret = 0;
+	
+	if ((data == NULL) || (client == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: data or client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	if (data->platform_data->irq_gpio)
 	{
-		ret = gpio_request(data->platform_data->irq_gpio,"pa2240_irq_gpio");
+		ret = gpio_request(data->platform_data->irq_gpio, "pa2240_irq_gpio");
 		if (ret)
 		{
-			TXC_PA2240_ERR("%s, line %d:unable to request gpio [%d]\n", __func__, __LINE__,data->platform_data->irq_gpio);
+			TXC_PA2240_ERR("%s, line %d:unable to request gpio [%d]\n", __func__, __LINE__, data->platform_data->irq_gpio);
 			return ret;
 		}
 		else
@@ -2056,7 +2717,7 @@ static int txc_pa2240_irq_init(struct txc_pa2240_data *data,struct i2c_client *c
 			ret = gpio_direction_input(data->platform_data->irq_gpio);
 			if(ret)
 			{
-				TXC_PA2240_ERR("%s, line %d: Failed to set gpio %d direction\n", __func__, __LINE__,data->platform_data->irq_gpio);
+				TXC_PA2240_ERR("%s, line %d: Failed to set gpio %d direction\n", __func__, __LINE__, data->platform_data->irq_gpio);
 				return ret;
 			}
 		}
@@ -2064,17 +2725,17 @@ static int txc_pa2240_irq_init(struct txc_pa2240_data *data,struct i2c_client *c
 	client->irq = gpio_to_irq(data->platform_data->irq_gpio);
 	if (client->irq < 0) {
 		ret = -EINVAL;
-		TXC_PA2240_ERR("%s, line %d:gpio_to_irq FAIL! IRQ=%d\n", __func__, __LINE__,data->platform_data->irq_gpio);
+		TXC_PA2240_ERR("%s, line %d:gpio_to_irq FAIL! IRQ=%d\n", __func__, __LINE__, data->platform_data->irq_gpio);
 		return ret;
 	}
 	data->irq = client->irq;
 	if (client->irq)
 	{
 		/*AP examination of low level to prevent lost interrupt*/
-		if (request_irq(data->irq, txc_pa2240_interrupt,IRQF_TRIGGER_LOW|IRQF_ONESHOT|IRQF_NO_SUSPEND, TXC_PA2240_DRV_NAME, (void *)client) >= 0)
+		if (request_irq(data->irq, txc_pa2240_interrupt, IRQF_TRIGGER_LOW|IRQF_ONESHOT|IRQF_NO_SUSPEND, TXC_PA2240_DRV_NAME, (void *)client) >= 0)
 		{
 			TXC_PA2240_FLOW("%s, line %d:Received IRQ!\n", __func__, __LINE__);
-			operate_irq(data,0,true);
+			operate_irq(data, 0, true);
 		}
 		else
 		{
@@ -2088,6 +2749,12 @@ static int txc_pa2240_irq_init(struct txc_pa2240_data *data,struct i2c_client *c
 static int sensor_regulator_power_on(struct txc_pa2240_data *data, bool on)
 {
 	int rc = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (!on) {
 		rc = regulator_disable(data->vdd);
@@ -2100,7 +2767,7 @@ static int sensor_regulator_power_on(struct txc_pa2240_data *data, bool on)
 		if (rc) {
 			TXC_PA2240_ERR("%s: Regulator vdd disable failed rc=%d\n", __func__, rc);
 			rc = regulator_enable(data->vdd);
-			TXC_PA2240_ERR("%s:Regulator vio re-enabled rc=%d\n",__func__, rc);
+			TXC_PA2240_ERR("%s:Regulator vio re-enabled rc=%d\n", __func__, rc);
 			/*
 			 * Successfully re-enable regulator.
 			 * Enter poweron delay and returns error.
@@ -2114,29 +2781,35 @@ static int sensor_regulator_power_on(struct txc_pa2240_data *data, bool on)
 	} else {
 		rc = regulator_enable(data->vdd);
 		if (rc) {
-			TXC_PA2240_ERR("%s:Regulator vdd enable failed rc=%d\n",__func__, rc);
+			TXC_PA2240_ERR("%s:Regulator vdd enable failed rc=%d\n", __func__, rc);
 			return rc;
 		}
 
 		rc = regulator_enable(data->vio);
 		if (rc) {
-			TXC_PA2240_ERR("%s:Regulator vio enable failed rc=%d\n", __func__,rc);
+			TXC_PA2240_ERR("%s:Regulator vio enable failed rc=%d\n", __func__, rc);
 			rc = regulator_disable(data->vdd);
 			return rc;
 		}
 	}
 enable_delay:
-	if(1 == txc_power_delay_flag)
+	if (txc_power_delay_flag == 1)
 	{
 		msleep(10);
 	}
-	TXC_PA2240_FLOW("%s:Sensor regulator power on =%d\n",__func__, on);
+	TXC_PA2240_FLOW("%s:Sensor regulator power on =%d\n", __func__, on);
 	return rc;
 }
 
-static int sensor_platform_hw_power_on(bool on,struct txc_pa2240_data *data)
+static int sensor_platform_hw_power_on(bool on, struct txc_pa2240_data *data)
 {
 	int err = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (data->power_on != on) {
 		if (!IS_ERR_OR_NULL(data->pinctrl)) {
@@ -2159,11 +2832,17 @@ static int sensor_platform_hw_power_on(bool on,struct txc_pa2240_data *data)
 }
 static int sensor_platform_hw_init(struct txc_pa2240_data *data)
 {
-	int error;
+	int error = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	error = sensor_regulator_configure(data, true);
 	if (error < 0) {
-		TXC_PA2240_ERR("%s,line %d:unable to configure regulator\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:unable to configure regulator\n", __func__, __LINE__);
 		return error;
 	}
 
@@ -2172,26 +2851,47 @@ static int sensor_platform_hw_init(struct txc_pa2240_data *data)
 
 static void sensor_platform_hw_exit(struct txc_pa2240_data *data)
 {
-	int error;
+	int error = 0;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	error = sensor_regulator_configure(data, false);
 	if (error < 0) {
-		TXC_PA2240_ERR("%s,line %d:unable to configure regulator\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:unable to configure regulator\n", __func__, __LINE__);
 	}
 }
+
 static int txc_pa2240_pinctrl_init(struct txc_pa2240_data *data)
 {
-	struct i2c_client *client = data->client;
+	struct i2c_client *client = NULL;
+	
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	client = data->client;
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	data->pinctrl = devm_pinctrl_get(&client->dev);
 	if (IS_ERR_OR_NULL(data->pinctrl)) {
-		TXC_PA2240_ERR("%s,line %d:Failed to get pinctrl\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Failed to get pinctrl\n", __func__, __LINE__);
 		return PTR_ERR(data->pinctrl);
 	}
 	/*we have not set the sleep state of INT pin*/
 	data->pin_default =
 		pinctrl_lookup_state(data->pinctrl, "default");
 	if (IS_ERR_OR_NULL(data->pin_default)) {
-		TXC_PA2240_ERR("%s,line %d:Failed to look up default state\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Failed to look up default state\n", __func__, __LINE__);
 		return PTR_ERR(data->pin_default);
 	}
 
@@ -2201,9 +2901,22 @@ static int txc_pa2240_pinctrl_init(struct txc_pa2240_data *data)
 static int sensor_parse_dt(struct device *dev,
 		struct txc_pa2240_platform_data *pdata)
 {
-	struct device_node *np = dev->of_node;
+	struct device_node *np = NULL;
 	unsigned int tmp = 0;
 	int rc = 0;
+	
+	if ((dev == NULL) || (pdata == NULL))
+	{
+		TXC_PA2240_ERR("%s,line %d: dev or pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	np = dev->of_node;
+	if (np == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: np is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	/* set functions of platform data */
 	pdata->init = sensor_platform_hw_init;
@@ -2214,81 +2927,81 @@ static int sensor_parse_dt(struct device *dev,
 	rc = of_get_named_gpio_flags(dev->of_node,
 			"txc,irq-gpio", 0, NULL);
 	if (rc < 0) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read irq gpio\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read irq gpio\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata->irq_gpio = rc;
 
 	rc = of_property_read_u32(np, "txc,ps_wave", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read pwave_value\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read pwave_value\n", __func__, __LINE__);
 		return rc;
 	}
-	pdata ->pwave= tmp;
+	pdata->pwave= tmp;
 
 	rc = of_property_read_u32(np, "txc,ps_window", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read pwindow_value\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read pwindow_value\n", __func__, __LINE__);
 		return rc;
 	}
-	pdata ->pwindow= tmp;
+	pdata->pwindow= tmp;
 
 	rc = of_property_read_u32(np, "txc,ps_defalt_crosstalk", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read ps_defalt_crosstalk\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read ps_defalt_crosstalk\n", __func__, __LINE__);
 		return rc;
 	}
-	pdata ->defalt_crosstalk = tmp;
-	pdata->crosstalk = pdata ->defalt_crosstalk;
+	pdata->defalt_crosstalk = tmp;
+	pdata->crosstalk = pdata->defalt_crosstalk;
 
 	rc = of_property_read_u32(np, "txc,ir_current", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read ir_current\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read ir_current\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata->ir_current = tmp;
 
 	rc = of_property_read_u32(np, "txc,oil_effect", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read oil_effect\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read oil_effect\n", __func__, __LINE__);
 		return rc;
 	}
 	oil_effect = tmp;
 
 	rc = of_property_read_u32(np, "txc,high_threshold", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read high_threshold\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read high_threshold\n", __func__, __LINE__);
 		return rc;
 	}
 	high_threshold = tmp;
 
 	rc = of_property_read_u32(np, "txc,low_threshold", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read low_threshold\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read low_threshold\n", __func__, __LINE__);
 		return rc;
 	}
 	low_threshold = tmp;
 
 	rc = of_property_read_u32(np, "txc,middle_threshold", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read middle_threshold\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read middle_threshold\n", __func__, __LINE__);
 		return rc;
 	}
 	middle_threshold = tmp;
 
 	rc = of_property_read_u32(np, "txc,calibration_threshold", &tmp);
 	if (rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read middle_threshold\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Unable to read middle_threshold\n", __func__, __LINE__);
 		return rc;
 	}
 	calibration_threshold = tmp;
 
-	rc = of_property_read_u32(np,"txc,power_delay_flag",&tmp);
-	if(rc) {
-		TXC_PA2240_ERR("%s,line %d:Unable to read power delay flag\n",__func__,__LINE__);
+	rc = of_property_read_u32(np, "txc,power_delay_flag", &tmp);
+	if (rc) {
+		TXC_PA2240_ERR("%s,line %d:Unable to read power delay flag\n", __func__, __LINE__);
 		txc_power_delay_flag = 1;
 	}
-	else{
+	else {
 		txc_power_delay_flag = tmp;
 	}
 	pdata->i2c_scl_gpio = of_get_named_gpio_flags(np, "txc,i2c-scl-gpio", 0, NULL);
@@ -2306,14 +3019,26 @@ static int sensor_parse_dt(struct device *dev,
 	return 0;
 }
 
-
-
 static void txc_pa2240_powerkey_screen_handler(struct work_struct *work)
 {
-	struct txc_pa2240_data *data = container_of((struct delayed_work *)work, struct txc_pa2240_data, powerkey_work);
-	if(power_key_ps)
+	struct txc_pa2240_data *data = NULL;
+	
+	if (work == NULL)
 	{
-		TXC_PA2240_INFO("%s : power_key_ps (%d) press\n",__func__, power_key_ps);
+		TXC_PA2240_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	data = container_of((struct delayed_work *)work, struct txc_pa2240_data, powerkey_work);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	if (power_key_ps)
+	{
+		TXC_PA2240_INFO("%s : power_key_ps (%d) press\n", __func__, power_key_ps);
 		power_key_ps=false;
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, TXC_PA2240_FAR_FLAG);
 		input_sync(data->input_dev_ps);
@@ -2328,12 +3053,25 @@ static struct i2c_driver txc_pa2240_driver;
 static int txc_pa2240_probe(struct i2c_client *client,
 				   const struct i2c_device_id *id)
 {
-	struct i2c_adapter *adapter = to_i2c_adapter(client->dev.parent);
-	struct txc_pa2240_data *data;
-	struct txc_pa2240_platform_data *pdata;
+	struct i2c_adapter *adapter = NULL;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
 	int err = 0;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	TXC_PA2240_INFO("%s,line %d:PROBE START.\n",__func__,__LINE__);
+	adapter = to_i2c_adapter(client->dev.parent);
+	if (adapter == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: adapter is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	TXC_PA2240_INFO("%s,line %d:PROBE START.\n", __func__, __LINE__);
 
 	if (client->dev.of_node) {
 		/*Memory allocated with this function is automatically freed on driver detach.*/
@@ -2341,7 +3079,7 @@ static int txc_pa2240_probe(struct i2c_client *client,
 				sizeof(struct txc_pa2240_platform_data),
 				GFP_KERNEL);
 		if (!pdata) {
-			TXC_PA2240_ERR("%s,line %d:Failed to allocate memory\n",__func__,__LINE__);
+			TXC_PA2240_ERR("%s,line %d:Failed to allocate memory\n", __func__, __LINE__);
 			err =-ENOMEM;
 			goto exit;
 		}
@@ -2355,21 +3093,21 @@ static int txc_pa2240_probe(struct i2c_client *client,
 	} else {
 		pdata = client->dev.platform_data;
 		if (!pdata) {
-			TXC_PA2240_ERR("%s,line %d:No platform data\n",__func__,__LINE__);
+			TXC_PA2240_ERR("%s,line %d:No platform data\n", __func__, __LINE__);
 			err = -ENODEV;
 			goto exit;
 		}
 	}
 
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE)) {
-		TXC_PA2240_ERR("%s,line %d:Failed to i2c_check_functionality\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Failed to i2c_check_functionality\n", __func__, __LINE__);
 		err = -EIO;
 		goto exit_parse_dt;
 	}
 
 	data = kzalloc(sizeof(struct txc_pa2240_data), GFP_KERNEL);
 	if (!data) {
-		TXC_PA2240_ERR("%s,line %d:Failed to allocate memory\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Failed to allocate memory\n", __func__, __LINE__);
 		err = -ENOMEM;
 		goto exit_parse_dt;
 	}
@@ -2383,10 +3121,10 @@ static int txc_pa2240_probe(struct i2c_client *client,
 		err = pdata->init(data);
 
 	if (pdata->power_on)
-		err = pdata->power_on(true,data);
+		err = pdata->power_on(true, data);
 #ifdef CONFIG_HUAWEI_DSM
 	err = txc_pa2240_dsm_init(data);
-	if(err < 0)
+	if (err < 0)
 		goto exit_uninit;
 #endif
 
@@ -2395,12 +3133,12 @@ static int txc_pa2240_probe(struct i2c_client *client,
 	/* initialize pinctrl */
 	err = txc_pa2240_pinctrl_init(data);
 	if (err) {
-		TXC_PA2240_ERR("%s,line %d:Can't initialize pinctrl\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Can't initialize pinctrl\n", __func__, __LINE__);
 			goto exit_unregister_dsm;
 	}
 	err = pinctrl_select_state(data->pinctrl, data->pin_default);
 	if (err) {
-		TXC_PA2240_ERR("%s,line %d:Can't select pinctrl default state\n",__func__,__LINE__);
+		TXC_PA2240_ERR("%s,line %d:Can't select pinctrl default state\n", __func__, __LINE__);
 		goto exit_unregister_dsm;
 	}
 
@@ -2419,7 +3157,7 @@ static int txc_pa2240_probe(struct i2c_client *client,
 	}
 
 	err = txc_pa2240_input_init(data);
-	if(err)
+	if (err)
 		goto exit_unregister_dsm;
 
 	/* Register sysfs hooks */
@@ -2438,15 +3176,15 @@ static int txc_pa2240_probe(struct i2c_client *client,
 
 	device_init_wakeup(&(client->dev), true);
 
-	err = txc_pa2240_sensorclass_init(data,client);
+	err = txc_pa2240_sensorclass_init(data, client);
 	if (err) {
 		TXC_PA2240_ERR("%s: Unable to register to sensors class: %d\n",
 	__func__, err);
 		goto exit_free_irq;
 	}
 
-	err=txc_pa2240_irq_init(data,client);
-	if(err)
+	err=txc_pa2240_irq_init(data, client);
+	if (err)
 		goto exit_unregister_sensorclass;
 
 	err = app_info_set("P-Sensor", "TXC PA2240");
@@ -2459,15 +3197,9 @@ static int txc_pa2240_probe(struct i2c_client *client,
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT
 	set_hw_dev_flag(DEV_I2C_APS);
 #endif
-	/*
-	err = set_sensor_input(PS, data->input_dev_ps->dev.kobj.name);
-	if (err) {
-		TXC_PA2240_ERR("%s set_sensor_input PS failed\n", __func__);
-	}
-	*/
 
 	if (pdata->power_on)
-		err = pdata->power_on(false,data);
+		err = pdata->power_on(false, data);
 	TXC_PA2240_INFO("%s: Support ver. %s enabled\n", __func__, DRIVER_VERSION);
 	data->device_exist = true;
 	return 0;
@@ -2490,7 +3222,7 @@ exit_uninit:
 exit_unregister_dsm:
 #endif
 	if (pdata->power_on)
-		pdata->power_on(false,data);
+		pdata->power_on(false, data);
 	if (pdata->exit)
 		pdata->exit(data);
 	kfree(data);
@@ -2502,8 +3234,28 @@ exit:
 
 static int txc_pa2240_remove(struct i2c_client *client)
 {
-	struct txc_pa2240_data *data = i2c_get_clientdata(client);
-	struct txc_pa2240_platform_data *pdata = data->platform_data;
+	struct txc_pa2240_data *data = NULL;
+	struct txc_pa2240_platform_data *pdata = NULL;
+	
+	if (client == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		TXC_PA2240_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	/* Power down the device */
 	data->enable = 0x00;
@@ -2519,7 +3271,7 @@ static int txc_pa2240_remove(struct i2c_client *client)
 #endif
 
 	if (pdata->power_on)
-		pdata->power_on(false,data);
+		pdata->power_on(false, data);
 
 	if (pdata->exit)
 		pdata->exit(data);

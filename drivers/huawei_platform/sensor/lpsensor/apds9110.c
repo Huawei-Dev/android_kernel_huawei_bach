@@ -19,7 +19,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/slab.h>
@@ -47,12 +46,9 @@
 
 #undef CONFIG_HUAWEI_DSM
 
-
-
 #ifdef CONFIG_HUAWEI_DSM
 #include 	<dsm/dsm_pub.h>
 #endif
-
 
 /* Change History 
  *
@@ -62,6 +58,8 @@
 
 #define APDS9110_DRV_NAME "apds9110"
 #define DRIVER_VERSION "1.0.0"
+
+#define HW_APDS_FUN_RET_FAIL      (-1)
 
 /*dynamic debug mask to control log print,you can echo value to apds9110_debug to control*/
 static int apds9110_debug_mask= 1;
@@ -79,7 +77,6 @@ module_param_named(apds9110_debug, apds9110_debug_mask, int, S_IRUGO | S_IWUSR |
     if ( apds9110_debug_mask >1) \
         printk(KERN_ERR x);\
     } while (0)
-
 
 struct apds9110_data {
 	struct i2c_client *client;
@@ -131,7 +128,6 @@ struct apds9110_data {
  * Global data
  */
 
-
 static struct sensors_classdev sensors_proximity_cdev = {
 	.name = "apds9110-proximity",
 	.vendor = "avago",
@@ -158,30 +154,39 @@ static unsigned char psGainValueArray[32]={0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0
 static struct workqueue_struct *apds9110_workqueue = NULL;
 extern bool power_key_ps ;    //the value is true means powerkey is pressed, false means not pressed
 
-
-
 /*we use the unified the function for i2c write and read operation*/
-static int apds9110_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool flag)
+static int apds9110_i2c_write(struct i2c_client *client, u8 reg, u16 value, bool flag)
 {
-	int err,loop;
-
-	struct apds9110_data *data = i2c_get_clientdata(client);
+	int err = 0, loop = 0;
+	struct apds9110_data *data = NULL;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	loop = APDS9110_I2C_RETRY_COUNT;
 	/*we give three times to repeat the i2c operation if i2c errors happen*/
-	while(loop) {
+	while (loop) {
 		mutex_lock(&data->update_lock);
 		/*0 is i2c_smbus_write_byte_data,1 is i2c_smbus_write_word_data*/
-		if(flag == APDS9110_I2C_BYTE)
+		if (flag == APDS9110_I2C_BYTE)
 		{
 			err = i2c_smbus_write_byte_data(client, reg, (u8)value);
 		}
-		else if(flag == APDS9110_I2C_WORD)
+		else if (flag == APDS9110_I2C_WORD)
 		{
 			err = i2c_smbus_write_word_data(client, reg, value);
 		}
 		mutex_unlock(&data->update_lock);
-		if(err < 0){
+		if (err < 0) {
 			loop--;
 			msleep(APDS9110_I2C_RETRY_TIMEOUT);
 		}
@@ -189,11 +194,11 @@ static int apds9110_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool f
 			break;
 	}
 	/*after three times,we print the register and regulator value*/
-	if(loop == 0){
-		APDS9110_ERR("%s,line %d:attention:i2c write err = %d\n",__func__,__LINE__,err);
+	if (loop == 0) {
+		APDS9110_ERR("%s,line %d:attention:i2c write err = %d\n", __func__, __LINE__, err);
 #ifdef CONFIG_HUAWEI_DSM
-		if (data->device_exist == true){
-			apds9110_report_i2c_info(data,err);
+		if (data->device_exist == true) {
+			apds9110_report_i2c_info(data, err);
 		}
 #endif
 	}
@@ -201,28 +206,38 @@ static int apds9110_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool f
 	return err;
 }
 
-
-static int apds9110_i2c_read(struct i2c_client*client, u8 reg,bool flag)
+static int apds9110_i2c_read(struct i2c_client *client, u8 reg, bool flag)
 {
-	int err,loop;
-
-	struct apds9110_data *data = i2c_get_clientdata(client);
+	int err = 0, loop = 0;
+	struct apds9110_data *data = NULL;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	loop = APDS9110_I2C_RETRY_COUNT;
 	/*we give three times to repeat the i2c operation if i2c errors happen*/
-	while(loop) {
+	while (loop) {
 		mutex_lock(&data->update_lock);
 		/*0 is i2c_smbus_read_byte_data,1 is i2c_smbus_read_word_data*/
-		if(flag == APDS9110_I2C_BYTE)
+		if (flag == APDS9110_I2C_BYTE)
 		{
 			err = i2c_smbus_read_byte_data(client, reg);
 		}
-		else if(flag == APDS9110_I2C_WORD)
+		else if (flag == APDS9110_I2C_WORD)
 		{
 			err = i2c_smbus_read_word_data(client, reg);
 		}
 		mutex_unlock(&data->update_lock);
-		if(err < 0){
+		if (err < 0) {
 			loop--;
 			msleep(APDS9110_I2C_RETRY_TIMEOUT);
 		}
@@ -230,11 +245,11 @@ static int apds9110_i2c_read(struct i2c_client*client, u8 reg,bool flag)
 			break;
 	}
 	/*after three times,we print the register and regulator value*/
-	if(loop == 0){
-		APDS9110_ERR("%s,line %d:attention: i2c read err = %d,reg=0x%x\n",__func__,__LINE__,err,reg);
+	if (loop == 0) {
+		APDS9110_ERR("%s,line %d:attention: i2c read err = %d,reg=0x%x\n", __func__, __LINE__, err, reg);
 #ifdef CONFIG_HUAWEI_DSM
 		if (data->device_exist == true){
-			apds9110_report_i2c_info(data,err);
+			apds9110_report_i2c_info(data, err);
 		}
 #endif
 	}
@@ -244,22 +259,46 @@ static int apds9110_i2c_read(struct i2c_client*client, u8 reg,bool flag)
 
 static int apds9110_dd_set_main_ctrl(struct i2c_client *client, int main_ctrl)
 {
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 	return i2c_smbus_write_byte_data(client, APDS9110_DD_MAIN_CTRL_ADDR, main_ctrl);
 }
 
 static int apds9110_dd_set_prx_meas_rate(struct i2c_client *client, int prx_meas)
-{	
+{
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}	
 	return i2c_smbus_write_byte_data(client, APDS9110_DD_PRX_MEAS_RATE_ADDR, prx_meas);
 }
+
 static int apds9110_dd_set_prx_gain(struct i2c_client *client, int prx_gain)
-{	
+{
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}	
 	return i2c_smbus_write_byte_data(client, APDS9110_DD_PRX_GAIN_ADDR, prx_gain);
 }
+
 static int apds9110_dd_set_prx_thresh(struct i2c_client *client, int thres_low, int thres_up)
 {
-	int ret;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	
 	ret = i2c_smbus_write_word_data(client, APDS9110_DD_PRX_THRES_UP_ADDR, thres_up);
-	if(ret)
+	if (ret)
 		APDS9110_ERR("%s, line:%d i2c write data fail, ret=%d\n", __func__, __LINE__, ret);
 	
 	return i2c_smbus_write_word_data(client, APDS9110_DD_PRX_THRES_LOW_ADDR, thres_low);
@@ -267,103 +306,149 @@ static int apds9110_dd_set_prx_thresh(struct i2c_client *client, int thres_low, 
 
 static int apds9110_set_pilt(struct i2c_client *client, int threshold)
 {
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	int ret;
+	struct apds9110_data *data = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
-	ret = apds9110_i2c_write(client,APDS9110_DD_PRX_THRES_LOW_ADDR, threshold,APDS9110_I2C_WORD);
-	if (ret < 0){
-		APDS9110_ERR("%s,line %d:i2c error,threshold = %d\n",__func__,__LINE__,threshold);
+	ret = apds9110_i2c_write(client, APDS9110_DD_PRX_THRES_LOW_ADDR, threshold, APDS9110_I2C_WORD);
+	if (ret < 0) {
+		APDS9110_ERR("%s,line %d:i2c error,threshold = %d\n", __func__, __LINE__, threshold);
 		return ret;
 	}
 
 	data->pilt = threshold;
-	APDS9110_INFO("%s,line %d:set apds9110 pilt =%d\n", __func__, __LINE__,threshold);
+	APDS9110_INFO("%s,line %d:set apds9110 pilt =%d\n", __func__, __LINE__, threshold);
 
 	return ret;
 }
 
 static int apds9110_set_piht(struct i2c_client *client, int threshold)
 {
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	int ret;
+	struct apds9110_data *data = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
-	ret = apds9110_i2c_write(client,APDS9110_DD_PRX_THRES_UP_ADDR, threshold,APDS9110_I2C_WORD);
-	if (ret < 0){
-		APDS9110_ERR("%s,line %d:i2c error,threshold = %d\n",__func__,__LINE__,threshold);
+	ret = apds9110_i2c_write(client, APDS9110_DD_PRX_THRES_UP_ADDR, threshold, APDS9110_I2C_WORD);
+	if (ret < 0) {
+		APDS9110_ERR("%s,line %d:i2c error,threshold = %d\n", __func__, __LINE__, threshold);
 		return ret;
 	}
 
 	data->piht = threshold;
-	APDS9110_INFO("%s,line %d:set apds9110 piht =%d\n", __func__,__LINE__,threshold);
+	APDS9110_INFO("%s,line %d:set apds9110 piht =%d\n", __func__, __LINE__, threshold);
 
 	return ret;
 }
 
 static void apds9110_ps_report_event(struct i2c_client *client)
 {
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	struct apds9110_platform_data *pdata = data->platform_data;
-	int ret=0;
+	struct apds9110_data *data = NULL;
+	struct apds9110_platform_data *pdata = NULL;
+	int ret = 0;
 	bool change_threshold = false;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	data = i2c_get_clientdata(client);	
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		APDS9110_ERR("%s,line %d: data or platform data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		APDS9110_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
 	 /* To calculate and set the minimum threshold for PS */
-	if((data->ps_data + pdata->pwave) < data->ps_min_threshold){
+	if ((data->ps_data + pdata->pwave) < data->ps_min_threshold) {
 		data->ps_min_threshold = data->ps_data + pdata->pwave;		
 		change_threshold = true;
-		APDS9110_INFO("%s:Changed ps_min_threshold=%d\n",__func__,data->ps_min_threshold);
+		APDS9110_INFO("%s:Changed ps_min_threshold=%d\n", __func__, data->ps_min_threshold);
 	}
 
-	APDS9110_INFO("%s:ps_data =%d,data->piht=%d,data->pilt=%d\n",__func__,data->ps_data,data->piht,data->pilt);
+	APDS9110_INFO("%s:ps_data =%d,data->piht=%d,data->pilt=%d\n", __func__, data->ps_data, data->piht, data->pilt);
 	/*far event*/
-	 if (data->ps_data <=  data->pilt && data->ps_detection == APDS9110_CLOSE_FLAG){
-		data->ps_detection =APDS9110_FAR_FLAG ;
+	 if ((data->ps_data <=  data->pilt) && (data->ps_detection == APDS9110_CLOSE_FLAG)) {
+		data->ps_detection = APDS9110_FAR_FLAG ;
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, APDS9110_FAR_FLAG);
 		input_sync(data->input_dev_ps);
-		APDS9110_INFO("%s:PROXIMITY far event,ps_data =%d,data->piht=%d,data->pilt=%d\n",__func__,data->ps_data,data->piht,data->pilt);
+		APDS9110_INFO("%s:PROXIMITY far event,ps_data =%d,data->piht=%d,data->pilt=%d\n", __func__, data->ps_data, data->piht, data->pilt);
 	}
 	/*near event*/
-	else if (data->ps_data >= data->piht && data->ps_detection ==  APDS9110_FAR_FLAG){
+	else if ((data->ps_data >= data->piht) && (data->ps_detection ==  APDS9110_FAR_FLAG)) {
 		data->ps_detection = APDS9110_CLOSE_FLAG;
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, APDS9110_CLOSE_FLAG);
 		input_sync(data->input_dev_ps);
-		APDS9110_INFO("%s:PROXIMITY close event,ps_data =%d,data->piht=%d,data->pilt=%d\n",__func__,data->ps_data,data->piht,data->pilt);
+		APDS9110_INFO("%s:PROXIMITY close event,ps_data =%d,data->piht=%d,data->pilt=%d\n", __func__, data->ps_data, data->piht, data->pilt);
 	}
-	else{
+	else {
 		APDS9110_ERR("%s:%d read pdata Not within reasonable limits,data->pilt=%d,data->piht=%d data->ps_data=%d\n",
-			__FUNCTION__,__LINE__,data->pilt,data->piht,data->ps_data);
+			__FUNCTION__, __LINE__, data->pilt, data->piht, data->ps_data);
 	}
 
-	if(change_threshold){
+	if (change_threshold) {
 		data->pilt = FAR_THRESHOLD(pdata->threshold_value);
 		data->piht = NEAR_THRESHOLD(pdata->threshold_value);
-		APDS9110_INFO("%s:Changed threshold,ps_data = %d,pilt = %d,piht = %d\n",__func__,data->ps_data,data->pilt,data->piht);
-		ret = apds9110_set_piht(client,data->piht);
+		APDS9110_INFO("%s:Changed threshold,ps_data = %d,pilt = %d,piht = %d\n", __func__, data->ps_data, data->pilt, data->piht);
+		ret = apds9110_set_piht(client, data->piht);
 		ret += apds9110_set_pilt(client, data->pilt);
-		if (ret < 0){
-			APDS9110_ERR("%s,line %d:data->pilt = %d,data->piht=%d, i2c wrong\n",__func__,__LINE__,data->pilt,data->piht);
+		if (ret < 0) {
+			APDS9110_ERR("%s,line %d:data->pilt = %d,data->piht=%d, i2c wrong\n", __func__, __LINE__, data->pilt, data->piht);
 			goto exit;
 		}
 	}
 
 	return;
 
-	exit:
+exit:
 	/*if i2c error happens,we report far event*/
-	if(data->ps_detection == APDS9110_CLOSE_FLAG){
+	if (data->ps_detection == APDS9110_CLOSE_FLAG) {
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, APDS9110_FAR_FLAG);
 		input_sync(data->input_dev_ps);
-		data->ps_detection= APDS9110_FAR_FLAG;
-		APDS9110_ERR("%s:i2c error happens, report far event, data->ps_data:%d\n", __func__,data->ps_data);
+		data->ps_detection = APDS9110_FAR_FLAG;
+		APDS9110_ERR("%s:i2c error happens, report far event, data->ps_data:%d\n", __func__, data->ps_data);
 	}
-
-	
 }
 
 void operate_irq(struct apds9110_data *data, int enable, bool sync)
 {
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	if (data->irq)
 	{
-		if(enable)
+		if (enable)
 		{
 			/*Avoid competitive access problems*/
 			data->count++;
@@ -371,9 +456,9 @@ void operate_irq(struct apds9110_data *data, int enable, bool sync)
 		}
 		else
 		{
-			if(data->count > 0)
+			if (data->count > 0)
 			{
-				if(sync)
+				if (sync)
 				{
 					disable_irq(data->irq);
 				}
@@ -387,45 +472,79 @@ void operate_irq(struct apds9110_data *data, int enable, bool sync)
 	}
 }
 
-
 /* PS interrupt routine */
 static void apds9110_work_handler(struct work_struct *work)
 {
-	struct apds9110_data *data = container_of(work, struct apds9110_data, dwork);
-	struct i2c_client *client=data->client;
-	int status;
-	int pdata;
+	struct apds9110_data *data = NULL;
+	struct i2c_client *client = NULL;
+	int status = 0;
+	int pdata = 0;
+	
+	if (work == NULL)
+	{
+		APDS9110_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	data = container_of(work, struct apds9110_data, dwork);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	client = data->client;
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
 
 	mutex_lock(&data->single_lock);
-	pdata= apds9110_i2c_read(client, APDS9110_DD_PRX_DATA_0_ADDR,APDS9110_I2C_WORD);
-	status = apds9110_i2c_read(client, APDS9110_DD_MAIN_STATUS_ADDR,APDS9110_I2C_BYTE);
-	if(pdata < 0){
+	pdata= apds9110_i2c_read(client, APDS9110_DD_PRX_DATA_0_ADDR, APDS9110_I2C_WORD);
+	status = apds9110_i2c_read(client, APDS9110_DD_MAIN_STATUS_ADDR, APDS9110_I2C_BYTE);
+	if (pdata < 0) {
 		/* If i2c error in near, ps_data assignment 100 ps reported so far */
 		data->ps_data = 100;
-		APDS9110_ERR("%s:i2c error,ps_data = 100",__func__);
-	}else{
+		APDS9110_ERR("%s:i2c error,ps_data = 100", __func__);
+	} else {
 		data->ps_data = pdata & 0x7FF;
 	}
 	if (status & APDS9110_DD_PRX_INT_STATUS) {
 		apds9110_ps_report_event(client);		
-	} else{
-		APDS9110_ERR("%s,line %d:wrong interrupts,APDS9110_DD_MAIN_STATUS_ADDR is 0X%x\n",__func__,__LINE__,status);
+	} else {
+		APDS9110_ERR("%s,line %d:wrong interrupts,APDS9110_DD_MAIN_STATUS_ADDR is 0X%x\n", __func__, __LINE__, status);
 	}
 	mutex_unlock(&data->single_lock);
 	if (data->irq)
 	{
-		operate_irq(data,1,true);
+		operate_irq(data, 1, true);
 	}
 }
-
 
 /* assume this is ISR */
 static irqreturn_t apds9110_interrupt(int vec, void *info)
 {
-	struct i2c_client *client=(struct i2c_client *)info;
-	struct apds9110_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct apds9110_data *data = NULL;
 
-	operate_irq(data,0,false);
+	if (info == NULL)
+	{
+		APDS9110_ERR("%s,line %d: info is NULL!\n", __func__, __LINE__);
+		return IRQ_NONE;
+	}
+	client = (struct i2c_client *)info;
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return IRQ_NONE;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return IRQ_NONE;
+	}
+
+	operate_irq(data, 0, false);
 	/*in 400ms,system keeps in wakeup state to avoid the sleeling system lose the pls event*/
 	wake_lock_timeout(&data->ps_report_wk, PS_WAKEUP_TIME);
 	queue_work(apds9110_workqueue, &data->dwork);
@@ -433,64 +552,82 @@ static irqreturn_t apds9110_interrupt(int vec, void *info)
 	return IRQ_HANDLED;
 }
 
-
 /*
  * Initialization function
  */
 static int apds9110_init_client(struct i2c_client *client)
 {
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	struct apds9110_platform_data *pdata = data->platform_data;
-	int err;
+	struct apds9110_data *data = NULL;
+	struct apds9110_platform_data *pdata = NULL;
+	int err = 0;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		APDS9110_ERR("%s,line %d: data pr platform data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		APDS9110_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	
 	data->enable = 0x00;
 	/*set enable*/
-	err = apds9110_i2c_write(client, APDS9110_DD_MAIN_CTRL_ADDR,data->enable,APDS9110_I2C_BYTE);
+	err = apds9110_i2c_write(client, APDS9110_DD_MAIN_CTRL_ADDR, data->enable, APDS9110_I2C_BYTE);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:set enable FAIL\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:set enable FAIL\n", __func__, __LINE__);
 		return err;
 	}
 	/* PS_LED 60khz 10ma*/
-	err = apds9110_i2c_write(client, APDS9110_DD_PRX_LED_ADDR,APDS9110_DD_PRX_DEFAULT_LED_FREQ|APDS9110_DD_PRX_DEFAULT_LED_CURRENT,APDS9110_I2C_BYTE);
+	err = apds9110_i2c_write(client, APDS9110_DD_PRX_LED_ADDR, APDS9110_DD_PRX_DEFAULT_LED_FREQ|APDS9110_DD_PRX_DEFAULT_LED_CURRENT, APDS9110_I2C_BYTE);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:PS_LED FAIL\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:PS_LED FAIL\n", __func__, __LINE__);
 		return err;
 	}
 
 	/* PS_PULSES 32 pulses */
-	err = apds9110_i2c_write(client,APDS9110_DD_PRX_PULSES_ADDR,APDS9110_DD_PRX_DEFAULT_PULSE,APDS9110_I2C_BYTE);
+	err = apds9110_i2c_write(client, APDS9110_DD_PRX_PULSES_ADDR, APDS9110_DD_PRX_DEFAULT_PULSE, APDS9110_I2C_BYTE);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:PS_PULSES FAIL\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:PS_PULSES FAIL\n", __func__, __LINE__);
 		return err;
 	}
 	/* PS_MEAS_RATE  Measurement Rate:6.25ms Resolution:10 bit*/
-	err = apds9110_i2c_write(client,APDS9110_DD_PRX_MEAS_RATE_ADDR,0x40|APDS9110_DD_PRX_DEFAULT_RES|APDS9110_DD_PRX_MEAS_RATE_6_25_MS,APDS9110_I2C_BYTE);
+	err = apds9110_i2c_write(client, APDS9110_DD_PRX_MEAS_RATE_ADDR, 0x40|APDS9110_DD_PRX_DEFAULT_RES|APDS9110_DD_PRX_MEAS_RATE_6_25_MS, APDS9110_I2C_BYTE);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:PS_MEAS_RATE FAIL\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:PS_MEAS_RATE FAIL\n", __func__, __LINE__);
 		return err;
 	}
 	/* INT_PERSISTENCE */
-	err = apds9110_i2c_write(client,APDS9110_DD_INT_PERSISTENCE_ADDR,APDS9110_DD_PRX_PERS_1,APDS9110_I2C_BYTE);
+	err = apds9110_i2c_write(client, APDS9110_DD_INT_PERSISTENCE_ADDR, APDS9110_DD_PRX_PERS_1, APDS9110_I2C_BYTE);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:INT_PERSISTENCE  FAIL\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:INT_PERSISTENCE  FAIL\n", __func__, __LINE__);
 		return err;
 	}	
 	/* init threshold for proximity */
-	err = apds9110_set_pilt(client, pdata->pwave+pdata->max_noise);
+	err = apds9110_set_pilt(client, pdata->pwave + pdata->max_noise);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:apds9110_set_pilt FAIL ",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:apds9110_set_pilt FAIL ", __func__, __LINE__);
 		return err;
 	}
 
-	err = apds9110_set_piht(client, data->pilt+pdata->pwindow);
+	err = apds9110_set_piht(client, data->pilt + pdata->pwindow);
 	if (err < 0)
 	{
-		APDS9110_ERR("%s,line%d:apds9110_set_piht FAIL ",__func__,__LINE__);
+		APDS9110_ERR("%s,line%d:apds9110_set_piht FAIL ", __func__, __LINE__);
 		return err;
 	}
 	err = apds9110_dd_set_prx_gain(client, psGainValueArray[data->ps_gain_index]);
@@ -504,40 +641,46 @@ static int apds9110_init_client(struct i2c_client *client)
 	return 0;
 }
 
-
 static int apds9110_open_ps_sensor(struct apds9110_data *data, struct i2c_client *client)
 {
 	int ret = 0;
+	
+	if ((data == NULL) || (client == NULL))
+	{
+		APDS9110_ERR("%s,line %d: data or clientis NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+
 	/* turn on p sensor */
-	if (data->enable_ps_sensor==0) {
+	if (data->enable_ps_sensor == 0) {
 		/* Power on and initalize the device */
 		if (data->platform_data->power_on)
-			data->platform_data->power_on(true,data);
+			data->platform_data->power_on(true, data);
 		ret = apds9110_init_client(client);
 		if (ret) {
 			APDS9110_ERR("%s:line:%d,Failed to init apds9110\n", __func__, __LINE__);
 			return ret;
 		}
 
-		data->enable_ps_sensor= 1;
+		data->enable_ps_sensor = 1;
 #ifdef CONFIG_HUAWEI_DSM
 		apds_dsm_save_threshold(data, APDS9110_FAR_INIT, APDS9110_NEAR_INIT);
 #endif
 		data->enable = APDS9110_DD_PRX_EN;
 		/*Enable chip interrupts*/
-		ret = apds9110_i2c_write(client,APDS9110_DD_INT_CFG_ADDR,APDS9110_DD_PRX_INT_EN,APDS9110_I2C_BYTE);
+		ret = apds9110_i2c_write(client, APDS9110_DD_INT_CFG_ADDR, APDS9110_DD_PRX_INT_EN, APDS9110_I2C_BYTE);
 		/*Enable the chip*/
-		ret += apds9110_i2c_write(client,APDS9110_DD_MAIN_CTRL_ADDR,data->enable,APDS9110_I2C_BYTE);
-		if(ret < 0){
-			APDS9110_INFO("%s:enable chip error,ret = %d\n", __func__,ret);
+		ret += apds9110_i2c_write(client, APDS9110_DD_MAIN_CTRL_ADDR, data->enable, APDS9110_I2C_BYTE);
+		if (ret < 0) {
+			APDS9110_INFO("%s:enable chip error,ret = %d\n", __func__, ret);
 			return ret;
 		}
-		APDS9110_INFO("%s: line:%d,enable ps sensor,report far event,data->enable = 0x%x\n", __func__, __LINE__,data->enable);
+		APDS9110_INFO("%s: line:%d,enable ps sensor,report far event,data->enable = 0x%x\n", __func__, __LINE__, data->enable);
 		/*first report event  0 is close, 1 is far */
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, APDS9110_FAR_FLAG);
 		input_sync(data->input_dev_ps);
-		if (data->irq){
-			operate_irq(data,1,true);
+		if (data->irq) {
+			operate_irq(data, 1, true);
 			/*set the property of pls irq,so the pls irq can wake up the sleeping system */
 			irq_set_irq_wake(data->irq, 1);
 		}
@@ -547,15 +690,28 @@ static int apds9110_open_ps_sensor(struct apds9110_data *data, struct i2c_client
 
 static int apds9110_ps_calibration(struct i2c_client *client)
 {
-	int i;
-	int ps_data_avg=0, ps_data_loop=0,ps_data_loop_tmp=0;
-	int ps_meas_rate;
-	struct apds9110_data *data = i2c_get_clientdata(client);
+	int i = 0;
+	int ps_data_avg = 0, ps_data_loop = 0, ps_data_loop_tmp = 0;
+	int ps_meas_rate = 0;
+	struct apds9110_data *data = NULL;
+	
 	APDS9110_INFO("%s\n", __func__);
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 	
 	if (data->enable_ps_sensor != APDS_DISABLE_PS) {
 		APDS9110_ERR("%s:sensor is active now\n", __func__);
-		data->cal_flag=APDS9110_CALIBRATION_SENSOR_ACTIVE;
+		data->cal_flag = APDS9110_CALIBRATION_SENSOR_ACTIVE;
 		return APDS9110_CALIBRATION_SENSOR_ACTIVE;
 	}
 	
@@ -573,22 +729,22 @@ static int apds9110_ps_calibration(struct i2c_client *client)
 	{
 		apds9110_dd_set_prx_gain(client, psGainValueArray[data->ps_gain_index]);
 
-		ps_data_avg=0;
-		for (i=0; i<APDS9110_PS_CAL_LOOP; i++) {
+		ps_data_avg = 0;
+		for (i = 0; i < APDS9110_PS_CAL_LOOP; i++) {
 			mdelay(10);	// must be greater than prx meas rate
 		
 			ps_data_loop = i2c_smbus_read_word_data(client, APDS9110_DD_PRX_DATA_ADDR);
-			ps_data_loop_tmp=ps_data_loop;
+			ps_data_loop_tmp = ps_data_loop;
 			if (ps_data_loop < 0) 
 			{
-				data->cal_flag=APDS9110_CALIBRATION_READ_PDARA_ERROR;
+				data->cal_flag = APDS9110_CALIBRATION_READ_PDARA_ERROR;
 				return APDS9110_CALIBRATION_READ_PDARA_ERROR;
 			}
 			ps_data_loop_tmp &= 0x7FF;
-			APDS9110_ERR("pdata [%d] = %d  pdata2 [%d] = %d\n", i, ps_data_loop,i,ps_data_loop_tmp);
+			APDS9110_ERR("pdata [%d] = %d  pdata2 [%d] = %d\n", i, ps_data_loop, i, ps_data_loop_tmp);
 			ps_data_avg += ps_data_loop;
 		}
-		ps_data_avg = ps_data_avg/i;
+		ps_data_avg = ps_data_avg / i;
 		if (ps_data_avg > 40) {
 			data->ps_gain_index -= 2;
 		} else {
@@ -610,22 +766,32 @@ static int apds9110_ps_calibration(struct i2c_client *client)
 		APDS9110_INFO("polling  new threshold=%d, hysteresis_threshold=%d\n", data->ps_threshold, data->ps_hysteresis_threshold);
 		apds9110_dd_set_prx_thresh(client, data->ps_hysteresis_threshold, data->ps_threshold);
 #endif
-	} else{
-		data->cal_flag=APDS9110_CALIBRATION_PDATA_BIG_ERROR;
+	} else {
+		data->cal_flag = APDS9110_CALIBRATION_PDATA_BIG_ERROR;
 		return APDS9110_CALIBRATION_PDATA_BIG_ERROR;
 	}
-	data->cal_flag=0;	
+	data->cal_flag = 0;	
 	return 0;
 }
 
-
-
-static int apds9110_enable_ps_sensor(struct i2c_client *client,unsigned int val)
+static int apds9110_enable_ps_sensor(struct i2c_client *client, unsigned int val)
 {
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	int ret;
+	struct apds9110_data *data = NULL;
+	int ret = 0;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
-	APDS9110_INFO("%s,line %d:val=%d\n",__func__,__LINE__,val);
+	APDS9110_INFO("%s,line %d:val=%d\n", __func__, __LINE__, val);
 	if ((val != 0) && (val != 1)) {
 		APDS9110_ERR("%s: invalid value=%d\n", __func__, val);
 		return -EINVAL;
@@ -634,45 +800,37 @@ static int apds9110_enable_ps_sensor(struct i2c_client *client,unsigned int val)
 		mutex_lock(&data->single_lock);
 		ret = apds9110_open_ps_sensor(data, client);
 		mutex_unlock(&data->single_lock);
-		if(ret){
-			APDS9110_ERR("%s,line %d:read power_value failed,open ps fail\n",__func__,__LINE__);
+		if (ret) {
+			APDS9110_ERR("%s,line %d:read power_value failed,open ps fail\n", __func__, __LINE__);
 			return ret;
 		}
 #ifdef CONFIG_HUAWEI_DSM
 		apds_dsm_no_irq_check(data);
 #endif
-
 		power_key_ps = false;
 		schedule_delayed_work(&data->powerkey_work, msecs_to_jiffies(100));
 	} else {
-
-		if (data->enable_ps_sensor==1) {
-
+		if (data->enable_ps_sensor == 1) {
 			mutex_lock(&data->single_lock);
-			
 			data->enable_ps_sensor = 0;
-			data->enable= 0x00;
-			/*disable chip interrupts */
-//			apds9110_i2c_write(client,APDS9110_DD_INT_CFG_ADDR,0x00,APDS9110_I2C_BYTE);
-			/*disable the chip*/
-			apds9110_i2c_write(client,APDS9110_DD_MAIN_CTRL_ADDR,data->enable,APDS9110_I2C_BYTE);
-
+			data->enable = 0x00;
+			apds9110_i2c_write(client, APDS9110_DD_MAIN_CTRL_ADDR, data->enable, APDS9110_I2C_BYTE);
 			mutex_unlock(&data->single_lock);
-			APDS9110_INFO("%s: line:%d,disable pls sensor,data->enable = 0x%x\n", __func__, __LINE__,data->enable);
+			APDS9110_INFO("%s: line:%d,disable pls sensor,data->enable = 0x%x\n", __func__, __LINE__, data->enable);
 			cancel_work_sync(&data->dwork);
 			cancel_delayed_work(&data->powerkey_work);
 			if (data->irq)
 			{
 				/*when close the ps,make the wakeup property disabled*/
 				irq_set_irq_wake(data->irq, 0);
-				operate_irq(data,0,true);
+				operate_irq(data, 0, true);
 			}
 		}
 	}
 
 	/* Vote off  regulators if both light and prox sensor are off */
-	if ((data->enable_ps_sensor == 0) &&(data->platform_data->power_on)){
-		data->platform_data->power_on(false,data);
+	if ((data->enable_ps_sensor == 0) && (data->platform_data->power_on)) {
+		data->platform_data->power_on(false, data);
 	}
 	return 0;
 }
@@ -680,8 +838,20 @@ static int apds9110_enable_ps_sensor(struct i2c_client *client,unsigned int val)
 static int apds9110_ps_set_enable(struct sensors_classdev *sensors_cdev,
 		unsigned int enable)
 {
-	struct apds9110_data *data = container_of(sensors_cdev,
-			struct apds9110_data, ps_cdev);
+	struct apds9110_data *data = NULL;
+
+	if (sensors_cdev == NULL)
+	{
+		APDS9110_ERR("%s,line %d: sensors_cdev is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = container_of(sensors_cdev, struct apds9110_data, ps_cdev);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	
 	if ((enable != 0) && (enable != 1)) {
 		APDS9110_ERR("%s: invalid value(%d)\n", __func__, enable);
 		return -EINVAL;
@@ -692,17 +862,29 @@ static int apds9110_ps_set_enable(struct sensors_classdev *sensors_cdev,
 static ssize_t apds9110_show_pdata(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	int pdata;
+	struct i2c_client *client = NULL;
+	int pdata = 0;
 	
-	pdata=apds9110_i2c_read(client, APDS9110_DD_PRX_DATA_ADDR,APDS9110_I2C_WORD);
-	if(pdata <0){
-		APDS9110_ERR("%s,line %d:read pdata failed\n",__func__,__LINE__);
-	}else{
+	if ((dev == NULL) || (buf == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = to_i2c_client(dev);	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	
+	pdata = apds9110_i2c_read(client, APDS9110_DD_PRX_DATA_ADDR, APDS9110_I2C_WORD);
+	if (pdata < 0) {
+		APDS9110_ERR("%s,line %d:read pdata failed\n", __func__, __LINE__);
+	} else {
 		pdata &= 0x7FF;
 	}
 
-	return snprintf(buf,32, "%d\n", pdata);
+	return snprintf(buf, 32, "%d\n", pdata);
 }
 
 static DEVICE_ATTR(pdata, S_IRUGO, apds9110_show_pdata, NULL);
@@ -713,34 +895,45 @@ static DEVICE_ATTR(pdata, S_IRUGO, apds9110_show_pdata, NULL);
 static ssize_t apds9110_print_reg_buf(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	int i=0;
-	int j=0;
-	char reg[APDS9110_REG_LEN];
-	struct i2c_client *client = to_i2c_client(dev);
+	int i = 0, j = 0;
+	char reg[APDS9110_REG_LEN] = {0,};
+	struct i2c_client *client = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = to_i2c_client(dev);	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	/* read all register value and print to user*/
-	for(i = 0,j=0; i < APDS9110_REG_MAX; j++ )
+	for (i = 0, j = 0; i < APDS9110_REG_MAX; j++ )
 	{
-		reg[j] = apds9110_i2c_read(client,i,APDS9110_I2C_BYTE);
-		if(reg[j] <0){
-			APDS9110_ERR("%s,line %d:read %d reg failed\n",__func__,__LINE__,i);
+		reg[j] = apds9110_i2c_read(client, i, APDS9110_I2C_BYTE);
+		if (reg[j] < 0) {
+			APDS9110_ERR("%s,line %d:read %d reg failed\n", __func__, __LINE__, i);
 			return reg[j] ;
 		}
-		if( 0x03== i){
+		if ( 0x03 == i) {
 			i += 0x3;
-		}else if(0x09==i){
+		} else if (0x09 == i) {
 			i += 0x10;
-		}else{
+		} else {
 			i += 1;
 		}
 	}
 
-	return snprintf(buf,512,"reg[0x0~0x3]=0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
+	return snprintf(buf, 512, "reg[0x0~0x3]=0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
 			"reg[0x6~0x9]=0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
 			"reg[0x19~0x20]0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n",
-			reg[0x00],reg[0x01],reg[0x02],reg[0x03],
-			reg[0x04],reg[0x05],reg[0x06],reg[0x07],
-			reg[0x08],reg[0x09],reg[0x0a],reg[0x0b],reg[0x0c],reg[0x0d],reg[0x0e],reg[0x0f]);
+			reg[0x00], reg[0x01], reg[0x02], reg[0x03],
+			reg[0x04], reg[0x05], reg[0x06], reg[0x07],
+			reg[0x08], reg[0x09], reg[0x0a], reg[0x0b], reg[0x0c], reg[0x0d], reg[0x0e], reg[0x0f]);
 }
 
 static DEVICE_ATTR(dump_reg, S_IRUGO, apds9110_print_reg_buf, NULL);
@@ -748,32 +941,64 @@ static DEVICE_ATTR(dump_reg, S_IRUGO, apds9110_print_reg_buf, NULL);
 static ssize_t apds9110_show_calibration(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	if(NULL==data)
+	struct i2c_client *client = NULL;
+	struct apds9110_data *data = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = to_i2c_client(dev);	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
 	{
 		return snprintf(buf, 32, "pdata is null\n");
 	}
+	
 	return snprintf(buf, 32,"%d\n", data->cal_flag);
 }
-
 
 static ssize_t apds9110_store_calibration(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
 
-	struct i2c_client *client = to_i2c_client(dev);	
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	int err;
-	u32 val;
-    APDS9110_INFO("apds9110_store_calibration\n");
+	struct i2c_client *client = NULL;	
+	struct apds9110_data *data = NULL;
+	int err = 0;
+	u32 val = 0;
+	APDS9110_INFO("apds9110_store_calibration\n");
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+
 	err = kstrtoint(buf, 0, &val);
 	if (err < 0) {
-		APDS9110_ERR("%s:%d kstrtoint failed\n", __func__,__LINE__);
+		APDS9110_ERR("%s:%d kstrtoint failed\n", __func__, __LINE__);
 		return err;
 	}
 	APDS9110_INFO("%s,line%d:val =%d\n ", __func__, __LINE__, val);
-	if(val == 1)
+	if (val == 1)
 	{
 		APDS9110_INFO("apds9110_store_calibration val = 1");
 		mutex_lock(&data->single_lock);
@@ -783,14 +1008,31 @@ static ssize_t apds9110_store_calibration(struct device *dev,
 	return count;
 }
 
-
-static DEVICE_ATTR(avago_apds9110_calibration, S_IRUGO | S_IWUSR,apds9110_show_calibration,apds9110_store_calibration);
+static DEVICE_ATTR(avago_apds9110_calibration, S_IRUGO | S_IWUSR, apds9110_show_calibration, apds9110_store_calibration);
 
 static ssize_t apds9110_show_calibration_result(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct apds9110_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct apds9110_data *data = NULL;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 	
 	if (data->cal_flag)
 	{
@@ -803,21 +1045,39 @@ static ssize_t apds9110_show_calibration_result(struct device *dev,
 static ssize_t apds9110_store_calibration_result(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	int err;
-	u32 val;
+	struct i2c_client *client = NULL;
+	struct apds9110_data *data = NULL;
+	int err = 0;
+	u32 val = 0;
+	
+	if ((dev == NULL) || (buf == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = to_i2c_client(dev);
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 	
 	err = kstrtoint(buf, 0, &val);
 	if (err < 0) {
-		APDS9110_ERR("%s:%d kstrtoint failed\n", __func__,__LINE__);
+		APDS9110_ERR("%s:%d kstrtoint failed\n", __func__, __LINE__);
 		return err;
 	}
 	APDS9110_INFO("%s,line%d:val =%d\n ", __func__, __LINE__, val);
 	data->ps_gain_index = val;       //load gain
 	return count;
 }
-static DEVICE_ATTR(avago_apds9110_calibration_result, S_IRUGO | S_IWUSR,apds9110_show_calibration_result,apds9110_store_calibration_result);
+static DEVICE_ATTR(avago_apds9110_calibration_result, S_IRUGO | S_IWUSR, apds9110_show_calibration_result, apds9110_store_calibration_result);
 
 static struct attribute *apds9110_attributes[] = {
 	&dev_attr_pdata.attr,
@@ -827,29 +1087,33 @@ static struct attribute *apds9110_attributes[] = {
 	NULL
 };
 
-
 static const struct attribute_group apds9110_attr_group = {
 	.attrs = apds9110_attributes,
 };
 
-
 /*qualcom updated the regulator configure functions and we add them all*/
 static int sensor_regulator_configure(struct apds9110_data *data, bool on)
 {
-	int rc;
+	int rc = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	if (!on) {
-		if (regulator_count_voltages(data->vdd) > 0){
+		if (regulator_count_voltages(data->vdd) > 0) {
 			rc = regulator_set_voltage(data->vdd, 0, APDS9110_VDD_MAX_UV);
 			if(rc)
-				APDS9110_ERR("%s,line%d:Regulator set vdd failed rc=%d\n",__func__,__LINE__,rc);
+				APDS9110_ERR("%s,line%d:Regulator set vdd failed rc=%d\n", __func__, __LINE__, rc);
 		}
 		regulator_put(data->vdd);
 
-		if (regulator_count_voltages(data->vio) > 0){
+		if (regulator_count_voltages(data->vio) > 0) {
 			rc = regulator_set_voltage(data->vio, 0, APDS9110_VIO_MAX_UV);
-			if(rc)
-				APDS9110_ERR("%s,line%d:Regulator set vio failed rc=%d\n",__func__,__LINE__,rc);
+			if (rc)
+				APDS9110_ERR("%s,line%d:Regulator set vio failed rc=%d\n", __func__, __LINE__, rc);
 		}
 		regulator_put(data->vio);
 
@@ -857,7 +1121,7 @@ static int sensor_regulator_configure(struct apds9110_data *data, bool on)
 		data->vdd = regulator_get(&data->client->dev, "vdd");
 		if (IS_ERR(data->vdd)) {
 			rc = PTR_ERR(data->vdd);
-			APDS9110_ERR("%s,line%d:Regulator get failed vdd rc=%d\n",__func__,__LINE__, rc);
+			APDS9110_ERR("%s,line%d:Regulator get failed vdd rc=%d\n", __func__, __LINE__, rc);
 			return rc;
 		}
 
@@ -865,7 +1129,7 @@ static int sensor_regulator_configure(struct apds9110_data *data, bool on)
 			rc = regulator_set_voltage(data->vdd,
 				APDS9110_VDD_MIN_UV, APDS9110_VDD_MAX_UV);
 			if (rc) {
-				APDS9110_ERR("%s,line%d:Regulator set failed vdd rc=%d\n",__func__,__LINE__,rc);
+				APDS9110_ERR("%s,line%d:Regulator set failed vdd rc=%d\n", __func__, __LINE__, rc);
 				goto reg_vdd_put;
 			}
 		}
@@ -873,7 +1137,7 @@ static int sensor_regulator_configure(struct apds9110_data *data, bool on)
 		data->vio = regulator_get(&data->client->dev, "vio");
 		if (IS_ERR(data->vio)) {
 			rc = PTR_ERR(data->vio);
-			APDS9110_ERR("%s,line%d:Regulator get failed vio rc=%d\n",__func__,__LINE__, rc);
+			APDS9110_ERR("%s,line%d:Regulator get failed vio rc=%d\n", __func__, __LINE__, rc);
 			goto reg_vdd_set;
 		}
 
@@ -881,7 +1145,7 @@ static int sensor_regulator_configure(struct apds9110_data *data, bool on)
 			rc = regulator_set_voltage(data->vio,
 				APDS9110_VIO_MIN_UV, APDS9110_VIO_MAX_UV);
 			if (rc) {
-				APDS9110_ERR("%s,line%d:Regulator set failed vio rc=%d\n",__func__,__LINE__, rc);
+				APDS9110_ERR("%s,line%d:Regulator set failed vio rc=%d\n", __func__, __LINE__, rc);
 				goto reg_vio_put;
 			}
 		}
@@ -900,7 +1164,6 @@ reg_vdd_put:
 	return rc;
 }
 
-
 /*In suspend and resume function,we only control the als,leave pls alone*/
 static int apds9110_suspend(struct i2c_client *client, pm_message_t mesg)
 {
@@ -912,27 +1175,44 @@ static int apds9110_resume(struct i2c_client *client)
 	return 0;
 }
 
-
 /*pamameter subfunction of probe to reduce the complexity of probe function*/
-static int apds9110_sensorclass_init(struct apds9110_data *data,struct i2c_client* client)
+static int apds9110_sensorclass_init(struct apds9110_data *data, struct i2c_client* client)
 {
-	int err;
+	int err = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+
 	/* Register to sensors class */
 	data->ps_cdev = sensors_proximity_cdev;
 	data->ps_cdev.sensors_enable = apds9110_ps_set_enable;
 	data->ps_cdev.sensors_poll_delay = NULL;
+	
+	if (data->input_dev_ps == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data ->input_dev_ps is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
-	err = sensors_classdev_register(&data ->input_dev_ps ->dev, &data->ps_cdev);
+	err = sensors_classdev_register(&data->input_dev_ps->dev, &data->ps_cdev);
 	if (err) {
-		APDS9110_ERR("%s: Unable to register to sensors class: %d\n",__func__, err);
+		APDS9110_ERR("%s: Unable to register to sensors class: %d\n", __func__, err);
 	}
 
 	return err;
 }
 
-
 static void apds9110_parameter_init(struct apds9110_data *data)
 {
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
 	/* Set the default parameters */
 	data->enable = 0x00;	/* default mode is standard */
 	data->enable_ps_sensor = 0;	// default to 0
@@ -943,6 +1223,12 @@ static void apds9110_parameter_init(struct apds9110_data *data)
 static int apds9110_input_init(struct apds9110_data *data)
 {
 	int err = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	data->input_dev_ps = input_allocate_device();
 	if (!data->input_dev_ps) {
@@ -971,25 +1257,31 @@ exit:
 	return err;
 }
 
-
 /*irq request subfunction of probe to reduce the complexity of probe function*/
-static int apds9110_irq_init(struct apds9110_data *data,struct i2c_client *client)
+static int apds9110_irq_init(struct apds9110_data *data, struct i2c_client *client)
 {
 	int ret = 0;
+	
+	if ((data == NULL) || (data->platform_data == NULL) || (client == NULL))
+	{
+		APDS9110_ERR("%s,line %d: data or client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+
 	if (data->platform_data->irq_gpio)
 	{
-		ret = gpio_request(data->platform_data->irq_gpio,"apds9110_irq_gpio");
+		ret = gpio_request(data->platform_data->irq_gpio, "apds9110_irq_gpio");
 		if (ret)
 		{
-			APDS9110_ERR("%s, line %d:unable to request gpio [%d]\n", __func__, __LINE__,data->platform_data->irq_gpio);
+			APDS9110_ERR("%s, line %d:unable to request gpio [%d]\n", __func__, __LINE__, data->platform_data->irq_gpio);
 			return ret;
 		}
 		else
 		{
 			ret = gpio_direction_input(data->platform_data->irq_gpio);
-			if(ret)
+			if (ret)
 			{
-				APDS9110_ERR("%s, line %d: Failed to set gpio %d direction\n", __func__, __LINE__,data->platform_data->irq_gpio);
+				APDS9110_ERR("%s, line %d: Failed to set gpio %d direction\n", __func__, __LINE__, data->platform_data->irq_gpio);
 				return ret;
 			}
 		}
@@ -997,17 +1289,17 @@ static int apds9110_irq_init(struct apds9110_data *data,struct i2c_client *clien
 	client->irq = gpio_to_irq(data->platform_data->irq_gpio);
 	if (client->irq < 0) {
 		ret = -EINVAL;
-		APDS9110_ERR("%s, line %d:gpio_to_irq FAIL! IRQ=%d\n", __func__, __LINE__,data->platform_data->irq_gpio);
+		APDS9110_ERR("%s, line %d:gpio_to_irq FAIL! IRQ=%d\n", __func__, __LINE__, data->platform_data->irq_gpio);
 		return ret;
 	}
 	data->irq = client->irq;
 	if (client->irq)
 	{
 		/*AP examination of low level to prevent lost interrupt*/
-		if (request_irq(data->irq, apds9110_interrupt,IRQF_TRIGGER_LOW|IRQF_ONESHOT|IRQF_NO_SUSPEND, APDS9110_DRV_NAME, (void *)client) >= 0)
+		if (request_irq(data->irq, apds9110_interrupt, IRQF_TRIGGER_LOW|IRQF_ONESHOT|IRQF_NO_SUSPEND, APDS9110_DRV_NAME, (void *)client) >= 0)
 		{
 			APDS9110_FLOW("%s, line %d:Received IRQ!\n", __func__, __LINE__);
-			operate_irq(data,0,true);
+			operate_irq(data, 0, true);
 		}
 		else
 		{
@@ -1019,10 +1311,15 @@ static int apds9110_irq_init(struct apds9110_data *data,struct i2c_client *clien
 	return ret;
 }
 
-
 static int sensor_regulator_power_on(struct apds9110_data *data, bool on)
 {
 	int rc = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	if (!on) {
 		rc = regulator_disable(data->vdd);
@@ -1035,7 +1332,7 @@ static int sensor_regulator_power_on(struct apds9110_data *data, bool on)
 		if (rc) {
 			APDS9110_ERR("%s: Regulator vdd disable failed rc=%d\n", __func__, rc);
 			rc = regulator_enable(data->vdd);
-			APDS9110_ERR("%s:Regulator vio re-enabled rc=%d\n",__func__, rc);
+			APDS9110_ERR("%s:Regulator vio re-enabled rc=%d\n", __func__, rc);
 			/*
 			 * Successfully re-enable regulator.
 			 * Enter poweron delay and returns error.
@@ -1049,27 +1346,32 @@ static int sensor_regulator_power_on(struct apds9110_data *data, bool on)
 	} else {
 		rc = regulator_enable(data->vdd);
 		if (rc) {
-			APDS9110_ERR("%s:Regulator vdd enable failed rc=%d\n",__func__, rc);
+			APDS9110_ERR("%s:Regulator vdd enable failed rc=%d\n", __func__, rc);
 			return rc;
 		}
 
 		rc = regulator_enable(data->vio);
 		if (rc) {
-			APDS9110_ERR("%s:Regulator vio enable failed rc=%d\n", __func__,rc);
+			APDS9110_ERR("%s:Regulator vio enable failed rc=%d\n", __func__, rc);
 			rc = regulator_disable(data->vdd);
 			return rc;
 		}
 	}
 enable_delay:
 	msleep(10);
-	APDS9110_FLOW("%s:Sensor regulator power on =%d\n",__func__, on);
+	APDS9110_FLOW("%s:Sensor regulator power on =%d\n", __func__, on);
 	return rc;
 }
 
-
-static int sensor_platform_hw_power_on(bool on,struct apds9110_data *data)
+static int sensor_platform_hw_power_on(bool on, struct apds9110_data *data)
 {
 	int err = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	if (data->power_on != on) {
 		if (!IS_ERR_OR_NULL(data->pinctrl)) {
@@ -1091,44 +1393,67 @@ static int sensor_platform_hw_power_on(bool on,struct apds9110_data *data)
 	return err;
 }
 
-
 static int sensor_platform_hw_init(struct apds9110_data *data)
 {
-	int error;
+	int error = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	error = sensor_regulator_configure(data, true);
 	if (error < 0) {
-		APDS9110_ERR("%s,line %d:unable to configure regulator\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:unable to configure regulator\n", __func__, __LINE__);
 		return error;
 	}
 
 	return 0;
 }
 
-
 static void sensor_platform_hw_exit(struct apds9110_data *data)
 {
-	int error;
+	int error = 0;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	error = sensor_regulator_configure(data, false);
 	if (error < 0) {
-		APDS9110_ERR("%s,line %d:unable to configure regulator\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:unable to configure regulator\n", __func__, __LINE__);
 	}
 }
 
 static int apds9110_pinctrl_init(struct apds9110_data *data)
 {
-	struct i2c_client *client = data->client;
+	struct i2c_client *client = NULL;
+	
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	client = data->client;
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	data->pinctrl = devm_pinctrl_get(&client->dev);
 	if (IS_ERR_OR_NULL(data->pinctrl)) {
-		APDS9110_ERR("%s,line %d:Failed to get pinctrl\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Failed to get pinctrl\n", __func__, __LINE__);
 		return PTR_ERR(data->pinctrl);
 	}
 	/*we have not set the sleep state of INT pin*/
 	data->pin_default =
 		pinctrl_lookup_state(data->pinctrl, "default");
 	if (IS_ERR_OR_NULL(data->pin_default)) {
-		APDS9110_ERR("%s,line %d:Failed to look up default state\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Failed to look up default state\n", __func__, __LINE__);
 		return PTR_ERR(data->pin_default);
 	}
 
@@ -1138,9 +1463,21 @@ static int apds9110_pinctrl_init(struct apds9110_data *data)
 static int sensor_parse_dt(struct device *dev,
 		struct apds9110_platform_data *pdata)
 {
-	struct device_node *np = dev->of_node;
+	struct device_node *np = NULL;
 	unsigned int tmp = 0;
 	int rc = 0;
+	
+	if ((dev == NULL) || (pdata == NULL))
+	{
+		APDS9110_ERR("%s,line %d: dev or pdata is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	np = dev->of_node;
+	if (np == NULL)
+	{
+		APDS9110_ERR("%s,line %d: np is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	/* set functions of platform data */
 	pdata->init = sensor_platform_hw_init;
@@ -1151,42 +1488,42 @@ static int sensor_parse_dt(struct device *dev,
 	rc = of_get_named_gpio_flags(dev->of_node,
 			"apds9110,irq-gpio", 0, NULL);
 	if (rc < 0) {
-		APDS9110_ERR("%s,line %d:Unable to read irq gpio\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Unable to read irq gpio\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata->irq_gpio = rc;
 
 	rc = of_property_read_u32(np, "apds9110,ps_wave", &tmp);
 	if (rc) {
-		APDS9110_ERR("%s,line %d:Unable to read pwave_value\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Unable to read pwave_value\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata ->pwave= tmp;
 
 	rc = of_property_read_u32(np, "apds9110,ps_window", &tmp);
 	if (rc) {
-		APDS9110_ERR("%s,line %d:Unable to read pwindow_value\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Unable to read pwindow_value\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata ->pwindow= tmp;
 
 	rc = of_property_read_u32(np, "apds9110,ir_current", &tmp);
 	if (rc) {
-		APDS9110_ERR("%s,line %d:Unable to read ir_current\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Unable to read ir_current\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata->ir_current = tmp;
 
 	rc = of_property_read_u32(np, "apds9110,threshold_value", &tmp);
 	if (rc) {
-		APDS9110_ERR("%s,line %d:Unable to read threshold_value\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Unable to read threshold_value\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata->threshold_value = tmp;
 
 	rc = of_property_read_u32(np, "apds9110,max_noise", &tmp);
 	if (rc) {
-		APDS9110_ERR("%s,line %d:Unable to read max_noise\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Unable to read max_noise\n", __func__, __LINE__);
 		return rc;
 	}
 	pdata->max_noise = tmp;
@@ -1196,11 +1533,24 @@ static int sensor_parse_dt(struct device *dev,
 
 static void apds9110_powerkey_screen_handler(struct work_struct *work)
 {
-	struct apds9110_data *data = container_of((struct delayed_work *)work, struct apds9110_data, powerkey_work);
-	if(power_key_ps)
+	struct apds9110_data *data = NULL;
+	
+	if (work == NULL)
 	{
-		APDS9110_INFO("%s : power_key_ps (%d) press\n",__func__, power_key_ps);
-		power_key_ps=false;
+		APDS9110_ERR("%s,line %d: np is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	data = container_of((struct delayed_work *)work, struct apds9110_data, powerkey_work);
+	if (data == NULL)
+	{
+		APDS9110_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	if (power_key_ps)
+	{
+		APDS9110_INFO("%s : power_key_ps (%d) press\n", __func__, power_key_ps);
+		power_key_ps = false;
 		input_report_abs(data->input_dev_ps, ABS_DISTANCE, APDS9110_FAR_FLAG);
 		input_sync(data->input_dev_ps);
 	}
@@ -1209,9 +1559,16 @@ static void apds9110_powerkey_screen_handler(struct work_struct *work)
 
 static int apds9110_read_device_id(struct i2c_client *client)
 {
-	int id;
-	int err;
-	id = apds9110_i2c_read(client, APDS9110_DD_PART_ID_ADDR,APDS9110_I2C_BYTE);
+	int id = 0;
+	int err = 0;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+
+	id = apds9110_i2c_read(client, APDS9110_DD_PART_ID_ADDR, APDS9110_I2C_BYTE);
 	if (id == 0xb1) {
 		err = app_info_set("P-Sensor", "APDS9110");
 		if (err < 0)/*failed to add app_info*/
@@ -1219,7 +1576,7 @@ static int apds9110_read_device_id(struct i2c_client *client)
 			APDS9110_ERR("%s %d:failed to add app_info\n", __func__, __LINE__);
 		}
 	} else {
-		APDS9110_INFO("%s:No apds9110 id(%d)\n", __func__,id);
+		APDS9110_INFO("%s:No apds9110 id(%d)\n", __func__, id);
 		return -ENODEV;
 	}
 	return 0;
@@ -1233,13 +1590,24 @@ static struct i2c_driver apds9110_driver;
 static int apds9110_probe(struct i2c_client *client,
 				   const struct i2c_device_id *id)
 {
-	struct i2c_adapter *adapter = to_i2c_adapter(client->dev.parent);
-	struct apds9110_data *data;
-	struct apds9110_platform_data *pdata;
+	struct i2c_adapter *adapter = NULL;
+	struct apds9110_data *data = NULL;
+	struct apds9110_platform_data *pdata = NULL;
 	int err = 0;
-
 	
 	APDS9110_INFO("%s,line %d:PROBE START.\n",__func__,__LINE__);
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	adapter = to_i2c_adapter(client->dev.parent);
+	if (adapter == NULL)
+	{
+		APDS9110_ERR("%s,line %d: adapter is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	if (client->dev.of_node) {
 		/*Memory allocated with this function is automatically freed on driver detach.*/
@@ -1247,7 +1615,7 @@ static int apds9110_probe(struct i2c_client *client,
 				sizeof(struct apds9110_platform_data),
 				GFP_KERNEL);
 		if (!pdata) {
-			APDS9110_ERR("%s,line %d:Failed to allocate memory\n",__func__,__LINE__);
+			APDS9110_ERR("%s,line %d:Failed to allocate memory\n", __func__, __LINE__);
 			err =-ENOMEM;
 			goto exit;
 		}
@@ -1258,30 +1626,27 @@ static int apds9110_probe(struct i2c_client *client,
 			APDS9110_ERR("%s: sensor_parse_dt() err\n", __func__);
 			goto exit_parse_dt;
 		}
-	}else{
+	} else {
 		pdata = client->dev.platform_data;
 		if (!pdata) {
-			APDS9110_ERR("%s,line %d:No platform data\n",__func__,__LINE__);
+			APDS9110_ERR("%s,line %d:No platform data\n", __func__, __LINE__);
 			err = -ENODEV;
 			goto exit;
 		}
 	}
 	
-
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE)) {
-		APDS9110_ERR("%s,line %d:Failed to i2c_check_functionality\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Failed to i2c_check_functionality\n", __func__, __LINE__);
 		err = -EIO;
 		goto exit_parse_dt;
 	}
 
-
 	data = kzalloc(sizeof(struct apds9110_data), GFP_KERNEL);
 	if (!data) {
-		APDS9110_ERR("%s,line %d:Failed to allocate memory\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Failed to allocate memory\n", __func__, __LINE__);
 		err = -ENOMEM;
 		goto exit_parse_dt;
 	}
-
 
 	data->platform_data = pdata;
 	data->client = client;
@@ -1292,7 +1657,7 @@ static int apds9110_probe(struct i2c_client *client,
 		err = pdata->init(data);
 
 	if (pdata->power_on)
-		err = pdata->power_on(true,data);
+		err = pdata->power_on(true, data);
 
 #ifdef CONFIG_HUAWEI_DSM
 		err = apds9110_dsm_init(data);
@@ -1306,13 +1671,13 @@ static int apds9110_probe(struct i2c_client *client,
 	/* initialize pinctrl */
 	err = apds9110_pinctrl_init(data);
 	if (err) {
-		APDS9110_ERR("%s,line %d:Can't initialize pinctrl\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Can't initialize pinctrl\n", __func__, __LINE__);
 		goto exit_unregister_dsm;
 	}
 
 	err = pinctrl_select_state(data->pinctrl, data->pin_default);
 	if (err) {
-		APDS9110_ERR("%s,line %d:Can't select pinctrl default state\n",__func__,__LINE__);
+		APDS9110_ERR("%s,line %d:Can't select pinctrl default state\n", __func__, __LINE__);
 		goto exit_unregister_dsm;
 	}
 
@@ -1335,7 +1700,7 @@ static int apds9110_probe(struct i2c_client *client,
 	}
 
 	err = apds9110_input_init(data);
-	if(err)
+	if (err)
 		goto exit_unregister_dsm;
 
 	/* Register sysfs hooks */
@@ -1359,8 +1724,8 @@ static int apds9110_probe(struct i2c_client *client,
 		goto exit_free_irq;
 	}
 
-	err=apds9110_irq_init(data,client);
-	if(err)
+	err = apds9110_irq_init(data, client);
+	if (err)
 		goto exit_remove_sysfs_group;
 
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT
@@ -1368,7 +1733,7 @@ static int apds9110_probe(struct i2c_client *client,
 #endif
 
 	if (pdata->power_on)
-		err = pdata->power_on(false,data);
+		err = pdata->power_on(false, data);
 	APDS9110_INFO("%s: Support ver. %s enabled\n", __func__, DRIVER_VERSION);
 	data->device_exist = true;
 
@@ -1393,7 +1758,7 @@ exit_uninit:
 exit_unregister_dsm:
 #endif
 	if (pdata->power_on)
-		pdata->power_on(false,data);
+		pdata->power_on(false, data);
 	if (pdata->exit)
 		pdata->exit(data);
 	kfree(data);
@@ -1401,13 +1766,30 @@ exit_unregister_dsm:
 exit_parse_dt:
 exit:
 	return err;
-
 }
 
 static int apds9110_remove(struct i2c_client *client)
 {
-	struct apds9110_data *data = i2c_get_clientdata(client);
-	struct apds9110_platform_data *pdata = data->platform_data;
+	struct apds9110_data *data = NULL;
+	struct apds9110_platform_data *pdata = NULL;
+	
+	if (client == NULL)
+	{
+		APDS9110_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	data = i2c_get_clientdata(client);
+	if ((data == NULL) || (data->platform_data == NULL))
+	{
+		APDS9110_ERR("%s,line %d: data or platform_data is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
+	pdata = data->platform_data;
+	if (pdata == NULL)
+	{
+		APDS9110_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return HW_APDS_FUN_RET_FAIL;
+	}
 
 	/* Power down the device */
 	data->enable = 0x00;
@@ -1423,7 +1805,7 @@ static int apds9110_remove(struct i2c_client *client)
 #endif
 
 	if (pdata->power_on)
-		pdata->power_on(false,data);
+		pdata->power_on(false, data);
 
 	if (pdata->exit)
 		pdata->exit(data);

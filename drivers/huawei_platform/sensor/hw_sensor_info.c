@@ -17,7 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/slab.h>
@@ -34,7 +33,7 @@
 #include <huawei_platform/sensor/hw_sensor_info.h>
 
 
-int hwsensor_debug_mask = 1;
+int hwsensor_debug_mask = SENSORS_DEBUG_MASK_ONE;
 module_param_named(hwsensor_debug, hwsensor_debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP);
 #define HWSENSOR_ERR(x...) do {\
     if (hwsensor_debug_mask >=0) \
@@ -55,84 +54,76 @@ module_param_named(hwsensor_debug, hwsensor_debug_mask, int, S_IRUGO | S_IWUSR |
 
 
 struct sensor_info{
-	struct platform_driver sensor_info_drv;
-	struct platform_device *sensor_info_dev;
+    struct platform_driver sensor_info_drv;
+    struct platform_device *sensor_info_dev;
 };
 
 static struct device_node *this_node = NULL;
 static const char *product_name = NULL;
 const char * get_sensor_info_of_product_name(void)
 {
-	if(NULL != product_name)
-		return product_name ;
-	else
-		return "error";
+    if(NULL != product_name)
+        return product_name ;
+    else
+        return "error";
 }
-int sensor_info_probe(struct platform_device *pdev)
+int hw_sensor_info_probe(struct platform_device *pdev)
 {
-	int ret = 0;
-	struct sensor_info *info = NULL ;
-	info = kzalloc(sizeof(*info), GFP_KERNEL);
-	if (info == NULL) {
-		ret = -ENOMEM;
-		goto error1;
-	}
-	info->sensor_info_dev = pdev;
-	this_node = info->sensor_info_dev->dev.of_node;
-	ret = of_property_read_string(this_node, "product_name", &product_name);
-	if(ret)
-	{
-		HWSENSOR_ERR("%s ,sensor info get failed,ret = %d\n",__func__,ret);
-		goto error2;
-	}
-	HWSENSOR_INFO("%s ,huawei product name is  %s\n",__func__,product_name);
-	kfree(info);
-	return 0;
+    int ret = 0;
 
-error2:
-	HWSENSOR_INFO("%s ,error2,huawei product name is  %s\n",__func__,product_name);
-	kfree(info);
-error1:
-	HWSENSOR_INFO("%s ,error1,huawei product name is  %s\n",__func__,product_name);
-	return ret;
+    if (NULL == pdev) {
+        HWSENSOR_ERR("%s: pdev is NULL!\n",__func__);
+        return -ENOMEM;
+    }
+
+    this_node = pdev->dev.of_node;
+    ret = of_property_read_string(this_node, "product_name", &product_name);
+    if(ret)
+    {
+        HWSENSOR_ERR("%s ,sensor info get failed,ret = %d\n", __func__, ret);
+        return ret;
+    }
+
+    HWSENSOR_INFO("%s ,huawei product name is  %s\n",__func__, product_name);
+    return 0;
 }
 
-static struct of_device_id sensor_info_match_table[] = {
-	{
-		.compatible = "huawei,hw_sensor_info",
-	},
-	{ },
+static struct of_device_id hw_sensor_info_match_table[] = {
+    {
+        .compatible = "huawei,hw_sensor_info",
+    },
+    { },
 };
 
 static struct sensor_info sensor_info_instance = {
-	.sensor_info_drv = {
-		.probe = sensor_info_probe,
-		.remove	= NULL,
-		.driver = {
-			.name = "huawei_sensor_info",
-			.owner = THIS_MODULE,
-			.of_match_table = sensor_info_match_table,
-		},
-	},
-	.sensor_info_dev = 	NULL,
+    .sensor_info_drv = {
+        .probe = hw_sensor_info_probe,
+        .remove	= NULL,
+        .driver = {
+            .name = "huawei_sensor_info",
+            .owner = THIS_MODULE,
+            .of_match_table = hw_sensor_info_match_table,
+        },
+    },
+    .sensor_info_dev = 	NULL,
 };
 
 
 static int __init hw_sensor_info_init(void)
 {
-	int err = 0;
+    int err = 0;
 
-	err = platform_driver_register(&sensor_info_instance.sensor_info_drv);
-	if (err){
-		HWSENSOR_ERR("sensor_info_drv regiset error %d\n", err);
-	}
+    err = platform_driver_register(&sensor_info_instance.sensor_info_drv);
+    if (err){
+        HWSENSOR_ERR("sensor_info_drv regiset error %d\n", err);
+    }
 
-	return err;
+    return err;
 }
 
 static void __exit hw_sensor_info_exit(void)
 {
-	platform_driver_unregister(&sensor_info_instance.sensor_info_drv);
+    platform_driver_unregister(&sensor_info_instance.sensor_info_drv);
 }
 
 MODULE_AUTHOR("huawei");

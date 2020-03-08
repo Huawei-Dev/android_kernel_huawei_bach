@@ -45,7 +45,7 @@
 #include <linux/types.h>
 #include <linux/regulator/consumer.h>
 #include <linux/of_gpio.h>
-#include	<linux/sensors.h>
+#include <linux/sensors.h>
 
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT
 #include <linux/hw_dev_dec.h>
@@ -211,8 +211,14 @@ int query_hall_event(void)
 	int value = 0;
 	int ret = 0;
 	int i = 0;
-
+	
 	gpio_data_t *gpio_ptr = hw_hall_dev.gpio_data;
+	
+       if (gpio_ptr == NULL) {
+       	AK8789_FLOWMSG("run query_hall_event: gpio_ptr is NULL!\n");
+       	return -1;
+       }
+       
 	AK8789_FLOWMSG("run query_hall_event; hw_hall_dev.gpio_nums(0x%x)\n", hw_hall_dev.gpio_nums);
 	for (i = 0; i < hw_hall_dev.gpio_nums; i++) {
 		GROUP_VALUE(gpio_ptr->gpio, gpio_ptr->hall_value);
@@ -232,9 +238,14 @@ Return:
 static int hall_irq_level_set(gpio_data_t *gpio_ptr)
 {
 	int ret = 0;
-	int gpio_num;
-	int gpio_val;
-	int irq;
+	int gpio_num = 0;
+	int gpio_val = 0;
+	int irq = 0;
+
+	if (gpio_ptr == NULL) {
+        	AK8789_FLOWMSG("hall_irq_level_set: gpio_ptr is NULL!");
+        	return -1;
+	}
 
 	gpio_num = gpio_ptr->gpio;
 	gpio_val = gpio_get_value(gpio_num);
@@ -276,11 +287,18 @@ static ssize_t ak8789_store_enable_hall_sensor(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
 	int value = 0;
-	unsigned long val = simple_strtoul(buf, NULL, 10);
+	unsigned long val = 0;
 	unsigned int i = 0;
-	gpio_data_t *gpio_ptr ;
-	int irq ;
-	unsigned long wake_flags ;
+	gpio_data_t *gpio_ptr = NULL;
+	int irq = 0;
+	unsigned long wake_flags = 0;
+	
+	if (buf == NULL)
+	{
+		AK8789_FLOWMSG("ak8789_store_enable_hall_sensor: buf ptr is NULL!");
+        	return -1;
+	}
+	val = simple_strtoul(buf, NULL, 10);
 
 	AK8789_FLOWMSG("enable_status: %d; enable value %lu", atomic_read(&hall_enable_status), val);
 	if ((val == 1) && (atomic_read(&hall_enable_status) == 0)) {
@@ -315,7 +333,7 @@ static ssize_t ak8789_store_enable_hall_sensor(struct device *dev,
 			irq =  gpio_to_irq(gpio_ptr->gpio);
 			wake_flags = gpio_ptr->wake_up;
 			if (IRQF_NO_SUSPEND == wake_flags) {
-				irq_set_irq_wake(irq , 0);
+				irq_set_irq_wake(irq, 0);
 			}
 			disable_irq(irq);
 			gpio_ptr++;
@@ -334,6 +352,11 @@ static ssize_t ak8789_store_enable_hall_sensor(struct device *dev,
 static ssize_t ak8789_show_enable_hall_sensor(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
+	if (buf == NULL)
+	{
+		AK8789_FLOWMSG("ak8789_show_enable_hall_sensor: buf ptr is NULL!");
+        	return -1;
+	}
 	return snprintf(buf, PAGE_SIZE, "%d\n", atomic_read(&hall_enable_status));
 }
 /*change the permissions of sys devices of hall*/
@@ -343,6 +366,13 @@ static ssize_t ak8789_show_get_hall_status(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	int value = 0;
+	
+	if (buf == NULL)
+	{
+		AK8789_FLOWMSG("ak8789_show_get_hall_status: buf ptr is NULL!");
+        	return -1;
+	}
+
 	value = query_hall_event();
 #ifdef CONFIG_LOG_JANK
 	if (!value)
@@ -361,6 +391,11 @@ static DEVICE_ATTR(get_hall_status, S_IWUSR|S_IRUSR|S_IRUGO, ak8789_show_get_hal
 static ssize_t ak8789_show_camera_overturn_num(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
+	if (buf == NULL)
+	{
+		AK8789_FLOWMSG("ak8789_show_camera_overturn_num: buf ptr is NULL!");
+        	return -1;
+	}
 	// hardcode 0 here, this is referenced in a blob
 	return snprintf(buf, PAGE_SIZE, "0\n");	
 }
@@ -370,7 +405,15 @@ static DEVICE_ATTR(camera_overturn_num, S_IWUSR|S_IRUSR|S_IRUGO, ak8789_show_cam
 static ssize_t ak8789_show_get_camera_status(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int value = 0;
-	gpio_data_t *gpio_ptr = hw_hall_dev.gpio_data;
+	gpio_data_t *gpio_ptr = NULL;
+
+	if ((buf == NULL) || (hw_hall_dev.gpio_data == NULL))
+	{
+		AK8789_FLOWMSG("ak8789_show_get_camera_status: buf or gpio_data is NULL!");
+        	return -1;
+	}
+
+	gpio_ptr = hw_hall_dev.gpio_data;
 	value = gpio_get_value(gpio_ptr->gpio);
 	return snprintf(buf, PAGE_SIZE, "%d\n", value);
 }
@@ -390,6 +433,11 @@ static const struct attribute_group ak8789_attr_group = {
 static void hall_timer_handler(unsigned long data)
 {
 	struct hall_dev *hall_timer_temp= (struct hall_dev *)data;
+	if (hall_timer_temp == NULL)
+	{
+		AK8789_FLOWMSG("hall_timer_handler: hall_timer_temp is NULL!");
+        	return;
+	}
 	queue_work(hall_timer_temp->hall_wq, &hall_timer_temp->hall_work);
 }
 
@@ -408,12 +456,17 @@ void hall_work_func(struct work_struct *work)
 	input_report_switch(hw_hall_dev.hw_input_hall, SW_LID, value & 0x1);
 	input_sync(hw_hall_dev.hw_input_hall);
 
-	AK8789_WARNMSG("input hall event:0x%x",value);
+	AK8789_WARNMSG("input hall event:0x%x", value);
 }
 
 int gpio_setup(int gpio_num, const char* gpio_name)
 {
 	int ret = 0;
+	
+	if (gpio_name == NULL)
+	{
+		AK8789_FLOWMSG("gpio_setup: gpio_name is NULL!");
+	}
 
 	ret = gpio_request(gpio_num, gpio_name);
 	if (ret) {
@@ -492,6 +545,11 @@ int hall_request_irq(int current_value, int hall_value, int irq, const char *nam
 {
 	int ret = 0;
 	AK8789_FLOWMSG("name=%s current_value=0x%x hall_value=0x%x irq %d flags %lu", name, current_value, hall_value, irq, wake_flags);
+	
+	if (name == NULL)
+	{
+		AK8789_FLOWMSG("hall_request_irq: name is NULL!");
+	}
 
 	/*if current gpio is high, set low as irq, otherwise vs*/
 	if (!(current_value & hall_value)) {
@@ -503,18 +561,18 @@ int hall_request_irq(int current_value, int hall_value, int irq, const char *nam
 		}
 		/*if the gpio can wake up, then set up the irq wake type*/
 		if (IRQF_NO_SUSPEND == wake_flags) {
-			irq_set_irq_wake(irq , 1);
+			irq_set_irq_wake(irq, 1);
 		}
 	} else {
 		ret = request_irq(irq, hall_event_isr,
 			 IRQF_TRIGGER_HIGH | wake_flags, name, &hw_hall_dev);
 		if (ret) {
-			AK8789_ERRMSG("gpio %s request_irq fail %d",name, ret);
+			AK8789_ERRMSG("gpio %s request_irq fail %d", name, ret);
 			return ret;
 		}
 		/*if the gpio can wake up, then set up the irq wake type*/
 		if (IRQF_NO_SUSPEND == wake_flags) {
-			irq_set_irq_wake(irq , 1);
+			irq_set_irq_wake(irq, 1);
 		}
 	}
 
@@ -527,6 +585,12 @@ static int hall_gpio_irq_setup(void)
 	int value = 0;
 	int i = 0;
 	gpio_data_t *gpio_ptr = hw_hall_dev.gpio_data;
+	
+	if (gpio_ptr == NULL)
+	{
+		AK8789_FLOWMSG("hall_gpio_irq_setup: gpio_ptr is NULL!");
+        	return -1;
+	}
 
 	for (i = 0; i < hw_hall_dev.gpio_nums; i++) {
 		ret = gpio_setup(gpio_ptr->gpio, gpio_ptr->name);
@@ -557,12 +621,21 @@ static int hall_gpio_irq_setup(void)
 
 static int hall_parse_dt(struct device *dev)
 {
-	struct device_node *np = dev->of_node;
-	int err = -1, i = 0;
-	gpio_data_t *gpio_ptr,*which_pole;
-	int used_type = -1;
-	int temp_val;
-	int gpio;
+	struct device_node *np = NULL;
+	int err = 0, i = 0;
+	gpio_data_t *gpio_ptr = NULL;
+	gpio_data_t *which_pole = NULL;
+	int used_type = 0;
+	int temp_val = 0;
+	int gpio = 0;
+	
+	if (dev == NULL)
+	{
+		AK8789_FLOWMSG("hall_gpio_irq_setup: gpio_ptr is NULL!");
+        	return -1;
+	}
+
+	np = dev->of_node;
 
 	/*for RIO*/
 	 gpio_data_t  one_pole_config_for_rio[1]={
@@ -648,6 +721,13 @@ int hall_pf_probe(struct platform_device *pdev)
 {
 	int err = 0;
 	int ret = 0;
+	
+	if (pdev == NULL)
+	{
+		AK8789_FLOWMSG("hall_pf_probe: pdev is NULL!");
+        	return -1;
+	}
+
 	err = hall_parse_dt(&pdev->dev);
 	if (err)
 		goto err_probe_start;
@@ -739,7 +819,7 @@ err_probe_start:
 
 static int ak8789_init(void)
 {
-	int err;
+	int err = 0;
 	err = platform_driver_register(&hw_hall_dev.hall_drv_pf);
 	if (err) {
 		AK8789_ERRMSG("hall_pf_drv_fall regiset error %d", err);

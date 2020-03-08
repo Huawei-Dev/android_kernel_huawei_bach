@@ -29,41 +29,55 @@ Problem NO.         Name        Time         Reason
 #include <linux/module.h>
 #include <misc/app_info.h>
 
-static int sns_dt_debug_mask= 1;
+#define HW_SNS_ERR_LOG       0
+#define HW_SNS_INFO_LOG      1
+#define HW_SNS_DEBUG_LOG     2
+
+#define HW_STRTOUL_BUF_LEN   10
+#define HW_DT_TEST_MODE      1
+
+static int sns_dt_debug_mask= HW_SNS_INFO_LOG;
 
 #define DTMODE_ERR(x...) do {\
-    if (sns_dt_debug_mask >=0) \
+    if (sns_dt_debug_mask >= HW_SNS_ERR_LOG) \
         printk(KERN_ERR x);\
     } while (0)
 
 #define DTMODE_INFO(x...) do {\
-    if (sns_dt_debug_mask >=1) \
+    if (sns_dt_debug_mask >= HW_SNS_INFO_LOG) \
         printk(KERN_ERR x);\
     } while (0)
+    
 #define DTMODE_FLOW(x...) do {\
-    if (sns_dt_debug_mask >=2) \
+    if (sns_dt_debug_mask >= HW_SNS_DEBUG_LOG) \
         printk(KERN_ERR x);\
     } while (0)
 
 
 module_param_named(sensor_dt_debug, sns_dt_debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP);
 
-bool sensorDT_mode=false;//sensor DT mode
-int als_data_count=0;	 //ALS sensor upload data times
-int ps_data_count=0;	 //ps sensor upload data times
+bool sensorDT_mode = false;	 //sensor DT mode
++int als_data_count = 0;	 //ALS sensor upload data times
++int ps_data_count = 0;	 //ps sensor upload data times
 
 
 static ssize_t store_sensor_DT_test(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
     unsigned long val = 0;
-    if (strict_strtoul(buf, 10, &val))
+    
+    if (NULL == buf)
+    {
+        DTMODE_ERR("[sensor]%s:store_sensor_DT_test, buf ptr is NULL\n", __func__);
+        return -EINVAL;
+    }
+    if (strict_strtoul(buf, HW_STRTOUL_BUF_LEN, &val))
     {
         DTMODE_ERR("[sensor]%s:store_sensor_DT_test val, val = %ld\n", __func__, val);
         return -EINVAL;
     }
     DTMODE_INFO("[sensor]%s:store_sensor_DT_test val=%ld\n", __func__, val);
-    if (1 == val)
+    if (HW_DT_TEST_MODE == val)
     {
         sensorDT_mode = true;
         als_data_count = 0;
@@ -81,8 +95,8 @@ static ssize_t store_sensor_DT_test(struct device *dev,
 static ssize_t show_sensor_DT_test(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	if (dev == NULL) {
-		DTMODE_ERR("[sensor]%s:dev info is null\n", __func__);
+	if (NULL == buf) {
+		DTMODE_ERR("[sensor]%s: buf ptr is null\n", __func__);
 		return -EINVAL;
 	}
 	return snprintf(buf, PAGE_SIZE, "%d\n", sensorDT_mode);
@@ -93,8 +107,8 @@ static DEVICE_ATTR(sensor_dt_enable, 0660,show_sensor_DT_test, store_sensor_DT_t
 static ssize_t show_als_test_result(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	if (dev == NULL) {
-		DTMODE_ERR("[sensor]%s:als_chip info is null.\n",__func__);
+	if (NULL == buf) {
+		DTMODE_ERR("[sensor]%s: buf ptr is null.\n",__func__);
 		return -EINVAL;
 	}
 	return snprintf(buf, PAGE_SIZE, "%d\n", als_data_count);
@@ -105,16 +119,14 @@ static DEVICE_ATTR(als_read_data, S_IRUGO,show_als_test_result, NULL);
 static ssize_t show_ps_test_result(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	if (dev == NULL) {
+	if (NULL == buf) {
 		DTMODE_ERR("[sensor]%s:ps_chip info is null.\n",__func__);
 		return -EINVAL;
 	}
 	return snprintf(buf, PAGE_SIZE, "%d\n", ps_data_count);
 }
-static DEVICE_ATTR(ps_read_data, S_IRUGO,show_ps_test_result, NULL);
 
-
-
+static DEVICE_ATTR(ps_read_data, S_IRUGO, show_ps_test_result, NULL);
 
 static struct platform_device sensor_dt_node = {
 	.name = "sensor_dt_nodes",

@@ -58,7 +58,7 @@
 #define PARSE_DTSI_NUMBER                               (77)
 #define APDS9251_OFFSET_LUX   4
 #define APDS9251_OFFSET_CCT   5
-enum tp_color_id{
+enum tp_color_id {
 	GOLD = 0,
 	WHITE,
 	BLACK,
@@ -105,7 +105,7 @@ static long apds9251_calibrate_total_data[6] = {0};//32
 static long apds9251_calibrate_average_data[6] = {0};//uint16
 
 static int apds9251_auto_light_open_flag = 0;
-static long apds9251_calibrate_object_data_from_kernel[6] = {1000,1000,1000,1000,1000,1000};//uint16
+static long apds9251_calibrate_object_data_from_kernel[6] = {1000, 1000, 1000, 1000, 1000, 1000};//uint16
 static long apds9251_als_offset[6] = {1000, 1000, 1000, 1000, 1000, 1000};//uint16
 
 static long als_ratio_max = 9000*1000;
@@ -132,7 +132,7 @@ module_param_named(rgb_apds9251_debug, rgb_apds9251_debug_mask, int, S_IRUGO | S
     } while (0)
 
 #ifdef CONFIG_HUAWEI_DSM
- struct als_test_excep{
+ struct als_test_excep {
 	int i2c_scl_val;		/* when i2c transfer err, read the gpio value*/
 	int i2c_sda_val;
 	int vdd_mv;
@@ -153,7 +153,8 @@ static const char *data_array_name[MODULE_MANUFACTURE_NUMBER] = {
 	[4] = "apds9251,cal_data4",
 	[5] = "apds9251,cal_data5"
 };
-struct apds9251_lux_cal_parameter{
+
+struct apds9251_lux_cal_parameter {
 	long cct_m;
 	long cct_n;
 	long avago_h;
@@ -171,15 +172,18 @@ struct apds9251_lux_cal_parameter{
 	long cct_mmi;
 	long cal_max;
 	long cal_min;
-}apds9251_lux_cal_parameter;
-struct apds9251_tp_lx_cal_parameter{
+} apds9251_lux_cal_parameter;
+
+struct apds9251_tp_lx_cal_parameter {
 	long tp_module_id;
 	struct apds9251_lux_cal_parameter  gold_apds9251_lux_cal_parameter;
 	struct apds9251_lux_cal_parameter  white_apds9251_lux_cal_parameter;
 	struct apds9251_lux_cal_parameter  black_apds9251_lux_cal_parameter;
 	struct apds9251_lux_cal_parameter  blue_apds9251_lux_cal_parameter;
-}apds9251_tp_lx_cal_parameter;
-static struct apds9251_tp_lx_cal_parameter apds9251_tp_module_parameter[MODULE_MANUFACTURE_NUMBER] = {{.tp_module_id = 0x55},{.tp_module_id = 0x55},{.tp_module_id = 0x55},{.tp_module_id = 0x55},{.tp_module_id = 0x55},{.tp_module_id = 0x55}};
+} apds9251_tp_lx_cal_parameter;
+
+static struct apds9251_tp_lx_cal_parameter apds9251_tp_module_parameter[MODULE_MANUFACTURE_NUMBER] = {{.tp_module_id = 0x55}, {.tp_module_id = 0x55}, {.tp_module_id = 0x55}, {.tp_module_id = 0x55}, {.tp_module_id = 0x55}, {.tp_module_id = 0x55}};
+
 typedef struct rgb_apds9251_rgb_data {
     unsigned int red;
     unsigned int green;
@@ -256,6 +260,7 @@ static struct sensors_classdev sensors_light_cdev = {
 	.sensors_enable = NULL,
 	.sensors_poll_delay = NULL,
 };
+
 static struct workqueue_struct *rgb_apds9251_workqueue = NULL;
 /*init the register of device function for probe and every time the chip is powered on*/
 static int rgb_apds9251_init_client(struct i2c_client *client);
@@ -273,14 +278,25 @@ static struct dsm_dev dsm_als_apds9251 = {
 	.buff_size 	= DSM_SENSOR_BUF_MAX,			// buffer size
 };
 
-static int apds9251_dsm_report_err(int errno,struct rgb_apds9251_data *data)
+static int apds9251_dsm_report_err(int errno, struct rgb_apds9251_data *data)
 {
 	int size = 0;
-	struct als_test_excep *excep = &data->als_test_exception;
+	struct als_test_excep *excep = NULL;
+	
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	if(dsm_client_ocuppy(apds9251_als_dclient)){
+	excep = &data->als_test_exception;
+	if (excep == NULL) {
+		APDS9251_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	if (dsm_client_ocuppy(apds9251_als_dclient)) {
 		/* buffer is busy */
-		APDS9251_ERR("%s: buffer is busy!, errno = %d\n", __func__,errno);
+		APDS9251_ERR("%s: buffer is busy!, errno = %d\n", __func__, errno);
 		return -EBUSY;
 	}
 
@@ -289,16 +305,15 @@ static int apds9251_dsm_report_err(int errno,struct rgb_apds9251_data *data)
 	size = dsm_client_record(apds9251_als_dclient,
 				"i2c_scl_val=%d,i2c_sda_val=%d,vdd = %d, vdd_status = %d\n"
 				"vio=%d, vio_status=%d, excep_num=%d, i2c_err_num=%d\n"
-				,excep->i2c_scl_val,excep->i2c_sda_val,excep->vdd_mv,excep->vdd_status
-				,excep->vio_mv,excep->vio_status,excep->excep_num,excep->i2c_err_num);
+				, excep->i2c_scl_val, excep->i2c_sda_val, excep->vdd_mv, excep->vdd_status
+				, excep->vio_mv, excep->vio_status, excep->excep_num, excep->i2c_err_num);
 
 	/*if device is not probe successfully or client is null, don't notify dsm work func*/
-	if(data->device_exist == false || apds9251_als_dclient == NULL){
+	if ((data->device_exist == false) || (apds9251_als_dclient == NULL)) {
 		return -ENODEV;
 	}
 
 	dsm_client_notify(apds9251_als_dclient, errno);
-
 
 	return size;
 }
@@ -307,7 +322,18 @@ static int apds9251_i2c_exception_status(struct rgb_apds9251_data *data)
 {
 	int ret = 0;
 	/* print pm status and i2c gpio status*/
-	struct als_test_excep *excep = &data->als_test_exception;
+	struct als_test_excep *excep = NULL;
+	
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	excep = &data->als_test_exception;
+	if (excep == NULL) {
+		APDS9251_ERR("%s,line %d: excep is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (data->vdd == NULL) {
 		return -ENXIO;
@@ -325,36 +351,36 @@ static int apds9251_i2c_exception_status(struct rgb_apds9251_data *data)
 
 	/* get regulator's status*/
 	excep->vdd_status = regulator_is_enabled(data->vdd);
-	if(excep->vdd_status < 0){
-		APDS9251_ERR("%s,line %d:regulator_is_enabled vdd failed\n",__func__,__LINE__);
+	if (excep->vdd_status < 0) {
+		APDS9251_ERR("%s,line %d:regulator_is_enabled vdd failed\n", __func__, __LINE__);
 	}
 	excep->vio_status = regulator_is_enabled(data->vio);
-	if(excep->vio_status < 0){
-		APDS9251_ERR("%s,line %d:regulator_is_enabled vio failed\n",__func__,__LINE__);
+	if (excep->vio_status < 0) {
+		APDS9251_ERR("%s,line %d:regulator_is_enabled vio failed\n", __func__, __LINE__);
 	}
 
 	/* get regulator's value*/
 	excep->vdd_mv = regulator_get_voltage(data->vdd)/1000;
-	if(excep->vdd_mv < 0){
-		APDS9251_ERR("%s,line %d:regulator_get_voltage vdd failed\n",__func__,__LINE__);
+	if (excep->vdd_mv < 0) {
+		APDS9251_ERR("%s,line %d:regulator_get_voltage vdd failed\n", __func__, __LINE__);
 	}
 
 	excep->vio_mv = regulator_get_voltage(data->vio)/1000;
-	if(excep->vio_mv < 0){
-		APDS9251_ERR("%s,line %d:regulator_get_voltage vio failed\n",__func__,__LINE__);
+	if (excep->vio_mv < 0) {
+		APDS9251_ERR("%s,line %d:regulator_get_voltage vio failed\n", __func__, __LINE__);
 	}
 
 	/* report i2c err info */
 	ret = apds9251_dsm_report_err(DSM_LPS_I2C_ERROR,data);
-	if(ret <= 0){
-		APDS9251_ERR("%s:probe did not succeed or apds9251_als_dclient is NULL",__func__);
+	if (ret <= 0) {
+		APDS9251_ERR("%s:probe did not succeed or apds9251_als_dclient is NULL", __func__);
 		return ret;
 	}
 
 	APDS9251_INFO("%s,line %d:i2c_scl_val=%d,i2c_sda_val=%d,vdd = %d, vdd_status = %d\n"
-			"vio=%d, vio_status=%d, excep_num=%d, i2c_err_num=%d",__func__,__LINE__
-			,excep->i2c_scl_val,excep->i2c_sda_val,excep->vdd_mv,excep->vdd_status
-			,excep->vio_mv,excep->vio_status,excep->excep_num,excep->i2c_err_num);
+			"vio=%d, vio_status=%d, excep_num=%d, i2c_err_num=%d", __func__, __LINE__
+			, excep->i2c_scl_val, excep->i2c_sda_val, excep->vdd_mv, excep->vdd_status
+			, excep->vio_mv, excep->vio_status, excep->excep_num, excep->i2c_err_num);
 
 	excep->i2c_err_num = 0;
 
@@ -365,32 +391,42 @@ static int apds9251_i2c_exception_status(struct rgb_apds9251_data *data)
 static void apds9251_report_i2c_info(struct rgb_apds9251_data* data, int err)
 {
 	int ret = 0;
+	
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
 	data->als_test_exception.i2c_err_num = err;
 	ret = apds9251_i2c_exception_status(data);
-	if(ret <= 0){
-		APDS9251_ERR("%s:ret = %d,called function apds9251_i2c_exception_status failed\n",__func__,ret);
+	if (ret <= 0) {
+		APDS9251_ERR("%s:ret = %d,called function apds9251_i2c_exception_status failed\n", __func__, ret);
 	}
 }
 
 static int apds9251_dsm_init(struct rgb_apds9251_data *data)
 {
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	apds9251_als_dclient = dsm_register_client(&dsm_als_apds9251);
 	if (!apds9251_als_dclient) {
-		APDS9251_ERR("%s@%d register dsm apds9521_als_dclient failed!\n",__func__,__LINE__);
+		APDS9251_ERR("%s@%d register dsm apds9521_als_dclient failed!\n", __func__, __LINE__);
 		return -ENOMEM;
 	}
 	/*for dmd*/
 	//apds9251_als_dclient->driver_data = data;
 
 	data->als_test_exception.reg_buf = kzalloc(512, GFP_KERNEL);
-	if(!data->als_test_exception.reg_buf){
-		APDS9251_ERR("%s@%d alloc dsm reg_buf failed!\n",__func__,__LINE__);
-		dsm_unregister_client(apds9251_als_dclient,&dsm_als_apds9251);
+	if (!data->als_test_exception.reg_buf) {
+		APDS9251_ERR("%s@%d alloc dsm reg_buf failed!\n", __func__, __LINE__);
+		dsm_unregister_client(apds9251_als_dclient, &dsm_als_apds9251);
 		return -ENOMEM;
 	}
 
 	return 0;
-
 }
 
 /*
@@ -399,49 +435,72 @@ static int apds9251_dsm_init(struct rgb_apds9251_data *data)
 static ssize_t apds9251_sysfs_dsm_test(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	long mode;
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
+	long mode = 0;
 	int ret = 0;
+	
+	if (dev == NULL) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (strict_strtol(buf, 10, &mode))
 			return -EINVAL;
 
 
-	if(DSM_LPS_I2C_ERROR == mode){
+	if (DSM_LPS_I2C_ERROR == mode) {
 		ret = apds9251_i2c_exception_status(data);
-	}
-	else{
+	} else {
 		APDS9251_ERR("%s unsupport err_no = %ld \n", __func__, mode);
 	}
 
 	return ret;
 }
-static DEVICE_ATTR(dsm_excep,S_IWUSR|S_IWGRP, NULL, apds9251_sysfs_dsm_test);
+
+static DEVICE_ATTR(dsm_excep, S_IWUSR|S_IWGRP, NULL, apds9251_sysfs_dsm_test);
 #endif
 
-
-static int rgb_apds9251_i2c_write(struct i2c_client*client, u8 reg, u16 value,bool flag)
+static int rgb_apds9251_i2c_write(struct i2c_client *client, u8 reg, u16 value, bool flag)
 {
-	int err,loop;
-
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	int err = 0, loop = 0;
+	struct rgb_apds9251_data *data = NULL;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	loop = APDS9251_I2C_RETRY_COUNT;
 	/*we give three times to repeat the i2c operation if i2c errors happen*/
-	while(loop) {
+	while (loop) {
 		mutex_lock(&data->update_lock);
 		/*0 is i2c_smbus_write_byte_data,1 is i2c_smbus_write_word_data*/
-		if(flag == APDS9251_I2C_BYTE)
+		if (flag == APDS9251_I2C_BYTE)
 		{
 			err = i2c_smbus_write_byte_data(client, reg, (u8)value);
 		}
-		else if(flag == APDS9251_I2C_WORD)
+		else if (flag == APDS9251_I2C_WORD)
 		{
 			err = i2c_smbus_write_word_data(client, reg, value);
 		}
 		mutex_unlock(&data->update_lock);
-		if(err < 0){
+		if (err < 0) {
 			loop--;
 			msleep(APDS9251_I2C_RETRY_TIMEOUT);
 		}
@@ -449,11 +508,11 @@ static int rgb_apds9251_i2c_write(struct i2c_client*client, u8 reg, u16 value,bo
 			break;
 	}
 	/*after three times,we print the register and regulator value*/
-	if(loop == 0){
-		APDS9251_ERR("%s,line %d:attention:i2c write err = %d\n",__func__,__LINE__,err);
+	if (loop == 0) {
+		APDS9251_ERR("%s,line %d:attention:i2c write err = %d\n", __func__, __LINE__, err);
 #ifdef CONFIG_HUAWEI_DSM
-		if(data->device_exist){
-				apds9251_report_i2c_info(data,err);
+		if (data->device_exist) {
+				apds9251_report_i2c_info(data, err);
 		}
 #endif
 	}
@@ -461,27 +520,36 @@ static int rgb_apds9251_i2c_write(struct i2c_client*client, u8 reg, u16 value,bo
 	return err;
 }
 
-static int rgb_apds9251_i2c_read(struct i2c_client*client, u8 reg,bool flag)
+static int rgb_apds9251_i2c_read(struct i2c_client *client, u8 reg, bool flag)
 {
-	int err,loop;
-
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	int err = 0, loop = 0;
+	struct rgb_apds9251_data *data = NULL;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	loop = APDS9251_I2C_RETRY_COUNT;
 	/*we give three times to repeat the i2c operation if i2c errors happen*/
-	while(loop) {
+	while (loop) {
 		mutex_lock(&data->update_lock);
 		/*0 is i2c_smbus_read_byte_data,1 is i2c_smbus_read_word_data*/
-		if(flag == APDS9251_I2C_BYTE)
+		if (flag == APDS9251_I2C_BYTE)
 		{
 			err = i2c_smbus_read_byte_data(client, reg);
 		}
-		else if(flag == APDS9251_I2C_WORD)
+		else if (flag == APDS9251_I2C_WORD)
 		{
 			err = i2c_smbus_read_word_data(client, reg);
 		}
 		mutex_unlock(&data->update_lock);
-		if(err < 0){
+		if (err < 0) {
 			loop--;
 			msleep(APDS9251_I2C_RETRY_TIMEOUT);
 		}
@@ -489,11 +557,11 @@ static int rgb_apds9251_i2c_read(struct i2c_client*client, u8 reg,bool flag)
 			break;
 	}
 	/*after three times,we print the register and regulator value*/
-	if(loop == 0){
-		APDS9251_ERR("%s,line %d:attention: i2c read err = %d,reg=0x%x\n",__func__,__LINE__,err,reg);
+	if (loop == 0) {
+		APDS9251_ERR("%s,line %d:attention: i2c read err = %d,reg=0x%x\n", __func__, __LINE__, err, reg);
 #ifdef CONFIG_HUAWEI_DSM
 		if(data->device_exist){
-				apds9251_report_i2c_info(data,err);
+				apds9251_report_i2c_info(data, err);
 		}
 #endif
 	}
@@ -503,23 +571,40 @@ static int rgb_apds9251_i2c_read(struct i2c_client*client, u8 reg,bool flag)
 
 static void rgb_apds9251_dump_register(struct i2c_client *client)
 {
-	int main_ctl,als_meas_rate,als_gain,part_id,int_cfg;
-	main_ctl = rgb_apds9251_i2c_read(client, APDS9251_DD_MAIN_CTRL_ADDR,APDS9251_I2C_BYTE);
-	als_meas_rate= rgb_apds9251_i2c_read(client, APDS9251_DD_ALS_MEAS_RATE_ADDR,APDS9251_I2C_BYTE);
-	als_gain =rgb_apds9251_i2c_read(client, APDS9251_DD_ALS_GAIN_ADDR,APDS9251_I2C_BYTE);
-	part_id=rgb_apds9251_i2c_read(client, APDS9251_DD_PART_ID_ADDR,APDS9251_I2C_BYTE);
-	int_cfg = rgb_apds9251_i2c_read(client, APDS9251_DD_INT_CFG_ADDR,APDS9251_I2C_BYTE);
-	APDS9251_INFO("%s,line %d:main_ctl = 0x%x,als_meas_rate=0x%x,als_gain=0x%x\n",__func__,__LINE__,main_ctl,als_meas_rate,als_gain);
-	APDS9251_INFO("%s,line %d:part_id = 0x%x,int_cfg =0x%x\n",__func__,__LINE__,part_id,int_cfg);
+	int main_ctl = 0, als_meas_rate = 0, als_gain = 0, part_id = 0, int_cfg = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	main_ctl = rgb_apds9251_i2c_read(client, APDS9251_DD_MAIN_CTRL_ADDR, APDS9251_I2C_BYTE);
+	als_meas_rate = rgb_apds9251_i2c_read(client, APDS9251_DD_ALS_MEAS_RATE_ADDR, APDS9251_I2C_BYTE);
+	als_gain = rgb_apds9251_i2c_read(client, APDS9251_DD_ALS_GAIN_ADDR, APDS9251_I2C_BYTE);
+	part_id = rgb_apds9251_i2c_read(client, APDS9251_DD_PART_ID_ADDR, APDS9251_I2C_BYTE);
+	int_cfg = rgb_apds9251_i2c_read(client, APDS9251_DD_INT_CFG_ADDR, APDS9251_I2C_BYTE);
+	APDS9251_INFO("%s,line %d:main_ctl = 0x%x,als_meas_rate=0x%x,als_gain=0x%x\n", __func__, __LINE__, main_ctl, als_meas_rate, als_gain);
+	APDS9251_INFO("%s,line %d:part_id = 0x%x,int_cfg =0x%x\n",__func__,__LINE__, part_id, int_cfg);
 }
 
 static int LuxCalculation(struct i2c_client *client)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct rgb_apds9251_data *data = NULL;
 	long long int lux = 0;
 	long long int cct = 0;
 	long long int ir_r_ratio = 0;
 	long long int b_r_ratio = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	if (data->rgb_data.red > 0)
 	{
 		ir_r_ratio = data->rgb_data.ir*100/data->rgb_data.red;
@@ -527,19 +612,19 @@ static int LuxCalculation(struct i2c_client *client)
 	}
 	cct = div_s64(CCT_M*b_r_ratio, 1000) + CCT_N;
 	
-	if (ir_r_ratio > avago_cofficient[0]){
+	if (ir_r_ratio > avago_cofficient[0]) {
 		cct = div_s64(cct_compensator_H * cct, 1000);
 		lux = data->rgb_data.green*LUX_R/((apds9251_als_meas_rate_tb[data->als_res_index])*apds9251_als_gain_tb[4]);
-	}else if (ir_r_ratio > avago_cofficient[1]){
+	} else if (ir_r_ratio > avago_cofficient[1]) {
 		cct = div_s64(cct_compensator_A * cct, 1000);
 		lux = data->rgb_data.green*LUX_R/((apds9251_als_meas_rate_tb[data->als_res_index])*apds9251_als_gain_tb[4]);
-	}else if (ir_r_ratio > avago_cofficient[2]){
+	} else if (ir_r_ratio > avago_cofficient[2]) {
 		cct = div_s64(cct_compensator_D * cct, 1000);
 		lux = data->rgb_data.green*LUX_Q/((apds9251_als_meas_rate_tb[data->als_res_index])*apds9251_als_gain_tb[4]);
-	}else{
+	} else {
 		lux = data->rgb_data.green*LUX_P/((apds9251_als_meas_rate_tb[data->als_res_index])*apds9251_als_gain_tb[4]);
 	}
-	APDS9251_FLOW("%s:apds9251_als_meas_rate_tb[data->als_res_index]=%d apds9251_als_gain_tb[4]=%d \n", __FUNCTION__,apds9251_als_meas_rate_tb[data->als_res_index],apds9251_als_gain_tb[4]);
+	APDS9251_FLOW("%s:apds9251_als_meas_rate_tb[data->als_res_index]=%d apds9251_als_gain_tb[4]=%d \n", __FUNCTION__, apds9251_als_meas_rate_tb[data->als_res_index], apds9251_als_gain_tb[4]);
 	data->rgb_data.lx = lux;
 	data->rgb_data.cct = cct;
 	return 0;
@@ -547,75 +632,96 @@ static int LuxCalculation(struct i2c_client *client)
 
 static int apds9251_dd_set_main_ctrl(struct i2c_client *client, int main_ctrl)
 {
-	return rgb_apds9251_i2c_write(client, APDS9251_DD_MAIN_CTRL_ADDR, main_ctrl,APDS9251_I2C_BYTE);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	return rgb_apds9251_i2c_write(client, APDS9251_DD_MAIN_CTRL_ADDR, main_ctrl, APDS9251_I2C_BYTE);
 }
 
 static int apds9251_dd_set_als_meas_rate(struct i2c_client *client, int als_meas)
 {
-	return rgb_apds9251_i2c_write(client, APDS9251_DD_ALS_MEAS_RATE_ADDR, als_meas,APDS9251_I2C_BYTE);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	return rgb_apds9251_i2c_write(client, APDS9251_DD_ALS_MEAS_RATE_ADDR, als_meas, APDS9251_I2C_BYTE);
 }
 
 static int apds9251_dd_set_als_gain(struct i2c_client *client, int als_gain)
 {
-	return rgb_apds9251_i2c_write(client, APDS9251_DD_ALS_GAIN_ADDR, als_gain,APDS9251_I2C_BYTE);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	return rgb_apds9251_i2c_write(client, APDS9251_DD_ALS_GAIN_ADDR, als_gain, APDS9251_I2C_BYTE);
 }
 
 static void apds9251_als_calibrate(unsigned int *raw_data)//uint16
 {
 	int i = 0;//uint8
 	int status = 0;
-	APDS9251_INFO("%s,line %d:apds9251 apds9251_als_calibrate_count:%d  APDS9251_ALS_CALIBRATE_COUNT:%d\n",__func__,__LINE__,apds9251_als_calibrate_count,APDS9251_ALS_CALIBRATE_COUNT);
-	if(apds9251_als_calibrate_count < APDS9251_ALS_CALIBRATE_COUNT) 
+	
+	if (raw_data == NULL) {
+		APDS9251_ERR("%s,line %d: raw_data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	APDS9251_INFO("%s,line %d:apds9251 apds9251_als_calibrate_count:%d  APDS9251_ALS_CALIBRATE_COUNT:%d\n", __func__, __LINE__, apds9251_als_calibrate_count, APDS9251_ALS_CALIBRATE_COUNT);
+	if (apds9251_als_calibrate_count < APDS9251_ALS_CALIBRATE_COUNT) 
 	{
 		apds9251_als_calibrate_count++;
-		for(i = 0;i < 6; i++){
+		for (i = 0; i < 6; i++) {
 			apds9251_calibrate_total_data[i] += raw_data[i];
-			APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_calibrate_total_data[%d]=%ld  raw_data[%d]=%d\n",__func__,__LINE__,i,apds9251_calibrate_total_data[i],i,raw_data[i]);
+			APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_calibrate_total_data[%d]=%ld  raw_data[%d]=%d\n", __func__, __LINE__, i, apds9251_calibrate_total_data[i], i, raw_data[i]);
 		}
 	}
 	else
 	{
-		for(i = 0;i < 6; i++)
+		for (i = 0; i < 6; i++)
 		{
-			if(apds9251_calibrate_total_data[i] < APDS9251_ALS_CALIBRATE_COUNT)
+			if (apds9251_calibrate_total_data[i] < APDS9251_ALS_CALIBRATE_COUNT)
 			{
-				APDS9251_INFO("%s,line %d:apds9251 als calibrate fail due to data is too small or zero,apds9251_calibrate_total_data[%d]=%ld \n",__func__,__LINE__,i ,apds9251_calibrate_total_data[i]);
-				apds9251_als_offset[0]=1000;
-				apds9251_als_offset[1]=1000;
-				apds9251_als_offset[2]=1000;
-				apds9251_als_offset[3]=1000;
-				apds9251_als_offset[4]=1000;
-				apds9251_als_offset[5]=1000;
+				APDS9251_INFO("%s,line %d:apds9251 als calibrate fail due to data is too small or zero,apds9251_calibrate_total_data[%d]=%ld \n", __func__, __LINE__, i, apds9251_calibrate_total_data[i]);
+				apds9251_als_offset[0] = 1000;
+				apds9251_als_offset[1] = 1000;
+				apds9251_als_offset[2] = 1000;
+				apds9251_als_offset[3] = 1000;
+				apds9251_als_offset[4] = 1000;
+				apds9251_als_offset[5] = 1000;
 				status = -1;
 				break;
 			}
 			else
 			{
 				apds9251_calibrate_average_data[i] = apds9251_calibrate_total_data[i]/APDS9251_ALS_CALIBRATE_COUNT;
-				if(0==apds9251_calibrate_average_data[i])
+				if (0 == apds9251_calibrate_average_data[i])
 				{
-					APDS9251_ERR("%s,line %d:zero err,apds9251_calibrate_object_data_from_kernel(%ld),apds9251_calibrate_average_data(%ld)\n",__func__,__LINE__,apds9251_calibrate_object_data_from_kernel[i], apds9251_calibrate_average_data[i]);
-					apds9251_als_offset[0]=1000;
-					apds9251_als_offset[1]=1000;
-					apds9251_als_offset[2]=1000;
-					apds9251_als_offset[3]=1000;
-					apds9251_als_offset[4]=1000;
-					apds9251_als_offset[5]=1000;
+					APDS9251_ERR("%s,line %d:zero err,apds9251_calibrate_object_data_from_kernel(%ld),apds9251_calibrate_average_data(%ld)\n", __func__, __LINE__, apds9251_calibrate_object_data_from_kernel[i], apds9251_calibrate_average_data[i]);
+					apds9251_als_offset[0] = 1000;
+					apds9251_als_offset[1] = 1000;
+					apds9251_als_offset[2] = 1000;
+					apds9251_als_offset[3] = 1000;
+					apds9251_als_offset[4] = 1000;
+					apds9251_als_offset[5] = 1000;
 					status = -1;
 					break;
 				}
 				apds9251_als_offset[i]=(apds9251_calibrate_object_data_from_kernel[i]*1000)/apds9251_calibrate_average_data[i];
-				APDS9251_INFO("%s,line %d:i:%d apds9251_calibrate_object_data_from_kernel(%ld),apds9251_calibrate_average_data(%ld)\n",__func__,__LINE__,i,apds9251_calibrate_object_data_from_kernel[i], apds9251_calibrate_average_data[i]);
+				APDS9251_INFO("%s,line %d:i:%d apds9251_calibrate_object_data_from_kernel(%ld),apds9251_calibrate_average_data(%ld)\n", __func__, __LINE__, i, apds9251_calibrate_object_data_from_kernel[i], apds9251_calibrate_average_data[i]);
 
-				if(((apds9251_als_offset[i] >= als_ratio_max) || (apds9251_als_offset[i] < als_ratio_min)) && (i != APDS9251_OFFSET_LUX) && (i != APDS9251_OFFSET_CCT))
+				if (((apds9251_als_offset[i] >= als_ratio_max) || (apds9251_als_offset[i] < als_ratio_min)) && (i != APDS9251_OFFSET_LUX) && (i != APDS9251_OFFSET_CCT))
 				{
-					APDS9251_INFO("%s,line %d:apds9251 als calibrate fail due to out of range,apds9251_als_offset[%d]=%ld\n",__func__,__LINE__,i,apds9251_als_offset[i]);
-					apds9251_als_offset[0]=1000;
-					apds9251_als_offset[1]=1000;
-					apds9251_als_offset[2]=1000;
-					apds9251_als_offset[3]=1000;
-					apds9251_als_offset[4]=1000;
-					apds9251_als_offset[5]=1000;
+					APDS9251_INFO("%s,line %d:apds9251 als calibrate fail due to out of range,apds9251_als_offset[%d]=%ld\n", __func__, __LINE__, i, apds9251_als_offset[i]);
+					apds9251_als_offset[0] = 1000;
+					apds9251_als_offset[1] = 1000;
+					apds9251_als_offset[2] = 1000;
+					apds9251_als_offset[3] = 1000;
+					apds9251_als_offset[4] = 1000;
+					apds9251_als_offset[5] = 1000;
 					status = -1;
 					break;
 				}
@@ -626,29 +732,36 @@ static void apds9251_als_calibrate(unsigned int *raw_data)//uint16
 			}
 		}
 
-		APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_calibrate_average_data %ld,%ld,%ld,%ld,%ld,%ld \n",__func__,__LINE__,apds9251_calibrate_average_data[0],
-                        apds9251_calibrate_average_data[1],apds9251_calibrate_average_data[2],apds9251_calibrate_average_data[3],apds9251_calibrate_average_data[4],apds9251_calibrate_average_data[5]);
-		APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_als_offset[0]=%ld apds9251_als_offset[1]=%ld apds9251_als_offset[2]=%ld apds9251_als_offset[3]=%ld apds9251_als_offset[4]=%ld apds9251_als_offset[5]=%ld\n",__func__,__LINE__,apds9251_als_offset[0],
-                        apds9251_als_offset[1],apds9251_als_offset[2],apds9251_als_offset[3],apds9251_als_offset[4],apds9251_als_offset[5]);
+		APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_calibrate_average_data %ld,%ld,%ld,%ld,%ld,%ld \n", __func__, __LINE__, apds9251_calibrate_average_data[0],
+                        apds9251_calibrate_average_data[1], apds9251_calibrate_average_data[2], apds9251_calibrate_average_data[3], apds9251_calibrate_average_data[4], apds9251_calibrate_average_data[5]);
+		APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_als_offset[0]=%ld apds9251_als_offset[1]=%ld apds9251_als_offset[2]=%ld apds9251_als_offset[3]=%ld apds9251_als_offset[4]=%ld apds9251_als_offset[5]=%ld\n",__func__,__LINE__, apds9251_als_offset[0],
+                        apds9251_als_offset[1], apds9251_als_offset[2], apds9251_als_offset[3], apds9251_als_offset[4], apds9251_als_offset[5]);
 		apds9251_als_calibrate_flag = false;
 	}
 }
+
 static void apds9251_change_als_threshold(struct i2c_client *client)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	unsigned char i2c_data[12];
-	int status;
+	struct rgb_apds9251_data *data = NULL;
+	unsigned char i2c_data[12] = {0,};
+	int status = 0;
 	int i = 0;
 	unsigned int calibrate_data[6] = {0};
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
+		
 	status = i2c_smbus_read_i2c_block_data(client, APDS9251_DD_IR_DATA_ADDR, APDS_READ_BLOCK_DATA_SIZE, (unsigned char*)i2c_data);
 	
 	if (status < 0) {
-		APDS9251_ERR("%s:i2c read block data fail\n",__FUNCTION__);
+		APDS9251_ERR("%s:i2c read block data fail\n", __FUNCTION__);
 		return;
 	}
 	
 	if (status != APDS_READ_BLOCK_DATA_SIZE) {
-		APDS9251_ERR("%s:i2c read block data does not match\n",__FUNCTION__);
+		APDS9251_ERR("%s:i2c read block data does not match\n", __FUNCTION__);
 		return;
 	}
 	
@@ -658,7 +771,7 @@ static void apds9251_change_als_threshold(struct i2c_client *client)
 	data->rgb_data.red = (i2c_data[11] << 16) | (i2c_data[10] << 8) | i2c_data[9];
 
 
-	if(apds9251_als_calibrate_flag == true)
+	if (apds9251_als_calibrate_flag == true)
 	{
 		LuxCalculation(client);
 		calibrate_data[0] = data->rgb_data.red;
@@ -679,15 +792,15 @@ static void apds9251_change_als_threshold(struct i2c_client *client)
 #endif
 		
 	LuxCalculation(client);
-	APDS9251_FLOW("%s:lux=%d  red=%d green=%d blue=%d ir=%d \n", __FUNCTION__,data->rgb_data.lx,data->rgb_data.red,
-	data->rgb_data.green,data->rgb_data.blue,data->rgb_data.ir);
+	APDS9251_FLOW("%s:lux=%d  red=%d green=%d blue=%d ir=%d \n", __FUNCTION__, data->rgb_data.lx, data->rgb_data.red,
+	data->rgb_data.green, data->rgb_data.blue, data->rgb_data.ir);
 
 	// report to HAL
 	data->rgb_data.lx = (data->rgb_data.lx>30000) ? 30000 : data->rgb_data.lx;
 	data->rgb_data.cct = (data->rgb_data.cct<10000) ? data->rgb_data.cct : 10000;
-	if( apds_als_polling_count < 5 )
+	if ( apds_als_polling_count < 5 )
 	{
-		if(data->rgb_data.lx == APDS9251_LUX_MAX)
+		if (data->rgb_data.lx == APDS9251_LUX_MAX)
 		{
 			data->rgb_data.lx = data->rgb_data.lx - apds_als_polling_count%2;
 		}
@@ -702,23 +815,23 @@ static void apds9251_change_als_threshold(struct i2c_client *client)
 	{
 		jiffies_save = jiffies;
 		APDS9251_INFO("[apds9251]: the cycle rgb_data.lx = %d,rgb_data.ir  = %d,rgb_data.green = %d,rgb_data.blue = %d,rgb_data.red = %d\n",
-						data->rgb_data.lx,data->rgb_data.ir ,data->rgb_data.green,data->rgb_data.blue,data->rgb_data.red);
+						data->rgb_data.lx, data->rgb_data.ir, data->rgb_data.green, data->rgb_data.blue, data->rgb_data.red);
 
 	}
 	else
 	{
-		for(i = 0;i<ARR_NUM;i++)
+		for (i = 0; i < ARR_NUM; i++)
 		{
-			if(data->rgb_data.lx < lux_arr[i])
+			if (data->rgb_data.lx < lux_arr[i])
 				break;
 
 		}
 		/*als value appears to jump or enable als to print log*/
-		if( i_save != i  || (true == als_print ))
+		if ((i_save != i)  || (true == als_print ))
 		{
 			i_save = i;
 			APDS9251_INFO("[apds9251]: the skip rgb_data.lx = %d,rgb_data.ir  = %d,rgb_data.green = %d,rgb_data.blue = %d,rgb_data.red = %d,als_print = %d\n",
-							data->rgb_data.lx,data->rgb_data.ir ,data->rgb_data.green,data->rgb_data.blue,data->rgb_data.red,als_print);			
+							data->rgb_data.lx,data->rgb_data.ir, data->rgb_data.green, data->rgb_data.blue, data->rgb_data.red, als_print);			
 			als_print  = false;
 		}
 	}
@@ -726,32 +839,50 @@ static void apds9251_change_als_threshold(struct i2c_client *client)
 	input_sync(data->input_dev_als);
 	//we does not use cct
 	//input_report_abs(data->input_dev_als, ABS_CCT, data->cct);
-	APDS9251_FLOW("%s:report to HAL Lux = %d data->rgb_data.cct=%d\n",__FUNCTION__, data->rgb_data.lx,data->rgb_data.cct);
+	APDS9251_FLOW("%s:report to HAL Lux = %d data->rgb_data.cct=%d\n", __FUNCTION__, data->rgb_data.lx, data->rgb_data.cct);
 }
 
 /* ALS polling routine */
 static void rgb_apds9251_als_polling_work_handler(struct work_struct *work)
 {
-	struct rgb_apds9251_data *data = container_of(work, struct rgb_apds9251_data,als_dwork);
-	struct i2c_client *client=data->client;
-	int status;
+	struct rgb_apds9251_data *data = NULL;
+	struct i2c_client *client = NULL;
+	int status = 0;
 	int loop_count=0;
-	int ret;
+	int ret = 0;
+	
+	if (work == NULL) {
+		APDS9251_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	data = container_of(work, struct rgb_apds9251_data,als_dwork);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	client = data->client;
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
 	status = rgb_apds9251_i2c_read(client, APDS9251_DD_MAIN_STATUS_ADDR, APDS9251_I2C_BYTE);
 
 	if ((status & APDS9251_DD_ALS_DATA_STATUS) && data->enable_als_sensor) {
 		apds9251_change_als_threshold(client);
-	}else{
+	} else {
 		/* wait the most another 200ms */
-		while (!(status & APDS9251_DD_ALS_DATA_STATUS) && loop_count < APDS_LOOP_COUNT)
+		while (!(status & APDS9251_DD_ALS_DATA_STATUS) && (loop_count < APDS_LOOP_COUNT))
 		{
-			status = rgb_apds9251_i2c_read(client, APDS9251_DD_MAIN_STATUS_ADDR,APDS9251_I2C_BYTE);
+			status = rgb_apds9251_i2c_read(client, APDS9251_DD_MAIN_STATUS_ADDR, APDS9251_I2C_BYTE);
 			msleep(20);
 			loop_count++;
-			APDS9251_FLOW("%s: enter work hadler loop_count=%d\n",__FUNCTION__,loop_count);
+			APDS9251_FLOW("%s: enter work hadler loop_count=%d\n", __FUNCTION__, loop_count);
 		}
 	
-		if (loop_count < APDS_LOOP_COUNT){
+		if (loop_count < APDS_LOOP_COUNT) {
 			apds9251_change_als_threshold(client);
 			loop_count = 0;
 		}
@@ -771,7 +902,18 @@ Description   :  hrtimer_start call back function,
 *****************************************************************/
 static enum hrtimer_restart rgb_apds9251_als_timer_func(struct hrtimer *timer)
 {
-	struct rgb_apds9251_data* data = container_of(timer,struct rgb_apds9251_data,timer);
+	struct rgb_apds9251_data* data = NULL;
+	
+	if (timer == NULL) {
+		APDS9251_ERR("%s,line %d: work is NULL!\n", __func__, __LINE__);
+		return HRTIMER_NORESTART;
+	}
+
+	data = container_of(timer, struct rgb_apds9251_data, timer);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return HRTIMER_NORESTART;
+	}
 	
 	queue_work(rgb_apds9251_workqueue, &data->als_dwork);
 	return HRTIMER_NORESTART;
@@ -803,20 +945,32 @@ static int tp_color_to_id(int color)
 
 static int parse_tp_color_and_module_manufacture(struct rgb_apds9251_data *data)
 {
-	struct rgb_apds9251_platform_data *pdata = data->platform_data;
+	struct rgb_apds9251_platform_data *pdata = NULL;
 	int i = 0;
 	int tp_color = 0;
-	tp_color =read_tp_color();
+	
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL) {
+		APDS9251_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	tp_color = read_tp_color();
 	pdata->tp_color = tp_color_to_id(tp_color);
-	APDS9251_INFO("%s:%d panel_id = %d tp_color = %d pdata->tp_color = %d\n", __FUNCTION__, __LINE__,pdata->panel_id,tp_color,pdata->tp_color);
-	if( UNKNOW_PRODUCT_MODULE == pdata->panel_id)
+	APDS9251_INFO("%s:%d panel_id = %d tp_color = %d pdata->tp_color = %d\n", __FUNCTION__, __LINE__, pdata->panel_id, tp_color,pdata->tp_color);
+	if (UNKNOW_PRODUCT_MODULE == pdata->panel_id)
 	{
-		APDS9251_ERR("%s:%d:tp_type =%d,get tp_type is fail.\n",__FUNCTION__, __LINE__,pdata->panel_id);
+		APDS9251_ERR("%s:%d:tp_type =%d,get tp_type is fail.\n", __FUNCTION__, __LINE__, pdata->panel_id);
 		return READ_TP_FAIL;
 	}
-	for (i = 0;i < MODULE_MANUFACTURE_NUMBER;i++){
-		if (pdata->panel_id == apds9251_tp_module_parameter[i].tp_module_id){
-			if (pdata->tp_color == GOLD){
+	for (i = 0; i < MODULE_MANUFACTURE_NUMBER; i++) {
+		if (pdata->panel_id == apds9251_tp_module_parameter[i].tp_module_id) {
+			if (pdata->tp_color == GOLD) {
 				CCT_M = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.lux_p;
@@ -836,7 +990,7 @@ static int parse_tp_color_and_module_manufacture(struct rgb_apds9251_data *data)
 				apds9251_calibrate_object_data_from_kernel[5] = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cct_mmi;
 				als_ratio_max = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cal_max;
 				als_ratio_min = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cal_min;
-			}else if (pdata->tp_color == WHITE){
+			}else if (pdata->tp_color == WHITE) {
 				CCT_M = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.lux_p;
@@ -857,7 +1011,7 @@ static int parse_tp_color_and_module_manufacture(struct rgb_apds9251_data *data)
 				als_ratio_max = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.cal_max;
 				als_ratio_min = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.cal_min;
 
-			}else if (pdata->tp_color == BLACK){
+			}else if (pdata->tp_color == BLACK) {
 				CCT_M = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.lux_p;
@@ -878,7 +1032,7 @@ static int parse_tp_color_and_module_manufacture(struct rgb_apds9251_data *data)
 				als_ratio_max = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cal_max;
 				als_ratio_min = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cal_min;
 
-			}else if (pdata->tp_color == RED){
+			}else if (pdata->tp_color == RED) {
 				CCT_M = apds9251_tp_module_parameter[i].blue_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].blue_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].blue_apds9251_lux_cal_parameter.lux_p;
@@ -902,39 +1056,55 @@ static int parse_tp_color_and_module_manufacture(struct rgb_apds9251_data *data)
 			}
 			else
 			{
-				APDS9251_ERR("%s:%d:tp_type =%d,get tp_type is fail.\n",__FUNCTION__, __LINE__,pdata->panel_id);
+				APDS9251_ERR("%s:%d:tp_type =%d,get tp_type is fail.\n", __FUNCTION__, __LINE__, pdata->panel_id);
 				return UNKNOW_TP_COLOR;
 			}
 		}
 	}
 	APDS9251_INFO("%s:%d lux cal  parameter from dtsi  is CCT_M [%ld], CCT_N[%ld], LUX_P[%ld], LUX_Q[%ld], LUX_R[%ld]\n",
-			__func__, __LINE__,CCT_M , CCT_N,LUX_P,LUX_Q,LUX_R);
+			__func__, __LINE__,CCT_M, CCT_N, LUX_P, LUX_Q, LUX_R);
 	APDS9251_INFO("%s:cct_compensator_A(%ld),cct_compensator_D(%ld),cct_compensator_H(%ld),avago_cofficient[0](%ld),avago_cofficient[1](%ld),avago_cofficient[2](%ld)",
-			__func__,cct_compensator_A,cct_compensator_D,cct_compensator_H,avago_cofficient[0],avago_cofficient[1],avago_cofficient[2]);
+			__func__, cct_compensator_A, cct_compensator_D, cct_compensator_H, avago_cofficient[0], avago_cofficient[1], avago_cofficient[2]);
 	APDS9251_INFO("%s:apds9251_calibrate_object_data_from_kernel:%ld,%ld,%ld,%ld,%ld,%ld,als_ratio_max:%ld als_ratio_min:%ld",
-			__func__,apds9251_calibrate_object_data_from_kernel[0],apds9251_calibrate_object_data_from_kernel[1],apds9251_calibrate_object_data_from_kernel[2],apds9251_calibrate_object_data_from_kernel[3],apds9251_calibrate_object_data_from_kernel[4],apds9251_calibrate_object_data_from_kernel[5],als_ratio_max,als_ratio_min);
+			__func__, apds9251_calibrate_object_data_from_kernel[0], apds9251_calibrate_object_data_from_kernel[1], apds9251_calibrate_object_data_from_kernel[2], apds9251_calibrate_object_data_from_kernel[3], apds9251_calibrate_object_data_from_kernel[4], apds9251_calibrate_object_data_from_kernel[5], als_ratio_max,als_ratio_min);
 	return SUCCESE_ALS;
 }
 
 static int rgb_apds9251_enable_als_sensor(struct i2c_client *client, int val)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	struct rgb_apds9251_platform_data *pdata = data->platform_data;
-	int ret;
-	APDS9251_FLOW("%s,line %d:enable als val=%d data->enable_als_sensor=%d\n",__func__,__LINE__,val,data->enable_als_sensor);
+	struct rgb_apds9251_data *data = NULL;
+	struct rgb_apds9251_platform_data *pdata = NULL;
+	int ret = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	pdata = data->platform_data;
+	if (pdata == NULL) {
+		APDS9251_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	APDS9251_FLOW("%s,line %d:enable als val=%d data->enable_als_sensor=%d\n", __func__, __LINE__, val, data->enable_als_sensor);
 	mutex_lock(&data->single_lock);
 	if (val == 1) {
 		/* turn on light  sensor */
-		APDS9251_INFO("%s:%d pdata->panel_id = %d pdata->tp_color = %d\n", __func__,__LINE__,pdata->panel_id,pdata->tp_color);
+		APDS9251_INFO("%s:%d pdata->panel_id = %d pdata->tp_color = %d\n", __func__, __LINE__, pdata->panel_id, pdata->tp_color);
 		APDS9251_INFO("%s:%d lux cal parameter from dtsi  is CCT_M[%ld], CCT_N[%ld], cct_compensator_H[%ld], cct_compensator_A[%ld] , cct_compensator_D[%ld], LUX_P[%ld], LUX_Q[%ld],LUX_R[%ld],avago_cofficient0[%ld],avago_cofficient1[%ld],avago_cofficient2[%ld]\n",
-		__FUNCTION__, __LINE__,CCT_M, CCT_N,cct_compensator_H,cct_compensator_A,cct_compensator_D,LUX_P,LUX_Q,LUX_R,avago_cofficient[0],avago_cofficient[1],avago_cofficient[2]);
-		APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_als_offset[0]=%ld apds9251_als_offset[1]=%ld apds9251_als_offset[2]=%ld apds9251_als_offset[3]=%ld apds9251_als_offset[4]=%ld apds9251_als_offset[5]=%ld cal_max:%ld cal_min:%ld\n",__func__,__LINE__,apds9251_als_offset[0],
-                        apds9251_als_offset[1],apds9251_als_offset[2],apds9251_als_offset[3],apds9251_als_offset[4],apds9251_als_offset[5],als_ratio_max,als_ratio_min);
+		__FUNCTION__, __LINE__, CCT_M, CCT_N, cct_compensator_H, cct_compensator_A, cct_compensator_D, LUX_P, LUX_Q, LUX_R, avago_cofficient[0], avago_cofficient[1], avago_cofficient[2]);
+		APDS9251_INFO("%s,line %d:apds9251 als calibrate apds9251_als_offset[0]=%ld apds9251_als_offset[1]=%ld apds9251_als_offset[2]=%ld apds9251_als_offset[3]=%ld apds9251_als_offset[4]=%ld apds9251_als_offset[5]=%ld cal_max:%ld cal_min:%ld\n", __func__, __LINE__, apds9251_als_offset[0],
+                        apds9251_als_offset[1], apds9251_als_offset[2], apds9251_als_offset[3], apds9251_als_offset[4], apds9251_als_offset[5], als_ratio_max,als_ratio_min);
 		// turn on light  sensor
-		if (data->enable_als_sensor==APDS_DISABLE_ALS) {
+		if (data->enable_als_sensor == APDS_DISABLE_ALS) {
 			/* Power on and initalize the device */
 			if (pdata->power_on)
-				pdata->power_on(true,data);
+				pdata->power_on(true, data);
 			
 			ret = rgb_apds9251_init_client(client);
 			if (ret) {
@@ -942,7 +1112,7 @@ static int rgb_apds9251_enable_als_sensor(struct i2c_client *client, int val)
 				mutex_unlock(&data->single_lock);
 				return ret;
 			}
-			apds_als_polling_count=0;
+			apds_als_polling_count = 0;
 			data->enable_als_sensor = val;
 			apds9251_dd_set_main_ctrl(client, APDS9251_DD_CS_MODE|APDS9251_DD_ALS_EN);
 			als_print = true;
@@ -952,8 +1122,8 @@ static int rgb_apds9251_enable_als_sensor(struct i2c_client *client, int val)
 			}
 		}
 	} else {
-		if(data->enable_als_sensor == 1){
-			APDS9251_INFO("%s:turn off the light sensor,val = %d\n",__func__,val);
+		if (data->enable_als_sensor == 1) {
+			APDS9251_INFO("%s:turn off the light sensor,val = %d\n", __func__, val);
 			//turn off light sensor
 			data->enable_als_sensor = APDS_DISABLE_ALS;
 			apds9251_dd_set_main_ctrl(client, 0);
@@ -966,43 +1136,60 @@ static int rgb_apds9251_enable_als_sensor(struct i2c_client *client, int val)
 		}
 	}
 	/* Vote off  regulators if light sensor are off */
-	if ((data->enable_als_sensor == 0)&&(pdata->power_on)){
-		pdata->power_on(false,data);
+	if ((data->enable_als_sensor == 0) && (pdata->power_on)) {
+		pdata->power_on(false, data);
 	}
 	mutex_unlock(&data->single_lock);
 	return 0;
 }
 
- static int rgb_apds9251_als_set_enable(struct sensors_classdev *sensors_cdev,
+static int rgb_apds9251_als_set_enable(struct sensors_classdev *sensors_cdev,
 		unsigned int enable)
 {
 	int ret = 0;
 	static int als_enalbe_count=0;
+	struct rgb_apds9251_data *data = NULL;
+	struct i2c_client *client = NULL;
 	
-	struct rgb_apds9251_data *data = container_of(sensors_cdev,struct rgb_apds9251_data, als_cdev);
-	struct i2c_client *client = data->client;
+	if (sensors_cdev == NULL) {
+		APDS9251_ERR("%s,line %d: sensors_cdev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = container_of(sensors_cdev,struct rgb_apds9251_data, als_cdev);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = data->client;
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
 
 	if ((enable != 0) && (enable != 1)) {
 		APDS9251_ERR("%s: invalid value(%d)\n", __func__, enable);
 		return -EINVAL;
 	}
-	APDS9251_FLOW("%s,line %d:rgb apds9251 als enable=%d\n",__func__,__LINE__,enable);
+	APDS9251_FLOW("%s,line %d:rgb apds9251 als enable=%d\n", __func__, __LINE__, enable);
 
 	/*for debug and print registers value when enable/disable the als every time*/
-	if(enable == 0)
+	if (enable == 0)
 	{
 		rgb_apds9251_enable_als_sensor(data->client, enable);
 
-		if(rgb_apds9251_debug_mask >= 1){
-			APDS9251_FLOW("%s:attention:before als_disable %d times\n", __FUNCTION__,als_enalbe_count);
+		if (rgb_apds9251_debug_mask >= 1) {
+			APDS9251_FLOW("%s:attention:before als_disable %d times\n", __FUNCTION__, als_enalbe_count);
 		}
 		rgb_apds9251_dump_register(client);
-	}else{
+	} else {
 
 		rgb_apds9251_enable_als_sensor(data->client, enable);
 
-		if(rgb_apds9251_debug_mask >= 1){
-			APDS9251_FLOW("%s:attention: after als_enable %d times\n",__FUNCTION__,++als_enalbe_count);
+		if (rgb_apds9251_debug_mask >= 1) {
+			APDS9251_FLOW("%s:attention: after als_enable %d times\n", __FUNCTION__, ++als_enalbe_count);
 		}
 		rgb_apds9251_dump_register(client);		
 	 }
@@ -1013,32 +1200,42 @@ static int rgb_apds9251_enable_als_sensor(struct i2c_client *client, int val)
 static int rgb_apds9251_set_als_poll_delay(struct i2c_client *client,
 		unsigned int val)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	int ret;
-	int als_res_index=0;
-	int als_meas_rate=0;
+	struct rgb_apds9251_data *data = NULL;
+	int ret = 0;
+	int als_res_index = 0;
+	int als_meas_rate = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	if (val <= 25){
+	if (val <= 25) {
 		data->als_poll_delay = 25;
 		//25ms conversion time
 		als_res_index = APDS9251_DD_ALS_RES_16BIT;
 		als_meas_rate = APDS9251_DD_ALS_MEAS_RES_16_BIT|APDS9251_DD_ALS_MEAS_RATE_25_MS;
-	}else if (val <= 50){
+	} else if (val <= 50) {
 		data->als_poll_delay = 50;
 		//50ms conversion time
 		als_res_index = APDS9251_DD_ALS_RES_17BIT;
 		als_meas_rate = APDS9251_DD_ALS_MEAS_RES_17_BIT|APDS9251_DD_ALS_MEAS_RATE_50_MS;
-	}else if (val <= 100){
+	} else if (val <= 100) {
 		data->als_poll_delay = 100;
 		//100ms conversion time
 		als_res_index = APDS9251_DD_ALS_RES_18BIT;
 		als_meas_rate = APDS9251_DD_ALS_MEAS_RES_18_BIT|APDS9251_DD_ALS_MEAS_RATE_100_MS;
-	}else if (val <= 200){
+	} else if (val <= 200) {
 		data->als_poll_delay = 200;
 		//200ms conversion time
 		als_res_index = APDS9251_DD_ALS_RES_19BIT;
 		als_meas_rate = APDS9251_DD_ALS_MEAS_RES_19_BIT|APDS9251_DD_ALS_MEAS_RATE_200_MS;
-	}else {
+	} else {
 		data->als_poll_delay = 100;
 		//100ms conversion time
 		als_res_index = APDS9251_DD_ALS_RES_18BIT;
@@ -1046,12 +1243,12 @@ static int rgb_apds9251_set_als_poll_delay(struct i2c_client *client,
 	}
 	
 	ret = apds9251_dd_set_als_meas_rate(client, als_meas_rate);
-	if (ret < 0){
-		APDS9251_ERR("%s: ret=%d\n",__FUNCTION__,ret);
+	if (ret < 0) {
+		APDS9251_ERR("%s: ret=%d\n", __FUNCTION__, ret);
 	}
 	data->als_res_index = als_res_index;
 	
-	APDS9251_INFO("%s:poll delay %d, als_res_index %d, meas_rate %d\n", __FUNCTION__,data->als_poll_delay, als_res_index, als_meas_rate);
+	APDS9251_INFO("%s:poll delay %d, als_res_index %d, meas_rate %d\n", __FUNCTION__, data->als_poll_delay, als_res_index, als_meas_rate);
 	if (!get_tp_info_ok)
 	{
 		ret = parse_tp_color_and_module_manufacture(data);
@@ -1073,7 +1270,7 @@ static int rgb_apds9251_set_als_poll_delay(struct i2c_client *client,
 	hrtimer_cancel(&data->timer);
 	ret = hrtimer_start(&data->timer, ktime_set(0, data->als_poll_delay * 1000000), HRTIMER_MODE_REL);
 	if (ret != 0) {
-		APDS9251_ERR("%s,line%d: hrtimer_start fail! nsec=%d\n", __func__, __LINE__,data->als_poll_delay);
+		APDS9251_ERR("%s,line%d: hrtimer_start fail! nsec=%d\n", __func__, __LINE__, data->als_poll_delay);
 		return ret;
 	}
 	return 0;
@@ -1082,8 +1279,19 @@ static int rgb_apds9251_set_als_poll_delay(struct i2c_client *client,
 static int rgb_apds9251_als_poll_delay(struct sensors_classdev *sensors_cdev,
 		unsigned int delay_msec)
 {
-	struct rgb_apds9251_data *data = container_of(sensors_cdev,
-			struct rgb_apds9251_data, als_cdev);
+	struct rgb_apds9251_data *data = NULL;
+			
+	if (sensors_cdev == NULL) {
+		APDS9251_ERR("%s,line %d: sensors_cdev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = container_of(sensors_cdev, struct rgb_apds9251_data, als_cdev);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
 	rgb_apds9251_set_als_poll_delay(data->client, delay_msec);
 	return 0;
 }
@@ -1091,9 +1299,26 @@ static int rgb_apds9251_als_poll_delay(struct sensors_classdev *sensors_cdev,
 static ssize_t rgb_apds9251_show_ir_data(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
 	unsigned char i2c_data[3] = {0};
+	
+	if (dev == NULL) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
 	i2c_smbus_read_i2c_block_data(client, APDS9251_DD_IR_DATA_ADDR, 3, (unsigned char*)i2c_data);
 	
@@ -1101,14 +1326,32 @@ static ssize_t rgb_apds9251_show_ir_data(struct device *dev,
 
 	return snprintf(buf,32,"%d\n", data->rgb_data.ir);
 }
+
 static DEVICE_ATTR(ir_data, S_IRUGO, rgb_apds9251_show_ir_data, NULL);
 
 static ssize_t rgb_apds9251_show_red_data(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
 	unsigned char i2c_data[3] = {0};
+	
+	if (dev == NULL) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
 	i2c_smbus_read_i2c_block_data(client, APDS9251_DD_RED_DATA_ADDR, 3, (unsigned char*)i2c_data);
 	
@@ -1116,14 +1359,32 @@ static ssize_t rgb_apds9251_show_red_data(struct device *dev,
 
 	return snprintf(buf,32,"%d\n", data->rgb_data.red);
 }
+
 static DEVICE_ATTR(red_data, S_IRUGO, rgb_apds9251_show_red_data, NULL);
 
 static ssize_t rgb_apds9251_show_green_data(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
 	unsigned char i2c_data[3] = {0};
+	
+	if (dev == NULL) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	i2c_smbus_read_i2c_block_data(client, APDS9251_DD_GREEN_DATA_ADDR, 3, (unsigned char*)i2c_data);
 	
@@ -1131,14 +1392,32 @@ static ssize_t rgb_apds9251_show_green_data(struct device *dev,
 	
 	return snprintf(buf,32, "%d\n", data->rgb_data.green);
 }
+
 static DEVICE_ATTR(green_data, S_IRUGO, rgb_apds9251_show_green_data, NULL);
 
 static ssize_t rgb_apds9251_show_blue_data(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
 	unsigned char i2c_data[3] = {0};
+	
+	if (dev == NULL) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	i2c_smbus_read_i2c_block_data(client, APDS9251_DD_BLUE_DATA_ADDR, 3, (unsigned char*)i2c_data);
 	
@@ -1146,6 +1425,7 @@ static ssize_t rgb_apds9251_show_blue_data(struct device *dev,
 	
 	return snprintf(buf,32, "%d\n", data->rgb_data.blue);
  }
+ 
 static DEVICE_ATTR(blue_data, S_IRUGO, rgb_apds9251_show_blue_data, NULL);
 
 /*
@@ -1156,62 +1436,73 @@ static DEVICE_ATTR(blue_data, S_IRUGO, rgb_apds9251_show_blue_data, NULL);
 static ssize_t rgb_apds9251_write_reg(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
+	struct i2c_client *client = NULL;
 	int val_len_max = 4;
-	char* input_str =NULL;
-	char reg_addr_str[10]={'\0'};
-	char reg_val_str[10]={'\0'};
-	long reg_addr,reg_val;
-	int addr_lenth=0,value_lenth=0,buf_len=0,ret = -1;
-	char* strtok=NULL;
+	char* input_str = NULL;
+	char reg_addr_str[10] = {'\0'};
+	char reg_val_str[10] = {'\0'};
+	long reg_addr = 0, reg_val = 0;
+	int addr_lenth = 0, value_lenth = 0, buf_len = 0, ret = 0;
+	char* strtok = NULL;
+	
+	if ((dev == NULL) || (buf == NULL)) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	buf_len = strlen(buf);
 	input_str = kzalloc(buf_len, GFP_KERNEL);
 	if (!input_str)
 	{
-		APDS9251_ERR("%s:kmalloc fail!\n",__func__);
+		APDS9251_ERR("%s:kmalloc fail!\n", __func__);
 		return -ENOMEM;
 	}
 
-	snprintf(input_str, 10,"%s", buf);
+	snprintf(input_str, 10, "%s", buf);
 	/*Split the string when encounter "|", for example "0x08|0x12" will be splited "0x18" "0x12" */
-	strtok=strsep(&input_str, "|");
-	if(strtok!=NULL)
+	strtok = strsep(&input_str, "|");
+	if (strtok != NULL)
 	{
 		addr_lenth = strlen(strtok);
-		memcpy(reg_addr_str,strtok,((addr_lenth > (val_len_max))?(val_len_max):addr_lenth));
+		memcpy(reg_addr_str, strtok, ((addr_lenth > (val_len_max)) ? (val_len_max) : addr_lenth));
 	}
 	else
 	{
-		APDS9251_ERR("%s: buf name Invalid:%s", __func__,buf);
+		APDS9251_ERR("%s: buf name Invalid:%s", __func__, buf);
 		goto parse_fail_exit;
 	}
-	strtok=strsep(&input_str, "|");
-	if(strtok!=NULL)
+	strtok = strsep(&input_str, "|");
+	if (strtok != NULL)
 	{
 		value_lenth = strlen(strtok);
-		memcpy(reg_val_str,strtok,((value_lenth > (val_len_max))?(val_len_max):value_lenth));
+		memcpy(reg_val_str, strtok, ((value_lenth > (val_len_max)) ? (val_len_max) : value_lenth));
 	}
 	else
 	{
-		APDS9251_ERR("%s: buf value Invalid:%s", __func__,buf);
+		APDS9251_ERR("%s: buf value Invalid:%s", __func__, buf);
 		goto parse_fail_exit;
 	}
 	/* transform string to long int */
-	ret = kstrtol(reg_addr_str,16,&reg_addr);
-	if(ret)
+	ret = kstrtol(reg_addr_str, 16, &reg_addr);
+	if (ret)
 		goto parse_fail_exit;
 
-	ret = kstrtol(reg_val_str,16,&reg_val);
-	if(ret)
+	ret = kstrtol(reg_val_str, 16, &reg_val);
+	if (ret)
 		goto parse_fail_exit;
 
 	/* write the parsed value in the register*/
-	ret = rgb_apds9251_i2c_write(client,(char)reg_addr,(char)reg_val,APDS9251_I2C_BYTE);
-	if (ret < 0){
+	ret = rgb_apds9251_i2c_write(client, (char)reg_addr, (char)reg_val, APDS9251_I2C_BYTE);
+	if (ret < 0) {
 		goto parse_fail_exit;
 	}
-	if(input_str)
+	if (input_str)
 		kfree(input_str);
 	return count;
 
@@ -1228,12 +1519,23 @@ parse_fail_exit:
 static ssize_t rgb_apds9251_print_reg_buf(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	int i;
-	char reg[APDS9251_REG_LEN];
-	struct i2c_client *client = to_i2c_client(dev);
+	int i = 0;
+	char reg[APDS9251_REG_LEN] = {0,};
+	struct i2c_client *client = NULL;
+	
+	if ((dev == NULL) || (buf == NULL)) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	/* read all register value and print to user*/
-	for(i = 0; i < APDS9251_REG_LEN; i++ )
+	for (i = 0; i < APDS9251_REG_LEN; i++ )
 	{
 		if ((i >= 0x1) && (i <= 0x3))
 			continue;
@@ -1242,18 +1544,18 @@ static ssize_t rgb_apds9251_print_reg_buf(struct device *dev,
 		if ((i >= 0x1B) && (i <= 0x20))
 			continue;
 		reg[i] = rgb_apds9251_i2c_read(client, i, APDS9251_I2C_BYTE);
-		if(reg[i] <0){
-			APDS9251_ERR("%s,line %d:read %d reg failed\n",__func__,__LINE__,i);
+		if (reg[i] < 0) {
+			APDS9251_ERR("%s,line %d:read %d reg failed\n", __func__, __LINE__, i);
 			return reg[i] ;
 		}
 	}
 
-	return snprintf(buf,512,"reg[0x0,0x04~0x7,0x0a~0x0e]=0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
+	return snprintf(buf, 512, "reg[0x0,0x04~0x7,0x0a~0x0e]=0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
 									 "reg[0x0f~0x18]=0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n"
 						    "reg[0x19~0x1a,0x21~0x27]=0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x, 0x%2x\n",
-			reg[0x00],reg[0x04],reg[0x05],reg[0x06],reg[0x07],reg[0x0a],reg[0x0b],reg[0x0c],reg[0x0d],reg[0x0e],
-			reg[0x0f],reg[0x10],reg[0x11],reg[0x12],reg[0x13],reg[0x14],reg[0x15],reg[0x16],reg[0x17],reg[0x18],
-			reg[0x19],reg[0x1a],reg[0x21],reg[0x22],reg[0x23],reg[0x24],reg[0x25],reg[0x26]);
+			reg[0x00], reg[0x04], reg[0x05], reg[0x06], reg[0x07], reg[0x0a], reg[0x0b], reg[0x0c], reg[0x0d], reg[0x0e],
+			reg[0x0f], reg[0x10], reg[0x11], reg[0x12], reg[0x13], reg[0x14], reg[0x15], reg[0x16], reg[0x17], reg[0x18],
+			reg[0x19], reg[0x1a], reg[0x21], reg[0x22], reg[0x23], reg[0x24], reg[0x25], reg[0x26]);
 }
 static DEVICE_ATTR(dump_reg ,S_IRUGO|S_IWUSR|S_IWGRP, rgb_apds9251_print_reg_buf, rgb_apds9251_write_reg);
 /*
@@ -1264,30 +1566,54 @@ static DEVICE_ATTR(dump_reg ,S_IRUGO|S_IWUSR|S_IWGRP, rgb_apds9251_print_reg_buf
 static ssize_t write_module_tpcolor(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	struct rgb_apds9251_platform_data *pdata = data->platform_data;
-	int err;
-	u32 val;
-	int valid_flag;
-	int i;
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
+	struct rgb_apds9251_platform_data *pdata = NULL;
+	int err = 0;
+	u32 val = 0;
+	int valid_flag = 0;
+	int i = 0;
+	
+	if ((dev == NULL) || (buf == NULL)) {
+		APDS9251_ERR("%s,line %d: dev is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL) {
+		APDS9251_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
 	err = kstrtoint(buf, 0, &val);
 	if (err < 0) {
-		APDS9251_ERR("%s:%d kstrtoint failed\n", __func__,__LINE__);
+		APDS9251_ERR("%s:%d kstrtoint failed\n", __func__, __LINE__);
 		return count;
 	}
 	valid_flag = val & 0xffff;
 	pdata->panel_id = (val >> 16) & 0xff;
 	pdata->tp_color = (val >> 24) & 0xff;
-	if (valid_flag != VALID_FLAG){
-		APDS9251_ERR("%s:%d  valid flag error\n", __func__,__LINE__);
+	if (valid_flag != VALID_FLAG) {
+		APDS9251_ERR("%s:%d  valid flag error\n", __func__, __LINE__);
 		return count;
 	}
 
-	APDS9251_INFO("%s:%d panel_id = %d pdata->tp_color = %d\n", __FUNCTION__, __LINE__,pdata->panel_id,pdata->tp_color);
-	for (i = 0;i < MODULE_MANUFACTURE_NUMBER;i++){
-		if (pdata->panel_id == apds9251_tp_module_parameter[i].tp_module_id){
-			if (pdata->tp_color == GOLD){
+	APDS9251_INFO("%s:%d panel_id = %d pdata->tp_color = %d\n", __FUNCTION__, __LINE__, pdata->panel_id, pdata->tp_color);
+	for (i = 0; i < MODULE_MANUFACTURE_NUMBER; i++){
+		if (pdata->panel_id == apds9251_tp_module_parameter[i].tp_module_id) {
+			if (pdata->tp_color == GOLD) {
 				CCT_M = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.lux_p;
@@ -1299,7 +1625,7 @@ static ssize_t write_module_tpcolor(struct device *dev, struct device_attribute 
 				avago_cofficient[0] = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.avago_cofficient[0];
 				avago_cofficient[1] = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.avago_cofficient[1];
 				avago_cofficient[2] = apds9251_tp_module_parameter[i].gold_apds9251_lux_cal_parameter.avago_cofficient[2];
-			}else if (pdata->tp_color == WHITE){
+			} else if (pdata->tp_color == WHITE) {
 				CCT_M = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.lux_p;
@@ -1311,7 +1637,7 @@ static ssize_t write_module_tpcolor(struct device *dev, struct device_attribute 
 				avago_cofficient[0] = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.avago_cofficient[0];
 				avago_cofficient[1] = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.avago_cofficient[1];
 				avago_cofficient[2] = apds9251_tp_module_parameter[i].white_apds9251_lux_cal_parameter.avago_cofficient[2];
-			}else if (pdata->tp_color == BLACK){
+			} else if (pdata->tp_color == BLACK) {
 				CCT_M = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.lux_p;
@@ -1323,7 +1649,7 @@ static ssize_t write_module_tpcolor(struct device *dev, struct device_attribute 
 				avago_cofficient[0] = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.avago_cofficient[0];
 				avago_cofficient[1] = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.avago_cofficient[1];
 				avago_cofficient[2] = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.avago_cofficient[2];
-			}else if (pdata->tp_color == RED){
+			} else if (pdata->tp_color == RED) {
 				CCT_M = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cct_m;
 				CCT_N = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.cct_n;
 				LUX_P = apds9251_tp_module_parameter[i].black_apds9251_lux_cal_parameter.lux_p;
@@ -1339,71 +1665,99 @@ static ssize_t write_module_tpcolor(struct device *dev, struct device_attribute 
 		}
 	}
 	APDS9251_INFO("%s:%d lux cal  parameter from dtsi  is M[%ld], N[%ld], H[%ld], A[%ld], D[%ld] , P[%ld], Q[%ld], R[%ld] avago_cofficient0[%ld] avago_cofficient1[%ld] avago_cofficient2[%ld]\n", __FUNCTION__, __LINE__,
-	CCT_M, CCT_N,cct_compensator_H,cct_compensator_A,cct_compensator_D,LUX_P,LUX_Q,LUX_R,avago_cofficient[0],avago_cofficient[1],avago_cofficient[2]);
+	CCT_M, CCT_N, cct_compensator_H, cct_compensator_A, cct_compensator_D, LUX_P, LUX_Q, LUX_R, avago_cofficient[0], avago_cofficient[1], avago_cofficient[2]);
 	return count;
 }
+
 static DEVICE_ATTR(module_tpcolor ,S_IRUGO|S_IWUSR, NULL, write_module_tpcolor);
-static void AddPara(char* buf,struct apds9251_tp_lx_cal_parameter tp_parameter)
+
+static void AddPara(char* buf, struct apds9251_tp_lx_cal_parameter tp_parameter)
 {
-	snprintf(buf,APDS9251_PARA_BODY_LEN,"golden:cct [%ld,%ld,%ld,%ld,%ld],lux [%ld,%ld,%ld],coff [%ld,%ld,%ld ],calib[%ld,%ld,%ld,%ld,%ld,%ld][%ld,%ld]\n"
+	if (buf == NULL) {
+		APDS9251_ERR("%s,line %d: buf is NULL!\n", __func__, __LINE__);
+		return;
+	}
+
+	snprintf(buf, APDS9251_PARA_BODY_LEN, "golden:cct [%ld,%ld,%ld,%ld,%ld],lux [%ld,%ld,%ld],coff [%ld,%ld,%ld ],calib[%ld,%ld,%ld,%ld,%ld,%ld][%ld,%ld]\n"
 	                           "white:cct [%ld,%ld,%ld,%ld,%ld],lux [%ld,%ld,%ld],coff [%ld,%ld,%ld],calib[%ld,%ld,%ld,%ld,%ld,%ld] [%ld,%ld]\n"
 	                           "black:cct [%ld,%ld,%ld,%ld,%ld],lux [%ld,%ld,%ld],coff [%ld,%ld,%ld],calib[%ld,%ld,%ld,%ld,%ld,%ld] [%ld,%ld]\n"
 	                           "blue:cct [%ld,%ld,%ld,%ld,%ld],lux [%ld,%ld,%ld],coff [%ld,%ld,%ld],calib[%ld,%ld,%ld,%ld,%ld,%ld] [%ld,%ld]\n\n",
-	tp_parameter.gold_apds9251_lux_cal_parameter.cct_m,tp_parameter.gold_apds9251_lux_cal_parameter.cct_n,tp_parameter.gold_apds9251_lux_cal_parameter.avago_h,
-	tp_parameter.gold_apds9251_lux_cal_parameter.avago_a,tp_parameter.gold_apds9251_lux_cal_parameter.avago_d,tp_parameter.gold_apds9251_lux_cal_parameter.lux_p,tp_parameter.gold_apds9251_lux_cal_parameter.lux_q,
-	tp_parameter.gold_apds9251_lux_cal_parameter.lux_r,tp_parameter.gold_apds9251_lux_cal_parameter.avago_cofficient[0],tp_parameter.gold_apds9251_lux_cal_parameter.avago_cofficient[1],tp_parameter.gold_apds9251_lux_cal_parameter.avago_cofficient[2],
-	tp_parameter.gold_apds9251_lux_cal_parameter.red_mmi,tp_parameter.gold_apds9251_lux_cal_parameter.green_mmi,tp_parameter.gold_apds9251_lux_cal_parameter.blue_mmi,tp_parameter.gold_apds9251_lux_cal_parameter.clear_mmi,
-	tp_parameter.gold_apds9251_lux_cal_parameter.lx_mmi,tp_parameter.gold_apds9251_lux_cal_parameter.cct_mmi,tp_parameter.gold_apds9251_lux_cal_parameter.cal_max,tp_parameter.gold_apds9251_lux_cal_parameter.cal_min,
-	
-	tp_parameter.white_apds9251_lux_cal_parameter.cct_m,tp_parameter.white_apds9251_lux_cal_parameter.cct_n,tp_parameter.white_apds9251_lux_cal_parameter.avago_h,
-	tp_parameter.white_apds9251_lux_cal_parameter.avago_a,tp_parameter.white_apds9251_lux_cal_parameter.avago_d,tp_parameter.white_apds9251_lux_cal_parameter.lux_p,tp_parameter.white_apds9251_lux_cal_parameter.lux_q,
-	tp_parameter.white_apds9251_lux_cal_parameter.lux_r,tp_parameter.white_apds9251_lux_cal_parameter.avago_cofficient[0],tp_parameter.white_apds9251_lux_cal_parameter.avago_cofficient[1],tp_parameter.white_apds9251_lux_cal_parameter.avago_cofficient[2],
-	tp_parameter.white_apds9251_lux_cal_parameter.red_mmi,tp_parameter.white_apds9251_lux_cal_parameter.green_mmi,tp_parameter.white_apds9251_lux_cal_parameter.blue_mmi,tp_parameter.white_apds9251_lux_cal_parameter.clear_mmi,
-	tp_parameter.white_apds9251_lux_cal_parameter.lx_mmi,tp_parameter.white_apds9251_lux_cal_parameter.cct_mmi,tp_parameter.white_apds9251_lux_cal_parameter.cal_max,tp_parameter.white_apds9251_lux_cal_parameter.cal_min,
-	
-	tp_parameter.black_apds9251_lux_cal_parameter.cct_m,tp_parameter.black_apds9251_lux_cal_parameter.cct_n,tp_parameter.black_apds9251_lux_cal_parameter.avago_h,
-	tp_parameter.black_apds9251_lux_cal_parameter.avago_a,tp_parameter.black_apds9251_lux_cal_parameter.avago_d,tp_parameter.black_apds9251_lux_cal_parameter.lux_p,tp_parameter.black_apds9251_lux_cal_parameter.lux_q,
-	tp_parameter.black_apds9251_lux_cal_parameter.lux_r,tp_parameter.black_apds9251_lux_cal_parameter.avago_cofficient[0],tp_parameter.black_apds9251_lux_cal_parameter.avago_cofficient[1],tp_parameter.black_apds9251_lux_cal_parameter.avago_cofficient[2],
-	tp_parameter.black_apds9251_lux_cal_parameter.red_mmi,tp_parameter.black_apds9251_lux_cal_parameter.green_mmi,tp_parameter.black_apds9251_lux_cal_parameter.blue_mmi,tp_parameter.black_apds9251_lux_cal_parameter.clear_mmi,
-	tp_parameter.black_apds9251_lux_cal_parameter.lx_mmi,tp_parameter.black_apds9251_lux_cal_parameter.cct_mmi,tp_parameter.black_apds9251_lux_cal_parameter.cal_max,tp_parameter.black_apds9251_lux_cal_parameter.cal_min,
-	
-	tp_parameter.blue_apds9251_lux_cal_parameter.cct_m,tp_parameter.blue_apds9251_lux_cal_parameter.cct_n,tp_parameter.blue_apds9251_lux_cal_parameter.avago_h,
-	tp_parameter.blue_apds9251_lux_cal_parameter.avago_a,tp_parameter.blue_apds9251_lux_cal_parameter.avago_d,tp_parameter.blue_apds9251_lux_cal_parameter.lux_p,tp_parameter.blue_apds9251_lux_cal_parameter.lux_q,
-	tp_parameter.blue_apds9251_lux_cal_parameter.lux_r,tp_parameter.blue_apds9251_lux_cal_parameter.avago_cofficient[0],tp_parameter.blue_apds9251_lux_cal_parameter.avago_cofficient[1],tp_parameter.blue_apds9251_lux_cal_parameter.avago_cofficient[2],	
-	tp_parameter.blue_apds9251_lux_cal_parameter.red_mmi,tp_parameter.blue_apds9251_lux_cal_parameter.green_mmi,tp_parameter.blue_apds9251_lux_cal_parameter.blue_mmi,tp_parameter.blue_apds9251_lux_cal_parameter.clear_mmi,
-	tp_parameter.blue_apds9251_lux_cal_parameter.lx_mmi,tp_parameter.blue_apds9251_lux_cal_parameter.cct_mmi,tp_parameter.blue_apds9251_lux_cal_parameter.cal_max,tp_parameter.blue_apds9251_lux_cal_parameter.cal_min);
+	tp_parameter.gold_apds9251_lux_cal_parameter.cct_m, tp_parameter.gold_apds9251_lux_cal_parameter.cct_n, tp_parameter.gold_apds9251_lux_cal_parameter.avago_h,
+	tp_parameter.gold_apds9251_lux_cal_parameter.avago_a, tp_parameter.gold_apds9251_lux_cal_parameter.avago_d, tp_parameter.gold_apds9251_lux_cal_parameter.lux_p, tp_parameter.gold_apds9251_lux_cal_parameter.lux_q, tp_parameter.gold_apds9251_lux_cal_parameter.lux_r, tp_parameter.gold_apds9251_lux_cal_parameter.avago_cofficient[0], tp_parameter.gold_apds9251_lux_cal_parameter.avago_cofficient[1], tp_parameter.gold_apds9251_lux_cal_parameter.avago_cofficient[2],
+	tp_parameter.gold_apds9251_lux_cal_parameter.red_mmi, tp_parameter.gold_apds9251_lux_cal_parameter.green_mmi, tp_parameter.gold_apds9251_lux_cal_parameter.blue_mmi, tp_parameter.gold_apds9251_lux_cal_parameter.clear_mmi, tp_parameter.gold_apds9251_lux_cal_parameter.lx_mmi, tp_parameter.gold_apds9251_lux_cal_parameter.cct_mmi, tp_parameter.gold_apds9251_lux_cal_parameter.cal_max, tp_parameter.gold_apds9251_lux_cal_parameter.cal_min, tp_parameter.white_apds9251_lux_cal_parameter.cct_m, tp_parameter.white_apds9251_lux_cal_parameter.cct_n, tp_parameter.white_apds9251_lux_cal_parameter.avago_h, tp_parameter.white_apds9251_lux_cal_parameter.avago_a, tp_parameter.white_apds9251_lux_cal_parameter.avago_d, tp_parameter.white_apds9251_lux_cal_parameter.lux_p, tp_parameter.white_apds9251_lux_cal_parameter.lux_q,
+	tp_parameter.white_apds9251_lux_cal_parameter.lux_r, tp_parameter.white_apds9251_lux_cal_parameter.avago_cofficient[0], tp_parameter.white_apds9251_lux_cal_parameter.avago_cofficient[1], tp_parameter.white_apds9251_lux_cal_parameter.avago_cofficient[2],
+	tp_parameter.white_apds9251_lux_cal_parameter.red_mmi, tp_parameter.white_apds9251_lux_cal_parameter.green_mmi, tp_parameter.white_apds9251_lux_cal_parameter.blue_mmi, tp_parameter.white_apds9251_lux_cal_parameter.clear_mmi, tp_parameter.white_apds9251_lux_cal_parameter.lx_mmi, tp_parameter.white_apds9251_lux_cal_parameter.cct_mmi, tp_parameter.white_apds9251_lux_cal_parameter.cal_max,tp_parameter.white_apds9251_lux_cal_parameter.cal_min, tp_parameter.black_apds9251_lux_cal_parameter.cct_m, tp_parameter.black_apds9251_lux_cal_parameter.cct_n, tp_parameter.black_apds9251_lux_cal_parameter.avago_h, tp_parameter.black_apds9251_lux_cal_parameter.avago_a, tp_parameter.black_apds9251_lux_cal_parameter.avago_d, tp_parameter.black_apds9251_lux_cal_parameter.lux_p, tp_parameter.black_apds9251_lux_cal_parameter.lux_q,
+	tp_parameter.black_apds9251_lux_cal_parameter.lux_r, tp_parameter.black_apds9251_lux_cal_parameter.avago_cofficient[0], tp_parameter.black_apds9251_lux_cal_parameter.avago_cofficient[1], tp_parameter.black_apds9251_lux_cal_parameter.avago_cofficient[2],
+	tp_parameter.black_apds9251_lux_cal_parameter.red_mmi, tp_parameter.black_apds9251_lux_cal_parameter.green_mmi, tp_parameter.black_apds9251_lux_cal_parameter.blue_mmi, tp_parameter.black_apds9251_lux_cal_parameter.clear_mmi, tp_parameter.black_apds9251_lux_cal_parameter.lx_mmi, tp_parameter.black_apds9251_lux_cal_parameter.cct_mmi, tp_parameter.black_apds9251_lux_cal_parameter.cal_max,tp_parameter.black_apds9251_lux_cal_parameter.cal_min, tp_parameter.blue_apds9251_lux_cal_parameter.cct_m, tp_parameter.blue_apds9251_lux_cal_parameter.cct_n,tp_parameter.blue_apds9251_lux_cal_parameter.avago_h, tp_parameter.blue_apds9251_lux_cal_parameter.avago_a, tp_parameter.blue_apds9251_lux_cal_parameter.avago_d, tp_parameter.blue_apds9251_lux_cal_parameter.lux_p, tp_parameter.blue_apds9251_lux_cal_parameter.lux_q,
+	tp_parameter.blue_apds9251_lux_cal_parameter.lux_r, tp_parameter.blue_apds9251_lux_cal_parameter.avago_cofficient[0], tp_parameter.blue_apds9251_lux_cal_parameter.avago_cofficient[1], tp_parameter.blue_apds9251_lux_cal_parameter.avago_cofficient[2], tp_parameter.blue_apds9251_lux_cal_parameter.red_mmi, tp_parameter.blue_apds9251_lux_cal_parameter.green_mmi, tp_parameter.blue_apds9251_lux_cal_parameter.blue_mmi, tp_parameter.blue_apds9251_lux_cal_parameter.clear_mmi, tp_parameter.blue_apds9251_lux_cal_parameter.lx_mmi, tp_parameter.blue_apds9251_lux_cal_parameter.cct_mmi, tp_parameter.blue_apds9251_lux_cal_parameter.cal_max, tp_parameter.blue_apds9251_lux_cal_parameter.cal_min);
 }
+
 static ssize_t read_tp_parameters(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	int i=0;
-	char s_buf[APDS9251_PARA_BODY_LEN]={'\0'};
-	snprintf(s_buf,APDS9251_PARA_HEAD_LEN,"color:cct_m,cct_n,avago_h,avago_a,avago_d,lux_p,lux_q,lux_r,avago_cofficient0,avago_cofficient1,avago_cofficient2,calibrate_from_kernel,als_max,als_min\n");
-	strncat(buf,s_buf,APDS9251_PARA_HEAD_LEN+1);
-	for(i=0;i<MODULE_MANUFACTURE_NUMBER;i++)
-	{
-		memset(s_buf,0,APDS9251_PARA_BODY_LEN);
-		AddPara(s_buf,apds9251_tp_module_parameter[i]);
-		strncat(buf,s_buf,APDS9251_PARA_BODY_LEN);
+	int i = 0;
+	char s_buf[APDS9251_PARA_BODY_LEN] = {'\0'};
+	
+	if (buf == NULL) {
+		APDS9251_ERR("%s,line %d: buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
 	}
-	return PAGE_SIZE-1;
+	snprintf(s_buf,APDS9251_PARA_HEAD_LEN,"color:cct_m,cct_n,avago_h,avago_a,avago_d,lux_p,lux_q,lux_r,avago_cofficient0,avago_cofficient1,avago_cofficient2,calibrate_from_kernel,als_max,als_min\n");
+	strncat(buf, s_buf, APDS9251_PARA_HEAD_LEN + 1);
+	for (i = 0; i < MODULE_MANUFACTURE_NUMBER; i++)
+	{
+		memset(s_buf, 0, APDS9251_PARA_BODY_LEN);
+		AddPara(s_buf, apds9251_tp_module_parameter[i]);
+		strncat(buf, s_buf, APDS9251_PARA_BODY_LEN);
+	}
+	return PAGE_SIZE - 1;
 }
-static DEVICE_ATTR(dump_tp_parameters ,S_IRUGO, read_tp_parameters, NULL);
+static DEVICE_ATTR(dump_tp_parameters, S_IRUGO, read_tp_parameters, NULL);
 
 static ssize_t rgb_apds9251_show_light_enable(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct i2c_client *client = NULL;
+	struct rgb_apds9251_data *data = NULL;
 	
-	return snprintf(buf, 32,"%d\n", data->enable_als_sensor);
+	if ((dev == NULL) || (buf == NULL)) {
+		APDS9251_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	return snprintf(buf, 32, "%d\n", data->enable_als_sensor);
 }
 
 static ssize_t rgb_apds9251_store_light_enable(struct device *dev,
 				struct device_attribute *attr, const char *buf, size_t count)
 {
-	struct i2c_client *client = to_i2c_client(dev);
-	unsigned long val = simple_strtoul(buf, NULL, 10);
+	struct i2c_client *client = NULL;
+	unsigned long val = 0;
+	
+	if ((dev == NULL) || (buf == NULL)) {
+		APDS9251_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
+	val = simple_strtoul(buf, NULL, 10);
+	
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
 	APDS9251_FLOW("%s: enable als sensor ( %ld)\n", __func__, val);
 	
@@ -1420,25 +1774,55 @@ static ssize_t rgb_apds9251_store_light_enable(struct device *dev,
 
 	return count;
 }
-static DEVICE_ATTR(light_enable,S_IRUGO|S_IWUSR|S_IWGRP,rgb_apds9251_show_light_enable, rgb_apds9251_store_light_enable);
+static DEVICE_ATTR(light_enable, S_IRUGO|S_IWUSR|S_IWGRP, rgb_apds9251_show_light_enable, rgb_apds9251_store_light_enable);
 
 static ssize_t rgb_apds9251_als_calibrate_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
+	if (buf == NULL) {
+		APDS9251_ERR("%s,line %d: buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
  	return snprintf(buf,32,"%ld %ld %ld %ld %ld %ld\n",apds9251_als_offset[0],apds9251_als_offset[1],apds9251_als_offset[2],apds9251_als_offset[3],apds9251_als_offset[4],apds9251_als_offset[5]);
 }
 
 static ssize_t rgb_apds9251_als_calibrate_store(struct device *dev, struct device_attribute *attr,
 						const char *buf, size_t count)
 {
- 	struct i2c_client *client = to_i2c_client(dev);
- 	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
- 	int ret=0;
-	long x0,x1,x2,x3,x4,x5,x6;
- 	ret = sscanf(buf, "%ld %ld %ld %ld %ld %ld %ld",&x0, &x1, &x2, &x3, &x4, &x5, &x6);
- 	APDS9251_INFO("%s:%d: %ld %ld %ld %ld %ld %ld %ld\n", __FUNCTION__, __LINE__,x0,x1,x2,x3,x4,x5,x6);
+ 	struct i2c_client *client = NULL;
+ 	struct rgb_apds9251_data *data = NULL;
+ 	int ret = 0;
+	long x0 = 0;
+	long x1 = 0;
+	long x2 = 0;
+	long x3 = 0;
+	long x4 = 0;
+	long x5 = 0;
+	long x6 = 0;
+	
+ 	APDS9251_INFO("%s:%d: %ld %ld %ld %ld %ld %ld %ld\n", __FUNCTION__, __LINE__, x0, x1, x2, x3, x4, x5, x6);
+
+	if ((dev == NULL) || (buf == NULL)) {
+		APDS9251_ERR("%s,line %d: dev or buf is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	client = to_i2c_client(dev);
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+ 	ret = sscanf(buf, "%ld %ld %ld %ld %ld %ld %ld", &x0, &x1, &x2, &x3, &x4, &x5, &x6);
 	   
- 	if(x0==1)
+ 	if (x0 == 1)
  	{
 		apds9251_als_calibrate_flag = true;
 		apds9251_als_calibrate_count = 0;
@@ -1456,7 +1840,7 @@ static ssize_t rgb_apds9251_als_calibrate_store(struct device *dev, struct devic
 				get_tp_info_ok = true;
 			}
 		}
-		if(1 != data->enable_als_sensor)
+		if (1 != data->enable_als_sensor)
 		{
 			rgb_apds9251_enable_als_sensor(data->client, 1);
 		}
@@ -1467,24 +1851,23 @@ static ssize_t rgb_apds9251_als_calibrate_store(struct device *dev, struct devic
  	}
  	else if (x0 == 0)
  	{
-		if(1 != apds9251_auto_light_open_flag)     //auto light close
+		if (1 != apds9251_auto_light_open_flag)     //auto light close
 		{
 			rgb_apds9251_enable_als_sensor(data->client, 0);
 		}
  	}
  	else
  	{
-		apds9251_als_offset[0]=x1;
-		apds9251_als_offset[1]=x2;
-		apds9251_als_offset[2]=x3;
-		apds9251_als_offset[3]=x4;
-		apds9251_als_offset[4]=x5;
-		apds9251_als_offset[5]=x6;	
+		apds9251_als_offset[0] = x1;
+		apds9251_als_offset[1] = x2;
+		apds9251_als_offset[2] = x3;
+		apds9251_als_offset[3] = x4;
+		apds9251_als_offset[4] = x5;
+		apds9251_als_offset[5] = x6;	
  	}
  	return count;
 }
-static DEVICE_ATTR(apds9251_als_calibrate,S_IRUGO|S_IWUSR, rgb_apds9251_als_calibrate_show, rgb_apds9251_als_calibrate_store);
-
+static DEVICE_ATTR(apds9251_als_calibrate, S_IRUGO|S_IWUSR, rgb_apds9251_als_calibrate_show, rgb_apds9251_als_calibrate_store);
 
 static struct attribute *rgb_apds9251_attributes[] = {
 	&dev_attr_ir_data.attr,
@@ -1511,9 +1894,16 @@ static const struct attribute_group rgb_apds9251_attr_group = {
  */
 static int rgb_apds9251_read_device_id(struct i2c_client *client)
 {
-	int id;
-	int err;
-	id    = rgb_apds9251_i2c_read(client, APDS9251_DD_PART_ID_ADDR, APDS9251_I2C_BYTE);
+	int id = 0;
+	int err = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+
+	id = rgb_apds9251_i2c_read(client, APDS9251_DD_PART_ID_ADDR, APDS9251_I2C_BYTE);
 	id &= 0xff;
 	if (id == 0xb2) {
 		APDS9251_INFO("%s: AVAGO APDS9251\n", __func__);
@@ -1531,47 +1921,58 @@ static int rgb_apds9251_read_device_id(struct i2c_client *client)
 
 static int rgb_apds9251_init_client(struct i2c_client *client)
 {
-	int err;
+	int err = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 	
 	err = apds9251_dd_set_main_ctrl(client, 0);
-	if (err < 0){
-		APDS9251_ERR("%s,line%d:MAIN ctrl FAIL ",__func__,__LINE__);
+	if (err < 0) {
+		APDS9251_ERR("%s,line%d:MAIN ctrl FAIL ", __func__, __LINE__);
 		return err;
 	}
 	/* ALS_MEAS_RATE */
 	err = apds9251_dd_set_als_meas_rate(client, APDS9251_DD_ALS_DEFAULT_RES|APDS9251_DD_ALS_DEFAULT_MEAS_RATE);
-	if (err < 0){
-		APDS9251_ERR("%s,line%d:ALS_MEAS_RATE FAIL ",__func__,__LINE__);
+	if (err < 0) {
+		APDS9251_ERR("%s,line%d:ALS_MEAS_RATE FAIL ", __func__, __LINE__);
 		return err;
 	}
 	/* ALS_GAIN */
 	err = apds9251_dd_set_als_gain(client, APDS9251_DD_ALS_DEFAULT_GAIN);
-	if (err < 0){
-		APDS9251_ERR("%s,line%d:ALS_GAIN FAIL ",__func__,__LINE__);
+	if (err < 0) {
+		APDS9251_ERR("%s,line%d:ALS_GAIN FAIL ", __func__, __LINE__);
 		return err;
 	}
 	
 	return 0;
 }
+
 /*qualcom updated the regulator configure functions and we add them all*/
 static int sensor_regulator_configure(struct rgb_apds9251_data *data, bool on)
 {
-	int rc;
+	int rc = 0;
+	
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (!on) {
-		if (regulator_count_voltages(data->vdd) > 0){
+		if (regulator_count_voltages(data->vdd) > 0) {
 			rc = regulator_set_voltage(data->vdd, 0, APDS9251_VDD_MAX_UV);
-			if(rc){
-				APDS9251_ERR("%s,line%d:Regulator set vdd failed rc=%d\n",__func__,__LINE__,rc);
+			if (rc) {
+				APDS9251_ERR("%s,line%d:Regulator set vdd failed rc=%d\n", __func__, __LINE__, rc);
 			}
 		}
 
 		regulator_put(data->vdd);
 
-		if (regulator_count_voltages(data->vio) > 0){
+		if (regulator_count_voltages(data->vio) > 0) {
 			rc = regulator_set_voltage(data->vio, 0, APDS9251_VIO_MAX_UV);
-			if(rc){
-				APDS9251_ERR("%s,line%d:Regulator set vio failed rc=%d\n",__func__,__LINE__,rc);
+			if (rc) {
+				APDS9251_ERR("%s,line%d:Regulator set vio failed rc=%d\n", __func__, __LINE__, rc);
 			}
 		}
 
@@ -1581,14 +1982,14 @@ static int sensor_regulator_configure(struct rgb_apds9251_data *data, bool on)
 		data->vdd = regulator_get(&data->client->dev, "vdd");
 		if (IS_ERR(data->vdd)) {
 			rc = PTR_ERR(data->vdd);
-			APDS9251_ERR("%s,line%d:Regulator get failed vdd rc=%d\n",__func__,__LINE__, rc);
+			APDS9251_ERR("%s,line%d:Regulator get failed vdd rc=%d\n", __func__, __LINE__, rc);
 			return rc;
 		}
 
 		if (regulator_count_voltages(data->vdd) > 0) {
 			rc = regulator_set_voltage(data->vdd, APDS9251_VDD_MIN_UV, APDS9251_VDD_MAX_UV);
 			if (rc) {
-				APDS9251_ERR("%s,line%d:Regulator set failed vdd rc=%d\n",__func__,__LINE__,rc);
+				APDS9251_ERR("%s,line%d:Regulator set failed vdd rc=%d\n", __func__, __LINE__, rc);
 				goto reg_vdd_put;
 			}
 		}
@@ -1596,7 +1997,7 @@ static int sensor_regulator_configure(struct rgb_apds9251_data *data, bool on)
 		data->vio = regulator_get(&data->client->dev, "vio");
 		if (IS_ERR(data->vio)) {
 			rc = PTR_ERR(data->vio);
-			APDS9251_ERR("%s,line%d:Regulator get failed vio rc=%d\n",__func__,__LINE__, rc);
+			APDS9251_ERR("%s,line%d:Regulator get failed vio rc=%d\n", __func__, __LINE__, rc);
 			goto reg_vdd_set;
 		}
 
@@ -1604,7 +2005,7 @@ static int sensor_regulator_configure(struct rgb_apds9251_data *data, bool on)
 			rc = regulator_set_voltage(data->vio,
 				APDS9251_VIO_MIN_UV, APDS9251_VIO_MAX_UV);
 			if (rc) {
-				APDS9251_ERR("%s,line%d:Regulator set failed vio rc=%d\n",__func__,__LINE__, rc);
+				APDS9251_ERR("%s,line%d:Regulator set failed vio rc=%d\n", __func__, __LINE__, rc);
 				goto reg_vio_put;
 			}
 		}
@@ -1622,19 +2023,31 @@ reg_vdd_put:
 	regulator_put(data->vdd);
 	return rc;
 }
+
 /*In suspend and resume function,we only control the als,leave pls alone*/
 static int rgb_apds9251_suspend(struct i2c_client *client, pm_message_t mesg)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	int rc;
-	APDS9251_INFO("%s,line%d:APDS9251 SUSPEND\n",__func__,__LINE__);
+	struct rgb_apds9251_data *data = NULL;
+	int rc = 0;
+	APDS9251_INFO("%s,line%d:APDS9251 SUSPEND\n", __func__, __LINE__);
+
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	data->enable_als_state = data->enable_als_sensor;
-	if(data->enable_als_sensor){
-		APDS9251_INFO("%s,line%d:APDS9251 SUSPEND and disable als\n",__func__,__LINE__);
+	if (data->enable_als_sensor) {
+		APDS9251_INFO("%s,line%d:APDS9251 SUSPEND and disable als\n", __func__, __LINE__);
 		rc = rgb_apds9251_enable_als_sensor(data->client, 0);
-		if (rc){
-			APDS9251_ERR("%s,line%d:Disable rgb light sensor fail! rc=%d\n",__func__,__LINE__, rc);
+		if (rc) {
+			APDS9251_ERR("%s,line%d:Disable rgb light sensor fail! rc=%d\n", __func__, __LINE__, rc);
 		}
 	}
 
@@ -1643,39 +2056,70 @@ static int rgb_apds9251_suspend(struct i2c_client *client, pm_message_t mesg)
 
 static int rgb_apds9251_resume(struct i2c_client *client)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
+	struct rgb_apds9251_data *data = NULL;
 	int ret = 0;
 
 	APDS9251_INFO("%s,line%d:APDS9251 RESUME\n",__func__,__LINE__);
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (data->enable_als_state) {
 		ret = rgb_apds9251_enable_als_sensor(data->client, 1);
-		if (ret){
-			APDS9251_ERR("%s,line%d:enable rgb  light sensor fail! rc=%d\n",__func__,__LINE__, ret);
+		if (ret) {
+			APDS9251_ERR("%s,line%d:enable rgb  light sensor fail! rc=%d\n", __func__, __LINE__, ret);
 		}
 	}
 
 	return 0;
 }
+
 /*pamameter subfunction of probe to reduce the complexity of probe function*/
-static int rgb_apds9251_sensorclass_init(struct rgb_apds9251_data *data,struct i2c_client* client)
+static int rgb_apds9251_sensorclass_init(struct rgb_apds9251_data *data, struct i2c_client* client)
 {
-	int err;
+	int err = 0;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	/* Register to sensors class */
 	data->als_cdev = sensors_light_cdev;
 	data->als_cdev.sensors_enable = rgb_apds9251_als_set_enable;
 	data->als_cdev.sensors_poll_delay = rgb_apds9251_als_poll_delay;
 
-	err = sensors_classdev_register(&data ->input_dev_als ->dev, &data->als_cdev);
+	err = sensors_classdev_register(&data->input_dev_als->dev, &data->als_cdev);
 	if (err) {
-		APDS9251_ERR("%s: Unable to register to sensors class: %d\n",__func__, err);
+		APDS9251_ERR("%s: Unable to register to sensors class: %d\n", __func__, err);
 	}
 
 	return err;
 }
+
 static void rgb_apds9251_parameter_init(struct rgb_apds9251_data *data)
 {
-	struct rgb_apds9251_platform_data *pdata = data->platform_data;
+	struct rgb_apds9251_platform_data *pdata = NULL;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
+	pdata = data->platform_data;
+ 	if (pdata == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+		
 	data->enable_als_sensor = 0;
 	data->als_poll_delay = 200;
 	data->als_prev_lux = 300;
@@ -1686,10 +2130,17 @@ static void rgb_apds9251_parameter_init(struct rgb_apds9251_data *data)
 	pdata->panel_id = -1;
 	pdata->tp_color = -1;
 }
+
 /*input init subfunction of probe to reduce the complexity of probe function*/
 static int rgb_apds9251_input_init(struct rgb_apds9251_data *data)
 {
 	int err = 0;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+	
 	/* Register to Input Device */
 	data->input_dev_als = input_allocate_device();
 	if (!data->input_dev_als) {
@@ -1721,6 +2172,11 @@ exit:
 static int sensor_regulator_power_on(struct rgb_apds9251_data *data, bool on)
 {
 	int rc = 0;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (!on) {
 		rc = regulator_disable(data->vdd);
@@ -1733,7 +2189,7 @@ static int sensor_regulator_power_on(struct rgb_apds9251_data *data, bool on)
 		if (rc) {
 			APDS9251_ERR("%s: Regulator vdd disable failed rc=%d\n", __func__, rc);
 			rc = regulator_enable(data->vdd);
-			APDS9251_ERR("%s:Regulator vio re-enabled rc=%d\n",__func__, rc);
+			APDS9251_ERR("%s:Regulator vio re-enabled rc=%d\n", __func__, rc);
 			/*
 			 * Successfully re-enable regulator.
 			 * Enter poweron delay and returns error.
@@ -1747,29 +2203,34 @@ static int sensor_regulator_power_on(struct rgb_apds9251_data *data, bool on)
 	} else {
 		rc = regulator_enable(data->vdd);
 		if (rc) {
-			APDS9251_ERR("%s:Regulator vdd enable failed rc=%d\n",__func__, rc);
+			APDS9251_ERR("%s:Regulator vdd enable failed rc=%d\n", __func__, rc);
 			return rc;
 		}
 
 		rc = regulator_enable(data->vio);
 		if (rc) {
-			APDS9251_ERR("%s:Regulator vio enable failed rc=%d\n", __func__,rc);
+			APDS9251_ERR("%s:Regulator vio enable failed rc=%d\n", __func__, rc);
 			rc = regulator_disable(data->vdd);
 			return rc;
 		}
 	}
 enable_delay:
-	if(1 == apds_power_delay_flag)
+	if (1 == apds_power_delay_flag)
 	{
 		msleep(10);
 	}
-	APDS9251_FLOW("%s:Sensor regulator power on =%d\n",__func__, on);
+	APDS9251_FLOW("%s:Sensor regulator power on =%d\n", __func__, on);
 	return rc;
 }
 
-static int sensor_platform_hw_power_on(bool on,struct rgb_apds9251_data *data)
+static int sensor_platform_hw_power_on(bool on, struct rgb_apds9251_data *data)
 {
 	int err = 0;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	if (data->power_on != on) {
 		err = sensor_regulator_power_on(data, on);
@@ -1784,11 +2245,16 @@ static int sensor_platform_hw_power_on(bool on,struct rgb_apds9251_data *data)
 
 static int sensor_platform_hw_init(struct rgb_apds9251_data *data)
 {
-	int error;
+	int error = 0;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	error = sensor_regulator_configure(data, true);
 	if (error < 0) {
-		APDS9251_ERR("%s,line %d:unable to configure regulator\n",__func__,__LINE__);
+		APDS9251_ERR("%s,line %d:unable to configure regulator\n", __func__, __LINE__);
 		return error;
 	}
 
@@ -1797,26 +2263,43 @@ static int sensor_platform_hw_init(struct rgb_apds9251_data *data)
 
 static void sensor_platform_hw_exit(struct rgb_apds9251_data *data)
 {
-	int error;
+	int error = 0;
+	
+ 	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return;
+	}
+	
 	error = sensor_regulator_configure(data, false);
 	if (error < 0) {
-		APDS9251_ERR("%s,line %d:unable to configure regulator\n",__func__,__LINE__);
+		APDS9251_ERR("%s,line %d:unable to configure regulator\n", __func__, __LINE__);
 	}
 }
 
 static int sensor_parse_dt(struct device *dev,
 		struct rgb_apds9251_platform_data *pdata)
 {
-	struct device_node *np = dev->of_node;
+	struct device_node *np = NULL;
 	unsigned int tmp = 0;
 	int tp_moudle_count = 0;
-	int index =0;
+	int index = 0;
 	int rc = 0;
 	int array_len = 0;
 	int retval = 0;
 	int i = 0;
 	const char *raw_data0_dts = NULL;
 	long *ptr = NULL;
+	
+	if ((dev == NULL) || (pdata == NULL)) {
+		APDS9251_ERR("%s,line %d: dev or pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	np = dev->of_node;
+	if (np == NULL) {
+		APDS9251_ERR("%s,line %d: np is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
 	/* set functions of platform data */
 	pdata->init = sensor_platform_hw_init;
@@ -1825,7 +2308,7 @@ static int sensor_parse_dt(struct device *dev,
 
 	rc = of_property_read_u32(np, "apds9251,power_delay_flag", &tmp);
 	if (rc) {
-		APDS9251_ERR("%s,line %d:Unable to read power_delay_flag\n",__func__,__LINE__);
+		APDS9251_ERR("%s,line %d:Unable to read power_delay_flag\n", __func__, __LINE__);
 		apds_power_delay_flag = 1;
 	}
 	else {
@@ -1833,32 +2316,32 @@ static int sensor_parse_dt(struct device *dev,
 	}
 	rc = of_property_read_u32(np, "apds9251,tp_moudle_count", &tmp);
 	if (rc) {
-		APDS9251_ERR("%s,line %d:Unable to read ga_a_value\n",__func__,__LINE__);
+		APDS9251_ERR("%s,line %d:Unable to read ga_a_value\n", __func__, __LINE__);
 		return rc;
 	}
 	tp_moudle_count = tmp;
 
 	APDS9251_FLOW("%s:%d tp_moudle_count from dtsi  is %d\n", __FUNCTION__, __LINE__, tp_moudle_count);
 
-	if(tp_moudle_count > MODULE_MANUFACTURE_NUMBER){
-		APDS9251_ERR("%s,line %d:tp_moudle_count from dtsi too large: %d\n",__func__,__LINE__, tp_moudle_count);
+	if (tp_moudle_count > MODULE_MANUFACTURE_NUMBER) {
+		APDS9251_ERR("%s,line %d:tp_moudle_count from dtsi too large: %d\n", __func__, __LINE__, tp_moudle_count);
 		return  -EINVAL;
 	}
 
-	for(i=0; i<tp_moudle_count; i++){
+	for (i = 0; i < tp_moudle_count; i++){
 		array_len = of_property_count_strings(np, data_array_name[i]);
 		if (array_len != PARSE_DTSI_NUMBER) {
-			APDS9251_ERR("%s:%d apds9251,junda_data0 length invaild or dts number is larger than:%d data_array_name[%d]:%s\n",__FUNCTION__,__LINE__,array_len,i,data_array_name[i]);
+			APDS9251_ERR("%s:%d apds9251,junda_data0 length invaild or dts number is larger than:%d data_array_name[%d]:%s\n", __FUNCTION__, __LINE__, array_len, i, data_array_name[i]);
 			return array_len;
 		}
 		APDS9251_FLOW("%s:%d read lux cal parameter count from dtsi  is %d\n", __FUNCTION__, __LINE__, array_len);
 
 		ptr = (long *)&apds9251_tp_module_parameter[i];
 
-		for(index = 0; index < array_len; index++){
+		for (index = 0; index < array_len; index++) {
 			retval = of_property_read_string_index(np, data_array_name[i], index, &raw_data0_dts);
 			if (retval) {
-				APDS9251_ERR("%s:%d read index = %d,raw_data0_dts = %s,retval = %d error,\n",__FUNCTION__,__LINE__,index, raw_data0_dts, retval);
+				APDS9251_ERR("%s:%d read index = %d,raw_data0_dts = %s,retval = %d error,\n", __FUNCTION__, __LINE__, index, raw_data0_dts, retval);
 				return retval;
 			}
 			ptr[index]  = simple_strtol(raw_data0_dts, NULL, 10);
@@ -1888,12 +2371,23 @@ static struct i2c_driver rgb_apds9251_driver;
 static int rgb_apds9251_probe(struct i2c_client *client,
 				   const struct i2c_device_id *id)
 {
-	struct i2c_adapter *adapter = to_i2c_adapter(client->dev.parent);
-	struct rgb_apds9251_data *data;
-	struct rgb_apds9251_platform_data *pdata;
+	struct i2c_adapter *adapter = NULL;
+	struct rgb_apds9251_data *data = NULL;
+	struct rgb_apds9251_platform_data *pdata = NULL;
 	int err = 0;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
 
-	APDS9251_INFO("%s,line %d:PROBE START.\n",__func__,__LINE__);
+	adapter = to_i2c_adapter(client->dev.parent);
+	if (adapter == NULL) {
+		APDS9251_ERR("%s,line %d: adapter is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	APDS9251_INFO("%s,line %d:PROBE START.\n", __func__, __LINE__);
 
 	if (client->dev.of_node) {
 		/*Memory allocated with this function is automatically freed on driver detach.*/
@@ -1901,7 +2395,7 @@ static int rgb_apds9251_probe(struct i2c_client *client,
 				sizeof(struct rgb_apds9251_platform_data),
 				GFP_KERNEL);
 		if (!pdata) {
-			APDS9251_ERR("%s,line %d:Failed to allocate memory\n",__func__,__LINE__);
+			APDS9251_ERR("%s,line %d:Failed to allocate memory\n", __func__, __LINE__);
 			err =-ENOMEM;
 			goto exit;
 		}
@@ -1915,21 +2409,21 @@ static int rgb_apds9251_probe(struct i2c_client *client,
 	} else {
 		pdata = client->dev.platform_data;
 		if (!pdata) {
-			APDS9251_ERR("%s,line %d:No platform data\n",__func__,__LINE__);
+			APDS9251_ERR("%s,line %d:No platform data\n", __func__, __LINE__);
 			err = -ENODEV;
 			goto exit;
 		}
 	}
 
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE)) {
-		APDS9251_ERR("%s,line %d:Failed to i2c_check_functionality\n",__func__,__LINE__);
+		APDS9251_ERR("%s,line %d:Failed to i2c_check_functionality\n", __func__, __LINE__);
 		err = -EIO;
 		goto exit_parse_dt;
 	}
 
 	data = kzalloc(sizeof(struct rgb_apds9251_data), GFP_KERNEL);
 	if (!data) {
-		APDS9251_ERR("%s,line %d:Failed to allocate memory\n",__func__,__LINE__);
+		APDS9251_ERR("%s,line %d:Failed to allocate memory\n", __func__, __LINE__);
 		err = -ENOMEM;
 		goto exit_parse_dt;
 	}
@@ -1943,10 +2437,10 @@ static int rgb_apds9251_probe(struct i2c_client *client,
 		err = pdata->init(data);
 
 	if (pdata->power_on)
-		err = pdata->power_on(true,data);
+		err = pdata->power_on(true, data);
 #ifdef CONFIG_HUAWEI_DSM
 		err = apds9251_dsm_init(data);
-		if(err < 0)
+		if (err < 0)
 			goto exit_power_off;
 #endif
 
@@ -1980,7 +2474,7 @@ static int rgb_apds9251_probe(struct i2c_client *client,
 	if (err)
 		goto exit_unregister_dev_als;
 
-	err = rgb_apds9251_sensorclass_init(data,client);
+	err = rgb_apds9251_sensorclass_init(data, client);
 	if (err) {
 		APDS9251_ERR("%s: Unable to register to sensors class: %d\n", __func__, err);
 		goto exit_remove_sysfs_group;
@@ -2000,7 +2494,7 @@ static int rgb_apds9251_probe(struct i2c_client *client,
 	set_hw_dev_flag(DEV_I2C_L_SENSOR);
 #endif
 	if (pdata->power_on)
-		err = pdata->power_on(false,data);
+		err = pdata->power_on(false, data);
 
 	APDS9251_INFO("%s: Support ver. %s enabled\n", __func__, DRIVER_VERSION);
 	data->device_exist = true;
@@ -2014,7 +2508,7 @@ exit_unregister_dev_als:
 	input_unregister_device(data->input_dev_als);
 exit_power_off:
 	if (pdata->power_on)
-		pdata->power_on(false,data);
+		pdata->power_on(false, data);
 	if (pdata->exit)
 		pdata->exit(data);
 	kfree(data);
@@ -2026,8 +2520,26 @@ exit:
 
 static int rgb_apds9251_remove(struct i2c_client *client)
 {
-	struct rgb_apds9251_data *data = i2c_get_clientdata(client);
-	struct rgb_apds9251_platform_data *pdata = data->platform_data;
+	struct rgb_apds9251_data *data = NULL;
+	struct rgb_apds9251_platform_data *pdata = NULL;
+	
+	if (client == NULL) {
+		APDS9251_ERR("%s,line %d: client is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	data = i2c_get_clientdata(client);
+	if (data == NULL) {
+		APDS9251_ERR("%s,line %d: data is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
+	pdata = data->platform_data;
+	if (pdata == NULL) {
+		APDS9251_ERR("%s,line %d: pdata is NULL!\n", __func__, __LINE__);
+		return -EINVAL;
+	}
+
 	/* Power down the device */
 	apds9251_dd_set_main_ctrl(client, 0);
 
@@ -2037,11 +2549,11 @@ static int rgb_apds9251_remove(struct i2c_client *client)
 
 	hrtimer_cancel(&data->timer);
 #ifdef  CONFIG_HUAWEI_DSM
-	dsm_unregister_client(apds9251_als_dclient,&dsm_als_apds9251);
+	dsm_unregister_client(apds9251_als_dclient, &dsm_als_apds9251);
 #endif
 
 	if (pdata->power_on)
-		pdata->power_on(false,data);
+		pdata->power_on(false, data);
 
 	if (pdata->exit)
 		pdata->exit(data);

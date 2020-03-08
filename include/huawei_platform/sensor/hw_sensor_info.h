@@ -21,6 +21,7 @@
 #ifndef __HW_SENSOR_INFO_H__
 #define __HW_SENSOR_INFO_H__
 
+#define SENSORS_DEBUG_MASK_ONE                  1
 #define SENSORS_ACCELERATION_HANDLE             0
 #define SENSORS_MAGNETIC_FIELD_HANDLE           1
 #define SENSORS_ORIENTATION_HANDLE              2
