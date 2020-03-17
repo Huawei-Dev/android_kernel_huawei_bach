@@ -39,6 +39,7 @@
 #include <linux/regulator/consumer.h>
 #include <huawei_platform/log/log_jank.h>
 #include "../../huawei_ts_kit_algo.h"
+#include <misc/app_info.h>
 #if defined (CONFIG_HUAWEI_DSM)
 #include <dsm/dsm_pub.h>
 #endif
@@ -1031,7 +1032,7 @@ static int nvt_hybrid_parse_dts(struct device_node *device,
 	const char *raw_data_dts = NULL;
 	const char *mp_selftest_mode_dts = NULL;
 	const char *producer = NULL;
-
+	const char *touch_driver = NULL;
 	retval =
 	    of_property_read_u32(device, NVT_HYBRID_IRQ_CFG,
 				 &chip_data->irq_config);
@@ -1177,6 +1178,9 @@ static int nvt_hybrid_parse_dts(struct device_node *device,
 		snprintf(chip_data->tp_test_type, PAGE_SIZE, "%s", raw_data_dts);
 	}
 	TS_LOG_INFO("%s get test type = %s\n", __func__, chip_data->tp_test_type);
+		/*touchscreen driver*/
+        retval = of_property_read_string(device, "touch_driver", &touch_driver);
+        app_info_set("touchscreen driver", touch_driver);
 
 	retval =
 	    of_property_read_string(device, NVT_HYBRID_MP_SELFTEST_MODE,

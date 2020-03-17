@@ -22,6 +22,8 @@ extern struct dsm_client *ts_dclient;
 #endif
 #include "../../huawei_ts_kit_api.h"
 
+#include <misc/app_info.h>
+
 extern volatile int g_ts_kit_lcd_brightness_info;
 extern struct ts_kit_platform_data g_ts_kit_platform_data;
 
@@ -4883,6 +4885,7 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 	struct parade_loader_platform_data *loader_pdata;
 	struct device_node *core_node = device;
 	char *tmp_buff = NULL;
+	const char *touch_driver = NULL;
 
 	TS_LOG_INFO("%s, parade parse config called\n", __func__);
 	//memset(tskit_parade_data, 0, sizeof(parade_core_data));
@@ -5340,6 +5343,9 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 	strcpy(tskit_parade_data->chip_name,tmp_buff);
 	strcpy(chip_data->chip_name,tmp_buff);
 	TS_LOG_INFO("%s, chip_name %s\n",__func__ , tskit_parade_data->chip_name);
+	/*touchscreen driver*/
+        rc = of_property_read_string(core_node, "touch_driver", &touch_driver);
+        app_info_set("touchscreen driver", touch_driver);
 	/*module vendor*/
 	rc = of_property_read_string(core_node, "module_vendor", (const char**)&tmp_buff);
     if (rc)

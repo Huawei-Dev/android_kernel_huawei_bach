@@ -1310,6 +1310,7 @@ static int himax_parse_dts(struct device_node *device, struct ts_kit_device_data
 	const char *projectid = NULL;
 	const char *tptesttype = NULL;
 	const char *chipname = NULL;
+	const char *touch_driver = NULL;
 	int read_val = 0;
 	TS_LOG_INFO("%s: parameter init begin\n", __func__);
 	if(NULL == device||NULL == chip_data) {
@@ -1383,6 +1384,9 @@ static int himax_parse_dts(struct device_node *device, struct ts_kit_device_data
 		strncpy(chip_data->module_name, modulename,strlen(MODULE_NAME)+1);
 	}
 	TS_LOG_INFO("module_name: %s\n", chip_data->module_name);
+	/*touchscreen driver*/
+	retval = of_property_read_string(device, "touch_driver", &touch_driver);
+	app_info_set("touchscreen driver", touch_driver);
 	/* get tp color flag */
 	retval = of_property_read_u32(device,  "support_get_tp_color", &read_val);
 	if (retval) {

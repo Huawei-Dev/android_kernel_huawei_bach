@@ -70,6 +70,7 @@
 		parade: touchscreen@24 {
 			status = "ok";
 			compatible = "parade";
+			touch_driver = "parade";
 			reg = <0x24>;
 			slave_address = <0x24>;
 			parade,adapter_id = "cyttsp5_i2c_adapter";

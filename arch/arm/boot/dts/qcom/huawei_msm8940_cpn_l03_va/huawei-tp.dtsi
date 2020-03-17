@@ -70,6 +70,7 @@
 		himax: touchscreen@48 {
 			status = "ok";
 			compatible = "himax";
+			touch_driver = "himax";
 			chip_name = "hx8529f";
 			reg = <0x48>;
 			ic_type = <1>;
@@ -95,6 +96,7 @@
 		novatek_hybrid: touchscreen@62 {
 			status = "ok";
 			compatible = "novatek_hybrid";
+			touch_driver = "novatek_hybrid";
 			ic_type = <1>;
 			roi_supported = <0>;
 			glove_supported = <0>;
