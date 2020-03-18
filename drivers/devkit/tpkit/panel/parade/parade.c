@@ -4884,8 +4884,7 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 	struct parade_mt_platform_data *mt_pdata;
 	struct parade_loader_platform_data *loader_pdata;
 	struct device_node *core_node = device;
-	char *tmp_buff = NULL;
-	const char *touch_driver = NULL;
+	const char *tmp_buff = NULL;
 
 	TS_LOG_INFO("%s, parade parse config called\n", __func__);
 	//memset(tskit_parade_data, 0, sizeof(parade_core_data));
@@ -5321,7 +5320,7 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 		}
 	}
 	/*project id*/
-	rc = of_property_read_string(core_node, "project_id", (const char**)&tmp_buff);
+	rc = of_property_read_string(core_node, "project_id", &tmp_buff);
     if (rc)
     {
        TS_LOG_ERR("%s, project_id read failed:%d\n",__func__ , rc);
@@ -5332,7 +5331,7 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 	strcpy(tskit_parade_data->project_id,tmp_buff);
 	TS_LOG_INFO("%s, project_id %s\n",__func__ , tskit_parade_data->project_id);
 	/*chip name*/
-	rc = of_property_read_string(core_node, "chip_name", (const char**)&tmp_buff);
+	rc = of_property_read_string(core_node, "chip_name", &tmp_buff);
     if (rc)
     {
        TS_LOG_ERR("%s, chip_name read failed:%d\n",__func__ , rc);
@@ -5343,11 +5342,8 @@ int parade_irq_stat(struct ts_kit_device_data *pdata)
 	strcpy(tskit_parade_data->chip_name,tmp_buff);
 	strcpy(chip_data->chip_name,tmp_buff);
 	TS_LOG_INFO("%s, chip_name %s\n",__func__ , tskit_parade_data->chip_name);
-	/*touchscreen driver*/
-        rc = of_property_read_string(core_node, "touch_driver", &touch_driver);
-        app_info_set("touchscreen driver", touch_driver);
 	/*module vendor*/
-	rc = of_property_read_string(core_node, "module_vendor", (const char**)&tmp_buff);
+	rc = of_property_read_string(core_node, "module_vendor", &tmp_buff);
     if (rc)
     {
        TS_LOG_ERR("%s, module_vendor read failed:%d\n",__func__ , rc);
@@ -9552,6 +9548,8 @@ static int __init parade_module_init(void)
     struct device_node* child = NULL;
     struct device_node* root = NULL;
     int error = NO_ERR;
+    int retval = 0;
+    const char *touch_driver = NULL;
 
     TS_LOG_INFO(" parade_module_init called here\n");
     tskit_parade_data = kzalloc(sizeof(struct parade_core_data), GFP_KERNEL);
@@ -9592,12 +9590,16 @@ static int __init parade_module_init(void)
     tskit_parade_data->parade_chip_data->ops = &ts_kit_parade_ops;
 
     error = huawei_ts_chip_register(tskit_parade_data->parade_chip_data);
-    if(error)
+    if (error)
     {
 	  TS_LOG_ERR(" parade chip register fail !\n");
 	  goto out;
+    } else {
+    /*touchscreen driver*/
+    retval = of_property_read_string(tskit_parade_data->parade_dev->dev.of_node, "touch_driver", &touch_driver);
+    app_info_set("touchscreen driver", touch_driver);
     }
-    TS_LOG_INFO("parade chip_register! err=%d\n", error);
+    TS_LOG_INFO("parade touchscreen driver register successful\n");
     return error;
 out:
     if(tskit_parade_data->parade_chip_data) {

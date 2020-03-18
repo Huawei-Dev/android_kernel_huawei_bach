@@ -1310,7 +1310,6 @@ static int himax_parse_dts(struct device_node *device, struct ts_kit_device_data
 	const char *projectid = NULL;
 	const char *tptesttype = NULL;
 	const char *chipname = NULL;
-	const char *touch_driver = NULL;
 	int read_val = 0;
 	TS_LOG_INFO("%s: parameter init begin\n", __func__);
 	if(NULL == device||NULL == chip_data) {
@@ -1384,9 +1383,6 @@ static int himax_parse_dts(struct device_node *device, struct ts_kit_device_data
 		strncpy(chip_data->module_name, modulename,strlen(MODULE_NAME)+1);
 	}
 	TS_LOG_INFO("module_name: %s\n", chip_data->module_name);
-	/*touchscreen driver*/
-	retval = of_property_read_string(device, "touch_driver", &touch_driver);
-	app_info_set("touchscreen driver", touch_driver);
 	/* get tp color flag */
 	retval = of_property_read_u32(device,  "support_get_tp_color", &read_val);
 	if (retval) {
@@ -1997,6 +1993,8 @@ static int __init himax_module_init(void)
     struct device_node* child = NULL;
     struct device_node* root = NULL;
     int err = NO_ERR;
+    int retval = 0;
+    const char *touch_driver = NULL;
 
     TS_LOG_INFO("[HXTP] himax_module_init called here\n");
     g_himax_ts_data = kzalloc(sizeof(struct himax_ts_data), GFP_KERNEL);
@@ -2038,12 +2036,16 @@ static int __init himax_module_init(void)
     g_himax_ts_data->tskit_himax_data->ops = &ts_kit_himax_ops;
 
     err = huawei_ts_chip_register(g_himax_ts_data->tskit_himax_data);
-    if(err)
+    if (err)
     {
-		TS_LOG_ERR(" himax chip register fail !\n");
+		TS_LOG_ERR("himax chip register fail !\n");
 		goto out;
+    } else {
+    /*touchscreen driver*/
+    retval = of_property_read_string(g_himax_ts_data->ts_dev->dev.of_node, "touch_driver", &touch_driver);
+    app_info_set("touchscreen driver", touch_driver);
     }
-    TS_LOG_INFO("himax chip_register sucess! return value=%d\n", err);
+    TS_LOG_INFO("himax touchscreen driver register successful\n");
     return err;
 out:
 	if (g_himax_ts_data->tskit_himax_data){

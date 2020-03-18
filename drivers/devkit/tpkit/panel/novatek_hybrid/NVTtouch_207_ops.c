@@ -1032,7 +1032,6 @@ static int nvt_hybrid_parse_dts(struct device_node *device,
 	const char *raw_data_dts = NULL;
 	const char *mp_selftest_mode_dts = NULL;
 	const char *producer = NULL;
-	const char *touch_driver = NULL;
 	retval =
 	    of_property_read_u32(device, NVT_HYBRID_IRQ_CFG,
 				 &chip_data->irq_config);
@@ -1178,9 +1177,6 @@ static int nvt_hybrid_parse_dts(struct device_node *device,
 		snprintf(chip_data->tp_test_type, PAGE_SIZE, "%s", raw_data_dts);
 	}
 	TS_LOG_INFO("%s get test type = %s\n", __func__, chip_data->tp_test_type);
-		/*touchscreen driver*/
-        retval = of_property_read_string(device, "touch_driver", &touch_driver);
-        app_info_set("touchscreen driver", touch_driver);
 
 	retval =
 	    of_property_read_string(device, NVT_HYBRID_MP_SELFTEST_MODE,
@@ -2443,6 +2439,8 @@ static int __init nvt_hybrid_module_init(void)
 	struct device_node* child = NULL;
 	struct device_node* root = NULL;
 	int error = NO_ERR;
+	int retval = 0;
+    	const char *touch_driver = NULL;
 
 	TS_LOG_INFO("%s called here\n", __func__);
 
@@ -2478,7 +2476,7 @@ static int __init nvt_hybrid_module_init(void)
 	}
 	if (!found)
 	{
-		TS_LOG_ERR(" not found chip nvt child node  !\n");
+		TS_LOG_ERR(" not found chip novatek_hybrid child node  !\n");
 		error = -EINVAL;
 		goto out;
 	}
@@ -2491,14 +2489,18 @@ static int __init nvt_hybrid_module_init(void)
 	nvt_hybrid_ts->print_criteria = true;
 	nvt_hybrid_ts->no_power = false;
 
-	TS_LOG_INFO("found novatek child node !\n");
+	TS_LOG_INFO("found novatek_hybrid child node !\n");
 	error = huawei_ts_chip_register(nvt_hybrid_ts->chip_data);
-	if(error)
+	if (error)
 	{
-		TS_LOG_ERR(" nvt chip register fail !\n");
+		TS_LOG_ERR(" novatek_hybrid chip register fail !\n");
 		goto out;
+	} else {
+	/*touchscreen driver*/
+    	retval = of_property_read_string(nvt_hybrid_ts->ts_dev->dev.of_node, "touch_driver", &touch_driver);
+    	app_info_set("touchscreen driver", touch_driver);
 	}
-	TS_LOG_INFO("nvt chip_register! err=%d\n", error);
+	TS_LOG_INFO("novatek_hybrid touchscreen driver register successful\n");
 	return error;
 out:
 	if(nvt_hybrid_ts->chip_data)
