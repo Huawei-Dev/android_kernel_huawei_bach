@@ -1316,7 +1316,7 @@ static int himax_parse_dts(struct device_node *device, struct ts_kit_device_data
 	if(NULL == device||NULL == chip_data) {
 		return -1;
 	}
-	retval = of_property_read_u32(device, "reg", &chip_data->ic_status_reg);
+	retval = of_property_read_u32(device, "reg", &chip_data->ts_platform_data->client->addr);
 	if (retval) {
 		chip_data->ts_platform_data->client->addr = SLAVE_I2C_ADRR;
 		TS_LOG_INFO("Not define reg in Dts, use default\n");
@@ -2043,7 +2043,7 @@ static int __init himax_module_init(void)
 		TS_LOG_ERR(" himax chip register fail !\n");
 		goto out;
     }
-    TS_LOG_INFO("himax chip_register sucess! teturn value=%d\n", err);
+    TS_LOG_INFO("himax chip_register sucess! return value=%d\n", err);
     return err;
 out:
 	if (g_himax_ts_data->tskit_himax_data){
